@@ -1,59 +1,123 @@
-const WIDTH = window.innerWidth;
-const HEIGHT = window.innerHeight;
+var WIDTH, HEIGHT, INIT, CLOCK
+var container, renderer, scene
 
+var VIEW_ANGLE, ASPECT, NEAR, FAR, CAMERA, cam_cam
 
-const CLOCK = new THREE.Clock(true)
+var DIR_LIGHT
 
-//Get some DOM elements that we're going to need to use
-var container = $("#container")
+var mouse_x, mouse_y
 
-//Create a renderer
-var renderer = new THREE.WebGLRenderer()
+var deltaTime = 0
 
-//Create a scene
-var scene = new THREE.Scene()
+init()
 
-//Create a camera and add it to the scene
-const VIEW_ANGLE = 45 //Viewing angle for the perspective camera
-const ASPECT = WIDTH / HEIGHT //Aspect ratio dimensions for the camera
-const NEAR = 0.1 //The near clipping plane
-const FAR = 10000 //The far clipping plane
+var cube = null
+var created_cube = setInterval(function(){
+	if(INIT.flags["IS_COMPLETE"]){
+		cube = new Cube(scene)
+		scene.add(cube.Obj)
+		clearInterval(created_cube)
+	}
+	}, 10)
 
-var cam_cam = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR)
+requestAnimationFrame(update)
 
-scene.add(cam_cam)
+//Events
+$(window).on('resize', onWindowResize)
 
-//Start up that renderer
-renderer.setSize(WIDTH, HEIGHT)
+$(document).mousedown(function(){onClick()})
 
-container.append(renderer.domElement)
-
-//Set up a directional light and add it to the scene
-const DIR_LIGHT = new THREE.DirectionalLight(0xFFFFFF, 0.5)
-
-scene.add(DIR_LIGHT)
-
-//Create the mesh for a cube
-//Set up the verticies
-
-var cube = new Cube(scene)
-cube.Obj.position.z = -10
-
-
-scene.add(cube.Obj)
 
 function update() {
+	deltaTime = CLOCK.getDelta();
 
-	var deltaTime = CLOCK.getDelta();
-
-	if(typeof cube.Obj != "undefined" && cube.Obj != null)
-	{
-		cube.Obj.rotation.x += 2 * deltaTime
-		cube.Obj.rotation.y += 2* deltaTime
-	}
-
-	renderer.render(scene, cam_cam)
+	renderer.render(scene, cam_cam.camera)
 	requestAnimationFrame(update)
 }
 
-requestAnimationFrame(update)
+function init(){
+	WIDTH = window.innerWidth;
+	HEIGHT = window.innerHeight;
+
+	//Flags
+	INIT = new Initialize()
+
+	CLOCK = new THREE.Clock(true)
+
+	//Get some DOM elements that we're going to need to use
+	container = $("#container")
+
+	//Create a renderer
+	renderer = new THREE.WebGLRenderer()
+
+	//Create a scene
+	scene = new THREE.Scene()
+
+	//Create a camera and add it to the scene
+	VIEW_ANGLE = 45 //Viewing angle for the perspective camera
+	ASPECT = WIDTH / HEIGHT //Aspect ratio dimensions for the camera
+	NEAR = 0.1 //The near clipping plane
+	FAR = 10000 //The far clipping plane
+
+	CAMERA = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR)
+	CAMERA.position.z = 10
+	CAMERA.lookAt(new THREE.Vector3(0, 0, 0))
+	cam_cam = new Camera_Handler(CAMERA)
+
+	scene.add(cam_cam.camera)
+
+	//Start up that renderer
+	renderer.setSize(WIDTH, HEIGHT)
+
+	container.append(renderer.domElement)
+
+	//Set up a directional light and add it to the scene
+	DIR_LIGHT = new THREE.DirectionalLight(0xFFFFFF, 0.5)
+
+	scene.add(DIR_LIGHT)
+
+	gridHelper = new THREE.GridHelper(100, 10)
+	scene.add(gridHelper)
+}
+
+function onWindowResize(){
+	cam_cam.camera.aspect = window.innerWidth/ window.innerHeight
+	cam_cam.camera.updateProjectionMatrix()
+
+	renderer.setSize(window.innerWidth, window.innerHeight)
+}
+
+function onClick(){
+	event.preventDefault()
+	mouse_x = event.pageX
+	mouse_y = event.pageY
+
+	if(event.button == 0)
+	{
+		$(document).mousemove(function(){onLeftClick()})
+	}
+	else if(event.button == 1)
+	{
+		$(document).mousemove(function(){onMiddleClick()})
+	}
+
+	$(document).mouseup(function(){onMouseUp()})
+}
+
+function onLeftClick(){
+	cam_cam.HandlePan(event.pageX - mouse_x, event.pageY - mouse_y, deltaTime)
+
+	mouse_x = event.pageX
+	mouse_y = event.pageY
+}
+
+function onMiddleClick(){
+	cam_cam.HandleRotate(event.pageX - mouse_x, event.pageY - mouse_y, deltaTime)
+
+	mouse_x = event.pageX
+	mouse_y = event.pageY
+}
+
+function onMouseUp(){
+	$(document).off("mousemove")
+}
