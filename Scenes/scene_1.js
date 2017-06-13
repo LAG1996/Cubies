@@ -22,11 +22,6 @@ var created_cube = setInterval(function(){
 
 requestAnimationFrame(update)
 
-//Events
-$(window).on('resize', onWindowResize)
-
-$(document).mousedown(function(){onClick()})
-
 
 function update() {
 	deltaTime = CLOCK.getDelta();
@@ -78,6 +73,12 @@ function init(){
 
 	gridHelper = new THREE.GridHelper(100, 10)
 	scene.add(gridHelper)
+
+	//Events
+	$(window).on('resize', onWindowResize)
+
+	$(document).mousedown(function(){onClick()})
+	$(document).on('mousewheel', function(e, delta){onScroll(e, delta)})
 }
 
 function onWindowResize(){
@@ -85,6 +86,11 @@ function onWindowResize(){
 	cam_cam.camera.updateProjectionMatrix()
 
 	renderer.setSize(window.innerWidth, window.innerHeight)
+}
+
+function onScroll(e, delta){
+	event.preventDefault()
+	cam_cam.HandleZoom(event.wheelDelta, deltaTime)
 }
 
 function onClick(){

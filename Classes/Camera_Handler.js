@@ -17,8 +17,13 @@ function Camera_Handler(camera){
 	}
 
 	this.HandleRotate = function(deltaX, deltaY, deltaTime){
-		that.camera.rotation.y += deltaX*deltaTime
+		that.camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), -1*deltaX*deltaTime)
 		that.camera.rotation.x += deltaY*deltaTime
 		that.camera.updateProjectionMatrix()
+	}
+
+	this.HandleZoom = function(delta, deltaTime)
+	{
+		that.camera.translateZ(-1*delta*deltaTime)
 	}
 }
