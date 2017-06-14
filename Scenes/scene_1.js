@@ -9,7 +9,10 @@ var mouse_x, mouse_y
 
 var deltaTime = 0
 
-init()
+initScene()
+
+var toolbarHandler = new Toolbar_Handler()
+toolbarHandler.Switch_Context_H('camera-control')
 
 var cube = null
 var created_cube = setInterval(function(){
@@ -30,7 +33,7 @@ function update() {
 	requestAnimationFrame(update)
 }
 
-function init(){
+function initScene(){
 	WIDTH = window.innerWidth;
 	HEIGHT = window.innerHeight;
 
@@ -63,6 +66,7 @@ function init(){
 
 	//Start up that renderer
 	renderer.setSize(WIDTH, HEIGHT)
+	renderer.domElement.id = 'canvas'
 
 	container.append(renderer.domElement)
 
@@ -71,14 +75,14 @@ function init(){
 
 	scene.add(DIR_LIGHT)
 
-	gridHelper = new THREE.GridHelper(100, 10)
+	gridHelper = new THREE.GridHelper(100, 2)
 	scene.add(gridHelper)
 
 	//Events
 	$(window).on('resize', onWindowResize)
 
-	$(document).mousedown(function(){onClick()})
-	$(document).on('mousewheel', function(e, delta){onScroll(e, delta)})
+	$('#canvas').mousedown(function(){onClick()})
+	$('#canvas').on('mousewheel', function(e, delta){onScroll(e, delta)})
 }
 
 function onWindowResize(){

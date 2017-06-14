@@ -1,0 +1,34 @@
+.toolbar {
+	position: fixed;
+	list-style-type : none;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	background-color: #461D2B;
+	width: 100%;
+	border: 1px solid #5B538C;
+}
+
+.toolbar-btn{
+	background-color: #5B538C;
+	border: none;
+	color: white;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-size: 16px;
+	cursor: pointer;
+	float: left;
+	padding: 15px 32px;
+	transition-duration: 0.4s;
+}
+
+.toolbar-btn:hover{
+	background-color: #AFB5CF;
+	
+	border: 2px solid #FFE2C5;
+}
+
+li {
+	float: left;
+}
