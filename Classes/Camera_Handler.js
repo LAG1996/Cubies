@@ -1,46 +1,35 @@
-function Camera_Handler(camera){
+function Camera_Handler(camera, renderer){
 
 	this.camera = camera
 	this.center = new THREE.Vector3(0, 0, 0)
-	this.radius = this.camera.position.sub(this.center).length()
-	this.camera.position.add(this.center)
+
+	this.pan_speed = 2
+	this.orbit_speed = 4
+	this.rotation_speed = 0.1
 
 	var modes = ['tp', 'orb']
-	var mode = modes[0]
+	var mode = 'orb'
+
+	var orbit_control = new THREE.OrbitControls(this.camera, renderer.domElement)
+
 	var that = this
 
 	this.HandlePan = function(deltaX, deltaY, deltaTime){
-
-		that.camera.translateX(-1*deltaX*deltaTime)
-		that.camera.translateY(deltaY*deltaTime)
-
-		if(that.mode == 'orb')
+		
+		if(mode == 'tp')
 		{
-			that.camera.lookAt(that.center)
+			that.camera.translateX(-1*deltaX*that.pan_speed*deltaTime)
+			that.camera.translateY(deltaY*that.pan_speed*deltaTime)
 		}
 
 		that.camera.updateProjectionMatrix()
 	}
 
 	this.HandleRotate = function(deltaX, deltaY, deltaTime){
-		if(that.mode == 'tp')
+		if(mode == 'tp')
 		{
-			that.camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), -1*deltaX*deltaTime)
-			that.camera.rotation.x += deltaY*deltaTime
-		}
-		else
-		{
-			old_pos = new THREE.Vector3(that.camera.position.x, that.camera.position.y, that.camera.position.z)
-
-			that.camera.translateX(-1*deltaX*deltaTime)
-			that.camera.translateY(deltaY*deltaTime)
-
-			dir = old_pos.sub(that.camera.position)
-			dir.multiplyScalar(-1)
-
-			that.center.add(dir)
-
-			that.camera.position.clone(old_pos)
+			that.camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), -1*deltaX*that.rotation_speed*deltaTime)
+			that.camera.rotation.x += deltaY*deltaTime*that.rotation_speed
 		}
 		
 		that.camera.updateProjectionMatrix()
@@ -49,18 +38,37 @@ function Camera_Handler(camera){
 	this.HandleZoom = function(delta, deltaTime)
 	{
 		that.camera.translateZ(-1*delta*deltaTime)
-		that.radius = that.camera.position.sub(that.center).length()
-		that.camera.position.add(that.center)
+		Calculate_Radius()
 		that.camera.updateProjectionMatrix()
 	}
 
 	this.SwitchToMode = function(mode_num)
 	{
-		that.mode = modes[mode_num]
+		mode = modes[mode_num]
 		
-		if(that.mode == 'orb')
+		if(mode == 'orb')
 		{
 			that.camera.lookAt(that.center)
+			orbit_control.enabled = true
 		}
+		else if(mode == 'tp')
+		{
+			orbit_control.enabled = false
+		}
+	}
+
+	function Calculate_Radius()
+	{
+		return that.camera.position.distanceTo(that.center)
+	}
+
+	function Calculate_Phi()
+	{
+		return Math.atan2(that.camera.position.y - that.center.y, that.camera.position.x - that.center.x)
+	}
+
+	function Calculate_Theta(radius)
+	{
+		return Math.acos((that.camera.position.z - that.center.z) / radius)
 	}
 }

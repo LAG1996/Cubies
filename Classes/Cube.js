@@ -1,9 +1,8 @@
-function Cube(scene, scale = 1, material = new THREE.MeshBasicMaterial({color:0x0000FF})){
-		this.Obj = new THREE.Group()
+function Cube(scene, material = new THREE.MeshBasicMaterial({color:0x0000FF})){
 		this.ID = Cube.ID++
 
-		this.material = material
-		this.scale = scale
+		this.faceMaterial = material
+		this.hingeMaterial = material
 		this.scene = scene
 
 		this.position = function(){return this.Obj.position}
@@ -85,4 +84,6 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 
 		Cube.new_cube.add(new_face)
 	}
+
+	Cube.new_cube.scale.set(0.95, 0.95, 0.95)
 }
