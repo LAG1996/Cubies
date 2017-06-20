@@ -11,11 +11,15 @@ var Controls
 
 var deltaTime = 0
 
+var L_Polycubes = []
+
 initScene()
 
 var toolbarHandler = new Toolbar_Handler()
-toolbarHandler.Switch_Context_H('camera-control')
+toolbarHandler.Switch_Context_H('poly-view')
 
+/*
+//Some example cubes
 var cube = null
 var created_cube = setInterval(function(){
 	if(INIT.flags["IS_COMPLETE"]){
@@ -24,6 +28,7 @@ var created_cube = setInterval(function(){
 		clearInterval(created_cube)
 	}
 	}, 10)
+
 
 var cube_2 = null
 var created_cube_2 = setInterval(function(){
@@ -60,14 +65,13 @@ var created_cube_4 = setInterval(function(){
 		clearInterval(created_cube_4)
 	}
 	}, 10)
-
+*/
 
 requestAnimationFrame(update)
 
 
 function update() {
 	deltaTime = CLOCK.getDelta();
-
 	renderer.render(scene, cam_cam.camera)
 	requestAnimationFrame(update)
 }
@@ -93,6 +97,7 @@ function initScene(){
 	//Start up that renderer
 	renderer.setSize(WIDTH, HEIGHT)
 	renderer.domElement.id = 'canvas'
+	renderer.setClearColor(0xFFFFE6, 1)
 
 	container.append(renderer.domElement)
 
@@ -101,7 +106,7 @@ function initScene(){
 
 	scene.add(DIR_LIGHT)
 
-	gridHelper = new THREE.GridHelper(1000, 500, 0x0000FF, 0x808080)
+	gridHelper = new THREE.GridHelper(1000, 500, 0x0000FF, 0x020202)
 	gridHelper.position.y = -1
 	gridHelper.position.x = -1
 	gridHelper.position.z = -1

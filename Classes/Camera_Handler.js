@@ -7,7 +7,7 @@ function Camera_Handler(camera, renderer){
 	this.orbit_speed = 4
 	this.rotation_speed = 0.1
 
-	var modes = ['tp', 'orb']
+	var modes = ['orb', 'tp']
 	var mode = 'orb'
 
 	var orbit_control = new THREE.OrbitControls(this.camera, renderer.domElement)

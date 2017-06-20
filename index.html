@@ -5,14 +5,57 @@
 	<meta name = "author" content = "Luis Angel Garcia">
 	<meta charset = "utf-8">
 	<meta name = "viewport" content = "width=device-width">
-	<link rel="stylesheet" href = "index.css">
+	<link rel = "stylesheet" href = "third_party_src/w3/w3css.css">
+ 	<link rel="stylesheet" href = "index.css">
 </head>
 
 	
 <body>
-<ul class = "toolbar" id = "camera-control">
-	<li><button id = "dropdown_trigger"></button></li>
-</ul>
+	<div class = "w3-bar w3-sand" id = 'toolbar'>
+		<div class = "w3-dropdown-click">
+			<button class = "w3-button w3-black" id = "sidebar_trigger">=</button>
+			<div class = "w3-dropdown-content w3-bar-block w3-sand" id = "sidebar">
+				<div class = "w3-sidebar w3-bar-block w3-sand" style = "width:25%">
+					<button class = "w3-bar-item w3-button w3-hover-red" id = "s_camera_control">Camera Control</button>
+					<button class = "w3-bar-item w3-button w3-hover-red" id = "s_polyview">Polycube View</button>
+				</div>
+			</div>
+		</div>
+
+		<div id ="mode_text" class = "w3-bar-item w3-right w3-red"></div>
+
+		<div class = "w3-dropdown-click w3-right">
+			<button class = "w3-button w3-black" id = "object_list_trigger">P</button>
+			<div class = "w3-dropdown-content w3-bar-block w3-sand" id = "object_list">
+				<div id = "object_data_list" class = "w3-sidebar w3-bar-block w3-sand" style = "width:25%">
+					<div id = "object_template" class = "w3-hover-red">
+						<p id = "object_name">Name of object</p>
+						<div id = "object_origin"><p>X: 0 <br> Y: 0 <br> Z: 0</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+<div id = "add_poly_modal" class = "w3-modal">
+	<div class = "w3-modal-content w3-sand">
+		<div class = "w3-container">
+			<form class = "w3-container w3-sand">
+			<label>New Polycube's Name</label>
+			<input id = "add_poly_modal_new_name" class = "w3-input w3-border w3-light-grey" type="text" value = "Name">
+			<label>X-Coordinate</label>
+			<input id = "add_poly_modal_x" class = "w3-input w3-border w3-light-grey" type="text" value = "0">
+			<label>Y-Coordinate</label>
+			<input id = "add_poly_modal_y" class = "w3-input w3-border w3-light-grey" type="text" value = "0">
+			<label>Z-Coordinate</label>
+			<input id = "add_poly_modal_z" class = "w3-input w3-border w3-light-grey" type="text" value = "0">
+			</form>
+			<button id = "add_poly_modal_submit" class="w3-button w3-black">Submit</button>
+			<button id = "add_poly_modal_close" class="w3-button w3-black">Cancel</button>
+		</div>
+	</div>
+</div>
+
 <div id = "container"></div>
 
 <script src = "third_party_src/THREE/three.js"></script>
@@ -26,6 +69,7 @@
 -->
 <script src = "Classes/Utils.js"></script>
 <script src = "Classes/Cube.js"></script>
+<script src = "Classes/Polycube.js"></script>
 <script src = "Classes/Init.js"></script>
 <script src = "Classes/Camera_Handler.js"></script>
 <script src = "Classes/Window_Helpers/Toolbar_Handler.js"></script>
