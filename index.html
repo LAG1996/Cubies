@@ -13,7 +13,7 @@
 <body>
 	<div class = "w3-bar w3-sand" id = 'toolbar'>
 		<div class = "w3-dropdown-click">
-			<button class = "w3-button w3-black" id = "sidebar_trigger">=</button>
+			<button class = "w3-button w3-black w3-hover-white" id = "sidebar_trigger">=</button>
 			<div class = "w3-dropdown-content w3-bar-block w3-sand" id = "sidebar">
 				<div class = "w3-sidebar w3-bar-block w3-sand" style = "width:25%">
 					<button class = "w3-bar-item w3-button w3-hover-red" id = "s_camera_control">Camera Control</button>
@@ -24,13 +24,18 @@
 
 		<div id ="mode_text" class = "w3-bar-item w3-right w3-red"></div>
 
-		<div class = "w3-dropdown-click w3-right">
-			<button class = "w3-button w3-black" id = "object_list_trigger">P</button>
+		<div class = "w3-dropdown-click">
+			<button class = "w3-button w3-black w3-hover-white" id = "object_list_trigger">P</button>
 			<div class = "w3-dropdown-content w3-bar-block w3-sand" id = "object_list">
-				<div id = "object_data_list" class = "w3-sidebar w3-bar-block w3-sand" style = "width:25%">
+				<div id = "object_data_list" class = "w3-sidebar w3-bar-block w3-sand" style = "width:25%; height:50%">
 					<div id = "object_template" class = "w3-hover-red">
-						<p id = "object_name">Name of object</p>
-						<div id = "object_origin"><p>X: 0 <br> Y: 0 <br> Z: 0</div>
+						<button class = "w3-button w3-black w3-right obj_data_trigger" id = "obj_data_trigger_template">objName</button>
+						<div id = "objName_data_edit" class ="w3-container" style = "display:none">
+							<input id = "poly_obj_name_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "">
+							<input id = "poly_obj_x_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "">
+							<input id = "poly_obj_y_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "">
+							<input id = "poly_obj_z_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "">
+						</div>
 					</div>
 				</div>
 			</div>

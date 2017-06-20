@@ -44,26 +44,30 @@ function Toolbar_Handler(){
 	function _Toggle_V(){
 		if($("#sidebar").is(":visible"))
 		{
-			$("#sidebar_trigger").attr("class", "w3-button w3-black")
+			$("#sidebar_trigger").attr("class", "w3-button w3-black w3-hover-white")
 			$("#sidebar").hide()
 		}
 		else
 		{
-			$("#sidebar_trigger").attr("class", "w3-button w3-red")
+			$("#sidebar_trigger").attr("class", "w3-button w3-red w3-hover-black")
 			$("#sidebar").show()
+			$("#object_list_trigger").attr("class", "w3-button w3-black w3-hover-white")
+			$("#object_list").hide()
 		}
 	}
 
 	function _Toggle_Object_L(){
 		if($("#object_list").is(":visible"))
 		{
-			$("#object_list_trigger").attr("class", "w3-button w3-black")
+			$("#object_list_trigger").attr("class", "w3-button w3-black w3-hover-white")
 			$("#object_list").hide()
 		}
 		else
 		{
-			$("#object_list_trigger").attr("class", "w3-button w3-red")
+			$("#object_list_trigger").attr("class", "w3-button w3-red w3-hover-black")
 			$("#object_list").show()
+			$("#sidebar_trigger").attr("class", "w3-button w3-black w3-hover-white")
+			$("#sidebar").hide()
 		}
 	}
 
@@ -96,7 +100,7 @@ function Toolbar_Handler(){
 
 		$(buttons[0]).text("New Polycube")
 		$(buttons[0]).click(function(){
-			$("#add_poly_modal_new_name").val("Polycube_#"+PolyCube.ID)
+			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 			$("#add_poly_modal").show()})
 
 		mode_text = "Edit Polycube"
@@ -110,17 +114,24 @@ function Toolbar_Handler(){
 		$("#object_list_trigger").click(function(){
 			_Toggle_Object_L()
 		})
-		//Set the function for the polycube sidebar button
+		//Set the function for the left sidebar buttons
 		$("#s_polyview").click(function(){that.Switch_Context_H("poly-view")})
 		$("#s_camera_control").click(function(){that.Switch_Context_H("camera-control")})
+
+		//Hide DOM templates
+		$("#object_template").hide()
 	}
 
 	function Init_Modals()
 	{
 		$("#add_poly_modal_close").click(function(){$("#add_poly_modal").hide()})
 		$("#add_poly_modal_submit").click(function(){
-			PolyCube.GenerateNewPolyCube($("#add_poly_modal_new_name").val())
-			$("#add_poly_modal").hide()
+			//TODO: handle verfication
+
+			//Items have been verified. Make a new polycube
+			PolyCube.GenerateNewPolyCube(new THREE.Vector3(parseInt($("#add_poly_modal_x"), 10), parseInt($("#add_poly_modal_y"), 10), parseInt($("#add_poly_modal_z"), 10)), $("#add_poly_modal_new_name").val())
+
+			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 		})
 	}
 }
