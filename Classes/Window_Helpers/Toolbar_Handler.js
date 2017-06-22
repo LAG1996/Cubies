@@ -3,7 +3,7 @@ function Toolbar_Handler(){
 	var buttons = []
 	var mode_text = ''
 
-	var amt_buttons_for_context = {"camera-control" : 2, "poly-view" : 1 }
+	var amt_buttons_for_context = {"camera-control" : 2, "poly-view" : 2 }
 
 	//Initialize the sidebars
 	Init_Modals()
@@ -98,10 +98,29 @@ function Toolbar_Handler(){
 			buttons[i] = document.createElement("button")
 		}
 
+		//Add a button for adding a new polycube origin point
 		$(buttons[0]).text("New Polycube")
 		$(buttons[0]).click(function(){
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 			$("#add_poly_modal").show()})
+
+		//Add a button for adding cubes to the active polycube (selected by the user)
+		$(buttons[1]).text("Add Cube")
+		$(buttons[1]).click(function(){
+			if(PolyCube.Active_Polycube != null)
+			{
+				//TODO: Make these console logs actual alerts on the screen
+				console.log("Adding cube to active polycube")
+				$("#add_cube_to_poly_modal").show()
+			}
+			else
+			{
+				//TODO: Make these console logs actual alerts on the screen
+				console.log("No active polycube")
+			}
+		})
+
+
 
 		mode_text = "Edit Polycube"
 	}
@@ -124,14 +143,26 @@ function Toolbar_Handler(){
 
 	function Init_Modals()
 	{
+		//Setting up what modals do
+		//The add_poly_modal does exactly that: adding a polycube to the scene
+		//This modal handles naming the polycube and setting its origin point
 		$("#add_poly_modal_close").click(function(){$("#add_poly_modal").hide()})
 		$("#add_poly_modal_submit").click(function(){
 			//TODO: handle verfication
 
 			//Items have been verified. Make a new polycube
-			PolyCube.GenerateNewPolyCube(new THREE.Vector3(parseInt($("#add_poly_modal_x"), 10), parseInt($("#add_poly_modal_y"), 10), parseInt($("#add_poly_modal_z"), 10)), $("#add_poly_modal_new_name").val())
+			PolyCube.GenerateNewPolyCube(new THREE.Vector3(parseInt($("#add_poly_modal_x").val(), 10), parseInt($("#add_poly_modal_y").val(), 10), parseInt($("#add_poly_modal_z").val(), 10)), $("#add_poly_modal_new_name").val())
 
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
+		})
+
+		//The add_cube_to_poly_modal handles setting the cube's coordinates in relation to the polycube's origin
+		$("#add_cube_to_poly_modal_close").click(function(){$("#add_cube_to_poly_modal").hide()})
+		$("#add_cube_to_poly_modal_submit").click(function(){
+			//TODO: handle verification
+
+			//Data has been verified. Make a new polycube
+			PolyCube.Active_Polycube.Add_Cube(new THREE.Vector3(parseInt($("#add_cube_to_poly_modal_x").val(), 10), parseInt($("#add_cube_to_poly_modal_y").val(), 10), parseInt($("#add_cube_to_poly_modal_z").val(), 10)))
 		})
 	}
 }

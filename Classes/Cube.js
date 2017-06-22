@@ -1,18 +1,32 @@
-function Cube(scene, material = new THREE.MeshBasicMaterial({color:0x0000FF})){
-		this.ID = Cube.ID++
+function Cube(scene, lattice_position, polycube, material = new THREE.MeshBasicMaterial({color:0x0000FF})){
+		this.ID = polycube.Get_Cubes().length
+		this.Polycube = polycube
 
 		this.faceMaterial = material
 		this.hingeMaterial = material
 		this.scene = scene
 
-		this.position = function(){return this.Obj.position}
-		this.rotation = function(){return this.Obj.rotation}
+		this.lattice_position = lattice_position
 
 		this.Obj = Cube.new_cube.clone()
 		this.Obj.name = "Cube_" + this.ID
+		this.Obj.position.copy(LatticeToReal(this.lattice_position))
+
+		this.missing_face = {"front" : false, "back" : false, "left" : false, "right" : false, "up" : false, "down" : false}
+
+		this.RemoveFace = function(name)
+		{
+			if(!this.missing_face[name])
+			{
+				var face = this.Obj.getObjectByName(name)
+				this.Obj.remove(face)
+				delete face
+
+				this.missing_face[name] = true
+			}
+		}
 }
 
-Cube.ID = 0
 Cube.new_cube = new THREE.Group()
 
 Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)

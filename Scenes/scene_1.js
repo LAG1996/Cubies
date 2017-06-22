@@ -11,8 +11,6 @@ var Controls
 
 var deltaTime = 0
 
-var L_Polycubes = []
-
 initScene()
 
 var toolbarHandler = new Toolbar_Handler()
