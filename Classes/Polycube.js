@@ -7,9 +7,9 @@ function PolyCube(position, name = ""){
 	this.obj.position.copy(LatticeToReal(position))
 	this.obj.add(this.trans_helper)
 
+	var AdjacencyGraph = new DualGraph()
 	var _lattice_position = position
 	var L_Cubes = []
-	var L_Edges = []
 
 	var that = this
 
@@ -25,56 +25,85 @@ function PolyCube(position, name = ""){
 
 			L_Cubes[key] = cube
 
-			//Clean up the cube so no two faces are incident
-			var up = PosToKey(new THREE.Vector3(cube.lattice_position.x, cube.lattice_position.y + 1, cube.lattice_position.z))
-			var down = PosToKey(new THREE.Vector3(cube.lattice_position.x, cube.lattice_position.y - 1, cube.lattice_position.z))
-			var right = PosToKey(new THREE.Vector3(cube.lattice_position.x + 1, cube.lattice_position.y, cube.lattice_position.z))
-			var left = PosToKey(new THREE.Vector3(cube.lattice_position.x - 1, cube.lattice_position.y, cube.lattice_position.z))
-			var front = PosToKey(new THREE.Vector3(cube.lattice_position.x, cube.lattice_position.y, cube.lattice_position.z + 1))
-			var back = PosToKey(new THREE.Vector3(cube.lattice_position.x, cube.lattice_position.y, cube.lattice_position.z - 1))
+			//Cube faces have adjacency with each other, so let's set this first
+			for(i = 0; i < PolyCube.dir_keys.length; i++)
+			{
+				d1 = PolyCube.dir_keys[i]
+				for(k = 0; k < PolyCube.dir_keys.length; k++)
+				{
+					d2 = PolyCube.dir_keys[k]
+					if(d1 != d2 && PolyCube.dir_to_opp[d1] != d2)
+					{
+						AdjacencyGraph.AddNeighboringFaces(PolyCube.CubeFaceString(cube, d1), cube.Obj.getObjectByName(d1), 
+							PolyCube.CubeFaceString(cube, d2), cube.Obj.getObjectByName(d2))
+					}
+				}
+			}
 
-			if(up in L_Cubes)
+			/*///////////////////////////
+			START CLEANING CUBE AND SETTING UP ADJACENCY
+			*///////////////////////////
+			//Clean up the cube so no two faces are incident
+			var up = PosToKey(new THREE.Vector3().addVectors(PolyCube.key_to_dir["up"], cube.lattice_position))
+			var down = PosToKey(new THREE.Vector3().addVectors(PolyCube.key_to_dir["down"], cube.lattice_position))
+			var right = PosToKey(new THREE.Vector3().addVectors(PolyCube.key_to_dir["right"], cube.lattice_position))
+			var left = PosToKey(new THREE.Vector3().addVectors(PolyCube.key_to_dir["left"], cube.lattice_position))
+			var front = PosToKey(new THREE.Vector3().addVectors(PolyCube.key_to_dir["front"], cube.lattice_position))
+			var back = PosToKey(new THREE.Vector3().addVectors(PolyCube.key_to_dir["back"], cube.lattice_position))
+
+			var c_up = L_Cubes[up]
+			var c_down = L_Cubes[down]
+			var c_right = L_Cubes[right]
+			var c_left = L_Cubes[left]
+			var c_front = L_Cubes[front]
+			var c_back = L_Cubes[back]
+
+			if(ObjectExists(c_up))
 			{
 				console.log("Incident face up")
-				cube.RemoveFace("up")
-				L_Cubes[up].RemoveFace("down")
+				
+				HandleFaceRemoval(cube, c_up)
+
+				SetAdjacentFaces(cube, c_up, "up")
 			}
-			if(down in L_Cubes)
+			if(ObjectExists(c_down))
 			{
 				console.log("Incident face down")
-				cube.RemoveFace("down")
-				L_Cubes[down].RemoveFace("up")
+				HandleFaceRemoval(cube, c_down)
+				SetAdjacentFaces(cube, c_down, "down")
 			}
-			if(right in L_Cubes)
+			if(ObjectExists(c_right))
 			{
 				console.log("Incident face right")
-				cube.RemoveFace("right")
-				L_Cubes[right].RemoveFace("left")
+				HandleFaceRemoval(cube, c_right, "right")
+				SetAdjacentFaces(cube, c_right, "right")
 			}
-			if(left in L_Cubes)
+			if(ObjectExists(c_left))
 			{
 				console.log("Incident face left")
-				cube.RemoveFace("left")
-				L_Cubes[left].RemoveFace("right")
+				HandleFaceRemoval(cube, c_left, "left")
+				SetAdjacentFaces(cube, c_left, "left")
 			}
-			if(front in L_Cubes)
+			if(ObjectExists(c_front))
 			{
 				console.log("Incident face front")
-				cube.RemoveFace("front")
-				L_Cubes[front].RemoveFace("back")
+				HandleFaceRemoval(cube, c_front, "front")
+				SetAdjacentFaces(cube, c_front, "front")
 			}
-			if(back in L_Cubes)
+			if(ObjectExists(c_back))
 			{
 				console.log("Incident face back")
-				cube.RemoveFace("back")
-				L_Cubes[back].RemoveFace("front")
+				HandleFaceRemoval(cube, c_back, "back")
+				SetAdjacentFaces(cube, c_back, "back")
 			}
+			/*////////////////////////
+			FINISH CLEANING CUBE AND SETTING UP ADJACENCY
+			*///////////////////////	
 		}
 		else
 		{
 			console.log("Cube already exists here")
 		}
-		
 	}
 
 	this.Set_PosX = function(x){
@@ -99,12 +128,49 @@ function PolyCube(position, name = ""){
 	var PosToKey = function(position){
 		return position.x+","+position.y+","+position.z
 	}
+
+	var SetAdjacentFaces = function(cube_1, cube_2, dir)
+	{
+		for(i = 0; i < PolyCube.dir_keys.length; i++)
+		{
+			if(PolyCube.dir_keys[i] != dir && PolyCube.dir_keys[i] != PolyCube.dir_to_opp[dir])
+			{
+				AdjacencyGraph.AddNeighboringFaces(PolyCube.CubeFaceString(cube_1, PolyCube.dir_keys[i]), cube_1.Obj.getObjectByName(PolyCube.dir_keys[i]),
+				PolyCube.CubeFaceString(cube_2, PolyCube.dir_keys[i]), cube_2.Obj.getObjectByName(PolyCube.dir_keys[i]))
+			}
+		}
+	}
+
+	var HandleFaceRemoval = function(cube_1, cube_2, dir)
+	{
+
+		AdjacencyGraph.RemoveFace(PolyCube.CubeFaceString(cube_1, dir))
+		AdjacencyGraph.RemoveFace(PolyCube.CubeFaceString(cube_2, PolyCube.dir_to_opp[dir]))
+
+		cube_1.RemoveFace(dir)
+		cube_2.RemoveFace(PolyCube.dir_to_opp[dir])
+	}
 }
 
 PolyCube.ID = 0
 PolyCube.name_being_changed = ""
 PolyCube.Active_Polycube = null
 PolyCube.L_Polycubes = []
+PolyCube.dir_keys = ["up", "down", "right", "left", "front", "back"]
+PolyCube.dir_to_opp = {"up": "down", "down": "up", "right": "left", "left": "right", "front": "back", "back": "front"}
+PolyCube.key_to_dir = {
+	"up" : new THREE.Vector3(0, 1, 0),
+	"down": new THREE.Vector3(0, -1, 0),
+	"left": new THREE.Vector3(-1, 0, 0),
+	"right": new THREE.Vector3(1, 0, 0),
+	"front": new THREE.Vector3(0, 0, 1),
+	"back": new THREE.Vector3(0, 0, -1)
+}
+
+PolyCube.CubeFaceString = function(cube, dir)
+{
+	return cube.ToIDString() + dir
+}
 
 PolyCube.GenerateNewPolyCube = function(position, name)
 {

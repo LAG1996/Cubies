@@ -120,7 +120,7 @@ function initScene(){
 	CAMERA.position.z = 10
 	CAMERA.position.y = 10
 	CAMERA.position.x = -10
-	CAMERA.lookAt(new THREE.Vector3(0, 0, 0))
+	CAMERA.lookAt(gridHelper.position)
 	cam_cam = new Camera_Handler(CAMERA, renderer)
 
 	scene.add(cam_cam.camera)

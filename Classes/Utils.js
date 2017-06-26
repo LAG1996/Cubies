@@ -1,4 +1,5 @@
-var Y_OFFSET = 0.125
+const Y_OFFSET = -0.115
+const XZ_OFFSET = 0
 
 function DEG2RAD(degrees)
 {
@@ -12,7 +13,15 @@ function LatticeToReal(coord)
 
 function LatticeToRealXZ(xz)
 {
-	return 2*xz
+	xz = 2*xz
+	if(xz != 0)
+	{
+		if(xz < 0)
+			return xz - XZ_OFFSET
+		else
+			return xz + XZ_OFFSET
+	}
+	
 }
 
 function LatticeToRealY(y)
@@ -38,4 +47,9 @@ function WorldToPolycube(coord, polycoord)
 	var vec = new THREE.Vector3().copy(coord)
 	vec.add(polycoord)
 	return vec
+}
+
+function ObjectExists(obj)
+{
+	return (typeof(obj) != 'null' && typeof(obj) != 'undefined')
 }

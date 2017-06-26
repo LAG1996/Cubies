@@ -1,5 +1,5 @@
 function Cube(scene, lattice_position, polycube, material = new THREE.MeshBasicMaterial({color:0x0000FF})){
-		this.ID = polycube.Get_Cubes().length
+		this.ID = Cube.ID++
 		this.Polycube = polycube
 
 		this.faceMaterial = material
@@ -25,17 +25,44 @@ function Cube(scene, lattice_position, polycube, material = new THREE.MeshBasicM
 				this.missing_face[name] = true
 			}
 		}
+
+		this.RepairCube = function()
+		{
+			for(var names in this.missing_face)
+			{
+				if(this.missing_face[names])
+				{
+					this.Obj.add(Cube.new_cube.getObjectByName(names).clone())
+					this.missing_face[names] = false
+				}
+			}
+		}
+
+		this.ToIDString = function()
+		{
+			return "c"+this.ID
+		}
 }
 
+Cube.ID = 0
 Cube.new_cube = new THREE.Group()
+Cube.face = null
+Cube.hinge = null
 
 Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 {
+	//Scale up the cube hinge mesh a bit
 	var face_names = ["front", "back", "left", "right", "up", "down"]
 	var ninety_deg = DEG2RAD(90)
 
+	Cube.face = new THREE.Group()
+	Cube.hinge = new THREE.Group()
+
 	Cube.face = cubeFaceMesh.clone()
 	Cube.hinge = cubeHingeMesh.clone()
+
+	Cube.hinge.scale.set(1.25, 1, 1.25)
+
 	var body = Cube.face.clone()
 	body.name = "body"
 
@@ -99,5 +126,5 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 		Cube.new_cube.add(new_face)
 	}
 
-	Cube.new_cube.scale.set(0.95, 0.95, 0.95)
+	Cube.new_cube.scale.set(0.9, 0.9, 0.9)
 }
