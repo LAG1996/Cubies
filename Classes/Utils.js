@@ -53,3 +53,14 @@ function ObjectExists(obj)
 {
 	return (typeof(obj) != 'null' && typeof(obj) != 'undefined')
 }
+
+function SumOfVectors(l_vectors)
+{
+	var vec = new THREE.Vector3()
+	for(index = 0; index < l_vectors.length; index++)
+	{
+		vec.add(l_vectors[index])
+	}
+
+	return vec
+}

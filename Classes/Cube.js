@@ -1,5 +1,5 @@
 function Cube(scene, lattice_position, polycube, material = new THREE.MeshBasicMaterial({color:0x0000FF})){
-		this.ID = Cube.ID++
+		this.ID = Object.keys(polycube.Get_Cubes()).length
 		this.Polycube = polycube
 
 		this.faceMaterial = material
@@ -44,7 +44,6 @@ function Cube(scene, lattice_position, polycube, material = new THREE.MeshBasicM
 		}
 }
 
-Cube.ID = 0
 Cube.new_cube = new THREE.Group()
 Cube.face = null
 Cube.hinge = null

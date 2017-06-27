@@ -1,11 +1,10 @@
-function DualGraph()
+function FaceEdgeDualGraph()
 {
 	var Faces = []
 	var Edges = []
 
 	this.AddNeighboringFaces = function(name_1, face_1, name_2, face_2)
 	{
-		console.log("Adding faces: " + name_1 + " | " + name_2 + " to face graph")
 		var new_face_1
 		var new_face_2
 
@@ -35,8 +34,6 @@ function DualGraph()
 		new_face_1["currneighbors"][name_2] = new_face_2
 		new_face_2["currneighbors"][name_1] = new_face_1
 
-
-		console.log(Faces)
 	}
 
 	this.RemoveFace = function(name){
@@ -46,8 +43,9 @@ function DualGraph()
 		{
 			for(var N in face["neighbors"])
 			{
-				delete face["neighbors"][N]["neighbors"][name]
-				delete face["neighbors"][N]["currneighbors"][name]
+				var neighbor = face["neighbors"][N]
+				delete neighbor["currneighbors"][name]
+				delete neighbor["neighbors"][name]
 			}
 
 			delete Faces[name]

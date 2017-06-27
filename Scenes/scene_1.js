@@ -16,54 +16,6 @@ initScene()
 var toolbarHandler = new Toolbar_Handler()
 toolbarHandler.Switch_Context_H('poly-view')
 
-/*
-//Some example cubes
-var cube = null
-var created_cube = setInterval(function(){
-	if(INIT.flags["IS_COMPLETE"]){
-		cube = new Cube(scene)
-		scene.add(cube.Obj)
-		clearInterval(created_cube)
-	}
-	}, 10)
-
-
-var cube_2 = null
-var created_cube_2 = setInterval(function(){
-	if(INIT.flags["IS_COMPLETE"]){
-		cube_2 = new Cube(scene)
-		cube_2.Obj.position.x = 2
-		console.log(cube_2)
-		scene.add(cube_2.Obj)
-		clearInterval(created_cube_2)
-	}
-	}, 10)
-
-var cube_3 = null
-var created_cube_3 = setInterval(function(){
-	if(INIT.flags["IS_COMPLETE"]){
-		cube_3 = new Cube(scene)
-		cube_3.Obj.position.x = 2
-		cube_3.Obj.position.y = 2.127
-		console.log(cube_3)
-		scene.add(cube_3.Obj)
-		clearInterval(created_cube_3)
-	}
-	}, 10)
-
-var cube_4 = null
-var created_cube_4 = setInterval(function(){
-	if(INIT.flags["IS_COMPLETE"]){
-		cube_4 = new Cube(scene)
-		cube_4.Obj.position.x = 2
-		cube_4.Obj.position.z = 2
-		cube_4.Obj.position.y = 2.127
-		console.log(cube_4)
-		scene.add(cube_4.Obj)
-		clearInterval(created_cube_4)
-	}
-	}, 10)
-*/
 
 requestAnimationFrame(update)
 
