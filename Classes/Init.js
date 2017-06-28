@@ -20,23 +20,13 @@ function Initialize()
 
 	var has_parts_interv = setInterval(function(){
 		if(CheckIfHasParts()){
-			console.log("I do have my parts")
 		 clearInterval(has_parts_interv)
-		}
-		else
-		{
-			console.log("I do not have parts")
 		}
 		}, 10)
 
 	var is_complete_interv = setInterval(function(){
 		if(CheckIfComplete()){
-		 console.log("I am complete")
 		 clearInterval(is_complete_interv)
-		}
-		else
-		{
-			console.log("I am not complete")
 		}
 		}, 10)
 
@@ -64,7 +54,7 @@ function Initialize()
 			}, function(xhr){
 				if(xhr.lengthComputable) {
 					var percentComplete = xhr.loaded/xhr.total * 100
-					console.log(Math.round(percentComplete, 2) + '% downloaded')
+					console.log(Math.round(percentComplete, 2) + '% uploaded')
 				}
 
 			}, function(xhr) {
@@ -87,7 +77,7 @@ function Initialize()
 			}, function(xhr){
 				if(xhr.lengthComputable) {
 					var percentComplete = xhr.loaded/xhr.total * 100
-					console.log(Math.round(percentComplete, 2) + '% downloaded')
+					console.log(Math.round(percentComplete, 2) + '% uploaded')
 				}
 
 			}, function(xhr) {

@@ -1,5 +1,4 @@
-function FaceEdgeDualGraph()
-{
+function FaceEdgeDualGraph(){
 	var Faces = []
 	var Edges = []
 

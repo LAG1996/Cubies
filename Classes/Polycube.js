@@ -1,30 +1,35 @@
 function PolyCube(position, name = ""){
 	this.name = name
 	this.scale = 1
-	this.obj = new THREE.Group()
+	this.Obj = new THREE.Group()
 	this.trans_helper = new THREE.AxisHelper(4)
 
-	this.obj.position.copy(LatticeToReal(position))
-	this.obj.add(this.trans_helper)
+	this.Obj.position.copy(LatticeToReal(position))
+	this.Obj.add(this.trans_helper)
+
+	this.face_picking_scene = new THREE.Scene()
+	this.hinge_picking_scene = new THREE.Scene()
+	this.cube_picking_scene = new THREE.Scene()
 
 	var AdjacencyGraph = new FaceEdgeDualGraph()
 	var _lattice_position = position
 	var L_Cubes = []
+	var ColorHex2Face_Map = []
+	var FaceName2Color_Map = []
+	var Hinge_Color_Map = []
+	var Cube_Color_Map = []
 
 	var that = this
-
-	scene.add(this.obj)
 
 	this.Add_Cube = function(position){
 		var key = PosToKey(position)
 
 		if(!(key in L_Cubes))
 		{
-			cube = new Cube(scene, position, that)
-			that.obj.add(cube.Obj)
+			cube = new Cube(position, this)
 
 			L_Cubes[key] = cube
-			latt_pos = cube.lattice_position
+			latt_pos = cube.GetLatticePosition()
 
 			//Cube faces have adjacency with each other, so let's set this first
 			SetAdjacentFacesWithSelf(cube)
@@ -47,7 +52,40 @@ function PolyCube(position, name = ""){
 			}
 			/*////////////////////////
 			FINISH CLEANING CUBE AND SETTING UP ADJACENCY
-			*///////////////////////	
+			*///////////////////////
+
+			/*////////////////////
+			START MAPPING EACH FACE TO A COLOR
+			*////////////////////
+			for(var key in PolyCube.key_to_dir)
+			{
+				var face = cube.Obj.getObjectByName(key)
+				if(ObjectExists(face))
+				{
+					var color = new THREE.Color().setHex(PolyCube.CalculateFaceID(key, cube))
+					console.log("The color of " + PolyCube.CubeFaceString(cube, key) + " is " + color.getHexString())
+					ColorHex2Face_Map[color.getHexString()] = face
+					FaceName2Color_Map[PolyCube.CubeFaceString(cube, key)] = color
+
+					var color_face = face.clone()
+					var face_mat = new THREE.MeshBasicMaterial({'color' : color.getHex()})
+					for(meshID = 0; childID < color_face.children.length; i++)
+					{
+						var mesh = color_face.children[childID]
+						mesh.material = face_mat
+					}
+
+					that.face_picking_scene.add(color_face)
+				}
+				
+			}
+			/*//////////////////////
+			FINISH MAPPING EACH FACE TO A COLOR 
+			*//////////////////////
+
+			that.Obj.add(cube.Obj)
+
+			return cube
 		}
 		else
 		{
@@ -58,19 +96,19 @@ function PolyCube(position, name = ""){
 	//Set the x-axis of the origin of this polycube
 	this.Set_PosX = function(x){
 		_lattice_position.x = Math.floor(x)
-		that.obj.position.x = LatticeToRealXZ(x)
+		that.Obj.position.x = LatticeToRealXZ(x)
 	}
 
 	//Set the y-axis of the origin of this polycube
 	this.Set_PosY = function(y){
 		_lattice_position.y = Math.floor(y)
-		that.obj.position.y = LatticeToRealY(y)
+		that.Obj.position.y = LatticeToRealY(y)
 	}
 
 	//Set the z-axis of the origin of this polycube
 	this.Set_PosZ = function(z){
 		_lattice_position.z = Math.floor(z)
-		that.obj.position.z = LatticeToRealXZ(z)
+		that.Obj.position.z = LatticeToRealXZ(z)
 	}
 
 	//Return the list of cubes in the polycube
@@ -115,7 +153,7 @@ function PolyCube(position, name = ""){
 	//In this code, cube3 will be called cube_2, and cube1 would just be called cube.
 	var CheckAndSetAdjacentWithDiagonal = function(cube, dir1, dir2)
 	{
-		var cube_2 = L_Cubes[PosToKey(SumOfVectors([PolyCube.key_to_dir[dir1], PolyCube.key_to_dir[dir2], cube.lattice_position]))]
+		var cube_2 = L_Cubes[PosToKey(SumOfVectors([PolyCube.key_to_dir[dir1], PolyCube.key_to_dir[dir2], cube.GetLatticePosition()]))]
 
 		if(ObjectExists(cube_2))
 		{
@@ -148,10 +186,20 @@ function PolyCube(position, name = ""){
 	}
 
 	//This is a utility function for removing a face from both a cube and the face dual graph
-	var HandleFaceRemoval = function(cube, dir)
-	{
-		AdjacencyGraph.RemoveFace(PolyCube.CubeFaceString(cube, dir))
+	var HandleFaceRemoval = function(cube, dir){
+
+		var facename = PolyCube.CubeFaceString(cube, dir)
+
+		AdjacencyGraph.RemoveFace(facename)
 		cube.RemoveFace(dir)
+
+		var color = FaceName2Color_Map[facename]
+
+		if(ObjectExists(color))
+		{
+			delete FaceName2Color_Map[facename]
+			delete ColorHex2Face_Map[color.getHexString()]
+		}
 	}
 
 	//Utility function for converting the lattice position of a cube to a key to look up in L_Cubes
@@ -180,6 +228,18 @@ PolyCube.key_to_dir = {
 	"back": new THREE.Vector3(0, 0, -1),
 }
 
+PolyCube.SwitchMode = {
+	"face" : function(){
+		if(ObjectExists(PolyCube.Active_PolyCube))
+			return PolyCube.Active_Polycube.face_picking_scene}, 
+	"hinge": function(){
+		if(ObjectExists(PolyCube.Active_PolyCube))
+			return PolyCube.Active_Polycube.hinge_picking_scene}, 
+	"cube" : function(){
+		if(ObjectExists(PolyCube.Active_PolyCube))
+			return PolyCube.Active_Polycube.cube_picking_scene}
+	}
+
 //A static utility function for taking a cube id and the label of a face on that cube and turning it into an id for usage in the dual graph
 PolyCube.CubeFaceString = function(cube, dir)
 {
@@ -197,87 +257,11 @@ PolyCube.GenerateNewPolyCube = function(position, name)
 	var new_pcube = new PolyCube(position, name)
 	PolyCube.L_Polycubes[name] = new_pcube
 
-	var object_data_space = $("#object_template").clone()
-
-	var id_string = new_pcube.name + "_data"
-
-	$(object_data_space).attr("id", id_string)
-
-	$(object_data_space).find("#active_toggle").text(new_pcube.name)
-
-	$(object_data_space).find("#poly_obj_name_edit").val(new_pcube.name)
-	$(object_data_space).find("#poly_obj_x_edit").val($("#add_poly_modal_x").val())
-	$(object_data_space).find("#poly_obj_y_edit").val($("#add_poly_modal_y").val())
-	$(object_data_space).find("#poly_obj_z_edit").val($("#add_poly_modal_z").val())
-
-	$(object_data_space).find("#objName_data_edit").attr("id", id_string+"_edit")
-
-	$(object_data_space).show()
-
-	$("#object_data_list").append(object_data_space)
-
-	//Set up what happens when you click the button that triggers this polycube's active state
-	//The button that I'm talking about would be found in the dropdown that shows all polycube data
-	$(object_data_space).find("#active_toggle").click(function(){
-			var thingy = $("#"+$(this).text() + "_data_edit")
-
-			if($(thingy).is(":visible"))
-			{
-				$(thingy).hide()
-				$(this).attr("class", "w3-button w3-black w3-right obj_data_trigger")
-				PolyCube.SwitchToNewActive(null)
-			}
-			else
-			{
-				$(".obj_data_edit").hide()
-				$(".obj_data_trigger").attr("class", "w3-button w3-black w3-right obj_data_trigger")
-				$(thingy).show()
-				$(this).attr("class", "w3-button w3-white w3-right obj_data_trigger")
-				PolyCube.SwitchToNewActive(PolyCube.L_Polycubes[$(this).text()])
-			}
-		})
-
-	//Set up what happens when somebody changes the polycube's name
-	//It changes name property of the actual polycube object, the key that maps to it in the list of polycubes.
-	//It also changes the text found on its active toggle button, and the id's of its respective div in the DOM
-	$(object_data_space).find("#poly_obj_name_edit").blur(function(){
-		var old_name = $(this).parent().parent().find("button").text()
-		var new_name = $(this).val()
-
-		if(old_name != new_name)
-		{
-			PolyCube.ChangeName(old_name, new_name)
-			$(this).parent().parent().find("#active_toggle").text(new_name)
-
-			$(this).parent().attr("id", new_name+"_data_edit")
-			$(this).parent().parent().attr("id", new_name+"_data")
-		}
-	})
-
-	//Set up what happens when the field containing the polycube's x-coordinate is changed
-	$(object_data_space).find("#poly_obj_x_edit").blur(function(){
-		var name = $(this).parent().parent().find("#active_toggle").text()
-
-		PolyCube.Active_Polycube.Set_PosX(parseInt($(this).val()))
-	})
-
-	//Set up what happens when the field containing the polycube's y-coordinate is changed
-	$(object_data_space).find("#poly_obj_y_edit").blur(function(){
-		var name = $(this).parent().parent().find("#active_toggle").text()
-
-		PolyCube.Active_Polycube.Set_PosY(parseInt($(this).val()))
-	})
-
-	//Set up what happens when the field containing the polycube's z-coordinate is changed
-	$(object_data_space).find("#poly_obj_z_edit").blur(function(){
-		var name = $(this).parent().parent().find("#active_toggle").text()
-
-		PolyCube.Active_Polycube.Set_PosZ(parseInt($(this).val()))
-	})
-
 
 	PolyCube.ID++
 	PolyCube.SwitchToNewActive(new_pcube)
+
+	return new_pcube
 }
 
 PolyCube.ChangeName = function(old_name, new_name)

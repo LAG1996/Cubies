@@ -1,28 +1,26 @@
-function Cube(scene, lattice_position, polycube, material = new THREE.MeshBasicMaterial({color:0x0000FF})){
+function Cube(latt_pos, polycube, material = new THREE.MeshBasicMaterial({color:0x0000FF})){
 		this.ID = Object.keys(polycube.Get_Cubes()).length
 		this.Polycube = polycube
 
 		this.faceMaterial = material
 		this.hingeMaterial = material
-		this.scene = scene
-
-		this.lattice_position = lattice_position
 
 		this.Obj = Cube.new_cube.clone()
 		this.Obj.name = "Cube_" + this.ID
-		this.Obj.position.copy(LatticeToReal(this.lattice_position))
+		this.Obj.position.copy(LatticeToReal(latt_pos))
 
-		this.missing_face = {"front" : false, "back" : false, "left" : false, "right" : false, "up" : false, "down" : false}
+		var missing_face = {"front" : false, "back" : false, "left" : false, "right" : false, "up" : false, "down" : false}
+		var lattice_position = latt_pos
 
 		this.RemoveFace = function(name)
 		{
-			if(!this.missing_face[name])
+			if(!missing_face[name])
 			{
 				var face = this.Obj.getObjectByName(name)
 				this.Obj.remove(face)
 				delete face
 
-				this.missing_face[name] = true
+				missing_face[name] = true
 			}
 		}
 
@@ -30,12 +28,23 @@ function Cube(scene, lattice_position, polycube, material = new THREE.MeshBasicM
 		{
 			for(var names in this.missing_face)
 			{
-				if(this.missing_face[names])
+				if(missing_face[names])
 				{
 					this.Obj.add(Cube.new_cube.getObjectByName(names).clone())
-					this.missing_face[names] = false
+					missing_face[names] = false
 				}
 			}
+		}
+
+		this.MoveTo = function(position)
+		{
+			this.Obj.position.copy(position)
+			lattice_position.copy(position)
+		}
+
+		this.GetLatticePosition = function()
+		{
+			return lattice_position
 		}
 
 		this.ToIDString = function()
