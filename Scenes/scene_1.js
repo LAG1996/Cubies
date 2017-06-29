@@ -12,4 +12,10 @@ $(document).ready(function(){
 	toolbarHandler.Switch_Context_H('poly-view')
 
 	scene_handler.RequestAddToScene(gridHelper)
+
+	scene_handler.SetEvent('mousedown', 'canvas', function(){HandlePick()})
 })
+
+function HandlePick() {
+	scene_handler.Pick()
+}

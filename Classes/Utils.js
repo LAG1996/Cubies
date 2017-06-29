@@ -51,7 +51,10 @@ function WorldToPolycube(coord, polycoord)
 
 function ObjectExists(obj)
 {
-	return (typeof(obj) != 'null' && typeof(obj) != 'undefined')
+	if(obj)
+		return true
+	else
+		return false
 }
 
 function SumOfVectors(l_vectors)

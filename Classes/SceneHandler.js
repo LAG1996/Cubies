@@ -2,11 +2,11 @@ function SceneHandler(){
 	var WIDTH, HEIGHT, INIT, CLOCK, CAMERA
 	var container, renderer, picking_texture
 
-
 	var defaultScene
 	var defaultPickingScene
 	var active_scene
 	var active_picking_scene
+	var mouse_pos = new THREE.Vector2()
 
 	var VIEW_ANGLE, ASPECT, NEAR, FAR, CAMERA, cam_cam
 
@@ -26,13 +26,17 @@ function SceneHandler(){
 	this.RequestAddToScene = function(object){
 		if(object.isObject3D && ObjectExists(object)){
 			defaultScene.add(object)
+			return true
 		}
+		return false
 	}
 
 	this.RequestAddToPickingScene = function(object){
 		if(object.isObject3D && ObjectExists(object)){
 			defaultPickingScene.add(object)
+			return true
 		}
+		return false
 	}
 
 	this.RequestSwitchToScene = function(scene)
@@ -40,20 +44,41 @@ function SceneHandler(){
 		if(ObjectExists(scene))
 		{
 			active_scene = scene
+			return true
 		}
+		return false
 	}
 
 	this.RequestSwitchToPickingScene = function(scene)
 	{
 		if(ObjectExists(scene))
 		{
-			active_scene = scene
+			active_picking_scene = scene
+			return true
 		}
+
+		return false
+	}
+
+	this.SwitchToDefaultScene = function()
+	{
+		active_scene = defaultScene
+	}
+
+	this.SwitchToDefaultPickingScene = function()
+	{
+		active_picking_scene = defaultPickingScene
 	}
 
 
 	this.SetEvent = function(eventtype, element, func){
 		$(element).on(eventtype, func)
+	}
+
+	this.Pick = function(){
+		renderer.render(active_picking_scene, CAMERA, picking_texture)
+
+		return GetPixelColor()
 	}
 
 	function initScene(){
@@ -105,21 +130,38 @@ function SceneHandler(){
 
 		//Events
 		$(window).on('resize', onWindowResize)
-		console.log($(window))
+
+		$('canvas').on('mousemove', onMouseMove)
 	}
 
 	function onWindowResize(){
-		cam_cam.camera.aspect = window.innerWidth/ window.innerHeight
-		cam_cam.camera.updateProjectionMatrix()
+		CAMERA.aspect = window.innerWidth/ window.innerHeight
+		CAMERA.updateProjectionMatrix()
 
 		renderer.setSize(window.innerWidth, window.innerHeight)
 		picking_texture.setSize(window.innerWidth, window.innerHeight)
 	}
 
+	function onMouseMove(event){
+		mouse_pos.x = event.clientX
+		mouse_pos.y = event.clientY
+	}
+
 	function update() {
 		deltaTime = CLOCK.getDelta();
-		renderer.render(active_picking_scene, CAMERA, picking_texture)
 		renderer.render(active_scene, CAMERA)
 		requestAnimationFrame(update)
+	}
+
+	//Uses a simple color buffer draw trick to decide where the client is clicking
+	function GetPixelColor(){
+		var pixelBuffer = new Uint8Array(4)
+
+		renderer.readRenderTargetPixels(picking_texture, mouse_pos.x, 
+			picking_texture.height - mouse_pos.y, 1, 1, pixelBuffer)
+
+		var id = (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | (pixelBuffer[2])
+
+		return id
 	}
 }

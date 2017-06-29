@@ -1,4 +1,5 @@
 function PolyCube(position, name = ""){
+	this.id = PolyCube.ID
 	this.name = name
 	this.scale = 1
 	this.Obj = new THREE.Group()
@@ -6,18 +7,34 @@ function PolyCube(position, name = ""){
 
 	this.Obj.position.copy(LatticeToReal(position))
 	this.Obj.add(this.trans_helper)
+	this.picking_polycube = this.Obj.clone()
+	var face_picking_polycube = this.Obj.clone()
+	var hinge_picking_polycube = this.Obj.clone()
+	var cube_picking_polycube = this.Obj.clone()
+	var new_cube_picking_polycube = this.Obj.clone()
 
 	this.face_picking_scene = new THREE.Scene()
+	this.face_picking_scene.add(face_picking_polycube)
+
 	this.hinge_picking_scene = new THREE.Scene()
+	this.hinge_picking_scene.add(hinge_picking_polycube)
+
 	this.cube_picking_scene = new THREE.Scene()
+	this.cube_picking_scene.add(cube_picking_polycube)
+
+	this.new_cube_picking_scene = new THREE.Scene()
+	this.new_cube_picking_scene.add(new_cube_picking_polycube)
 
 	var AdjacencyGraph = new FaceEdgeDualGraph()
 	var _lattice_position = position
 	var L_Cubes = []
+	var L_CubeNames = []
 	var ColorHex2Face_Map = []
-	var FaceName2Color_Map = []
+	var FaceName2ColorHex_Map = []
 	var Hinge_Color_Map = []
 	var Cube_Color_Map = []
+
+	var amt_new_cube_spots = 0
 
 	var that = this
 
@@ -57,33 +74,24 @@ function PolyCube(position, name = ""){
 			/*////////////////////
 			START MAPPING EACH FACE TO A COLOR
 			*////////////////////
-			for(var key in PolyCube.key_to_dir)
-			{
-				var face = cube.Obj.getObjectByName(key)
-				if(ObjectExists(face))
-				{
-					var color = new THREE.Color().setHex(PolyCube.CalculateFaceID(key, cube))
-					console.log("The color of " + PolyCube.CubeFaceString(cube, key) + " is " + color.getHexString())
-					ColorHex2Face_Map[color.getHexString()] = face
-					FaceName2Color_Map[PolyCube.CubeFaceString(cube, key)] = color
+			//The cube automatically has the faces of the picking cube colored
+			face_picking_polycube.add(cube.face_picking_cube)
+			//Adding to the cube picking scene would also be trivial because the cube automatically has its color stored as well
+			cube_picking_polycube.add(cube.cube_picking_cube)
+			//Adding to the new cube picking scene would just
 
-					var color_face = face.clone()
-					var face_mat = new THREE.MeshBasicMaterial({'color' : color.getHex()})
-					for(meshID = 0; childID < color_face.children.length; i++)
-					{
-						var mesh = color_face.children[childID]
-						mesh.material = face_mat
-					}
+			var new_cube_placeholder = Cube.cube_placeholder.clone()
+			new_cube_placeholder.position.copy(cube)
+			new_cube_placeholder.material = new THREE.MeshBasicMaterial({'color' : amt_new_cube_spots})
+			new_cube_picking_polycube.add(new_cube_placeholder)
 
-					that.face_picking_scene.add(color_face)
-				}
-				
-			}
+
 			/*//////////////////////
 			FINISH MAPPING EACH FACE TO A COLOR 
 			*//////////////////////
 
 			that.Obj.add(cube.Obj)
+			this.picking_polycube.add(cube.polycube_picking_cube)
 
 			return cube
 		}
@@ -193,12 +201,12 @@ function PolyCube(position, name = ""){
 		AdjacencyGraph.RemoveFace(facename)
 		cube.RemoveFace(dir)
 
-		var color = FaceName2Color_Map[facename]
+		var colorHexString = FaceName2ColorHex_Map[facename]
 
-		if(ObjectExists(color))
+		if(ObjectExists(colorHexString))
 		{
-			delete FaceName2Color_Map[facename]
-			delete ColorHex2Face_Map[color.getHexString()]
+			delete FaceName2ColorHex_Map[facename]
+			delete ColorHex2Face_Map[colorHexString]
 		}
 	}
 

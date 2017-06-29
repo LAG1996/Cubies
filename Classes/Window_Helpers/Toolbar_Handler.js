@@ -232,7 +232,9 @@ function Toolbar_Handler(){
 
 				PolyCube.Active_Polycube.Set_PosZ(parseInt($(this).val()))
 			})
+
 			scene_handler.RequestAddToScene(p_cube.Obj)
+			scene_handler.RequestAddToPickingScene(p_cube.picking_polycube)
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 		})
 
