@@ -32,7 +32,6 @@ function FaceEdgeDualGraph(){
 
 		new_face_1["currneighbors"][name_2] = new_face_2
 		new_face_2["currneighbors"][name_1] = new_face_1
-
 	}
 
 	this.RemoveFace = function(name){

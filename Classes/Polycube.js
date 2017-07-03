@@ -4,33 +4,31 @@ function PolyCube(position, name = ""){
 	this.scale = 1
 	this.Obj = new THREE.Group()
 	this.trans_helper = new THREE.AxisHelper(4)
+	this.pick_context = null
+	this.context_name = ''
 
 	this.Obj.position.copy(LatticeToReal(position))
 	this.Obj.add(this.trans_helper)
 	this.picking_polycube = this.Obj.clone()
+
+	var contexts = {'face': new THREE.Scene(), 'hinge' : new THREE.Scene(), 'cube' : new THREE.Scene(), 'new_cube' : new THREE.Scene()}
+
 	var face_picking_polycube = this.Obj.clone()
 	var hinge_picking_polycube = this.Obj.clone()
 	var cube_picking_polycube = this.Obj.clone()
 	var new_cube_picking_polycube = this.Obj.clone()
 
-	this.face_picking_scene = new THREE.Scene()
-	this.face_picking_scene.add(face_picking_polycube)
-
-	this.hinge_picking_scene = new THREE.Scene()
-	this.hinge_picking_scene.add(hinge_picking_polycube)
-
-	this.cube_picking_scene = new THREE.Scene()
-	this.cube_picking_scene.add(cube_picking_polycube)
-
-	this.new_cube_picking_scene = new THREE.Scene()
-	this.new_cube_picking_scene.add(new_cube_picking_polycube)
+	contexts['face'].add(face_picking_polycube)
+	contexts['hinge'].add(hinge_picking_polycube)
+	contexts['cube'].add(cube_picking_polycube)
+	contexts['new_cube'].add(new_cube_picking_polycube)
 
 	var AdjacencyGraph = new FaceEdgeDualGraph()
 	var _lattice_position = position
 	var L_Cubes = []
 	var L_CubeNames = []
-	var ColorHex2Face_Map = []
-	var FaceName2ColorHex_Map = []
+	var Color2Face_Map = []
+	var FaceName2Color_Map = []
 	var Hinge_Color_Map = []
 	var Cube_Color_Map = []
 
@@ -48,6 +46,13 @@ function PolyCube(position, name = ""){
 			L_Cubes[key] = cube
 			latt_pos = cube.GetLatticePosition()
 
+			//Rename all faces
+			for(faceNum = 0; faceNum < cube.Obj.children.length; faceNum++)
+			{
+				var face = cube.Obj.children[faceNum]
+				face.name = PolyCube.CubeFaceString(cube.ID, face.name)
+			}
+
 			//Cube faces have adjacency with each other, so let's set this first
 			SetAdjacentFacesWithSelf(cube)
 
@@ -62,7 +67,7 @@ function PolyCube(position, name = ""){
 				if(ObjectExists(cube_2))
 				{
 					console.log("Adjacency with " + key)
-					HandleFaceRemoval(cube, key)
+					HandleFaceRemoval(cube, PolyCube.CubeFaceString(cube.ID, key))
 					HandleFaceRemoval(cube_2, PolyCube.dir_to_opp[key])
 					SetAdjacentFaces(cube, cube_2, key)
 				}
@@ -76,21 +81,25 @@ function PolyCube(position, name = ""){
 			*////////////////////
 			//The cube automatically has the faces of the picking cube colored
 			face_picking_polycube.add(cube.face_picking_cube)
+			for(var dir in cube.faceColors)
+			{
+				var face = cube.Obj.getObjectByName(PolyCube.CubeFaceString(cube.ID, dir))
+
+				if(ObjectExists(face))
+				{
+					Color2Face_Map[cube.faceColors[dir]] = face
+				}
+			}
 			//Adding to the cube picking scene would also be trivial because the cube automatically has its color stored as well
 			cube_picking_polycube.add(cube.cube_picking_cube)
 			//Adding to the new cube picking scene would just
-
-			var new_cube_placeholder = Cube.cube_placeholder.clone()
-			new_cube_placeholder.position.copy(cube)
-			new_cube_placeholder.material = new THREE.MeshBasicMaterial({'color' : amt_new_cube_spots})
-			new_cube_picking_polycube.add(new_cube_placeholder)
 
 
 			/*//////////////////////
 			FINISH MAPPING EACH FACE TO A COLOR 
 			*//////////////////////
 
-			that.Obj.add(cube.Obj)
+			this.Obj.add(cube.Obj)
 			this.picking_polycube.add(cube.polycube_picking_cube)
 
 			return cube
@@ -104,19 +113,31 @@ function PolyCube(position, name = ""){
 	//Set the x-axis of the origin of this polycube
 	this.Set_PosX = function(x){
 		_lattice_position.x = Math.floor(x)
-		that.Obj.position.x = LatticeToRealXZ(x)
+		this.Obj.position.x = LatticeToRealXZ(x)
+		face_picking_polycube.x = this.Obj.position.x
+		hinge_picking_polycube.x = this.Obj.position.x
+		cube_picking_polycube.x = this.Obj.position.x
+		new_cube_picking_polycube.x = this.Obj.position.x
 	}
 
 	//Set the y-axis of the origin of this polycube
 	this.Set_PosY = function(y){
 		_lattice_position.y = Math.floor(y)
 		that.Obj.position.y = LatticeToRealY(y)
+		face_picking_polycube.y = this.Obj.position.y
+		hinge_picking_polycube.y = this.Obj.position.y
+		cube_picking_polycube.y = this.Obj.position.y
+		new_cube_picking_polycube.y = this.Obj.position.y
 	}
 
 	//Set the z-axis of the origin of this polycube
 	this.Set_PosZ = function(z){
 		_lattice_position.z = Math.floor(z)
 		that.Obj.position.z = LatticeToRealXZ(z)
+		face_picking_polycube.z = this.Obj.position.z
+		hinge_picking_polycube.z = this.Obj.position.z
+		cube_picking_polycube.z = this.Obj.position.z
+		new_cube_picking_polycube.z = this.Obj.position.z
 	}
 
 	//Return the list of cubes in the polycube
@@ -124,7 +145,30 @@ function PolyCube(position, name = ""){
 		return L_Cubes
 	}
 
-	//Let cube1 be the cube we are addding to the polycube, and cube2 be a cube adjacent to cube1. Then dir is the Vector3 representing the direction from
+	this.SwitchToContext = function(context_name){
+		if(ObjectExists(contexts[context_name]))
+		{
+			this.pick_context = contexts[context_name]
+			this.context_name = context_name
+		}
+	}
+
+	this.HandlePick = function(id){
+		if(this.context_name == 'face')
+		{
+			var face = Color2Face_Map[id]
+
+			console.log(face.name)
+		}
+		else
+		{
+			return false
+		}
+
+		return true
+	}
+
+	//Let cube1 be the cube we are adding to the polycube, and cube2 be a cube adjacent to cube1. Then dir is the Vector3 representing the direction from
 	//cube1 to cube2. For each face that is not facing the same or opposite direction to dir, check if each cube has the corresponding face.
 	//If so, then the respective faces of each cube are adjacent.
 	//If not, then there are two possibilities:
@@ -138,13 +182,13 @@ function PolyCube(position, name = ""){
 			var dir2 = PolyCube.dir_keys[i]
 			if(dir2 != dir && dir2 != PolyCube.dir_to_opp[dir])
 			{
-				var face_1 = cube_1.Obj.getObjectByName(dir2)
-				var face_2 = cube_2.Obj.getObjectByName(dir2)
+				var face_1 = cube_1.Obj.getObjectByName(PolyCube.CubeFaceString(cube_1.ID, dir2))
+				var face_2 = cube_2.Obj.getObjectByName(PolyCube.CubeFaceString(cube_2.ID, dir2))
 
 				if(ObjectExists(face_1) && ObjectExists(face_2))
 				{
-					AdjacencyGraph.AddNeighboringFaces(PolyCube.CubeFaceString(cube_1, dir2), face_1,
-					PolyCube.CubeFaceString(cube_2, dir2), face_2)
+					AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1,
+					face_2.name, face_2)
 				}
 				else
 				{
@@ -165,12 +209,12 @@ function PolyCube(position, name = ""){
 
 		if(ObjectExists(cube_2))
 		{
-			var face_1 = cube.Obj.getObjectByName(dir2)
-			var face_2 = cube_2.Obj.getObjectByName(PolyCube.dir_to_opp[dir1])
+			var face_1 = cube.Obj.getObjectByName(PolyCube.CubeFaceString(cube.ID, dir2))
+			var face_2 = cube_2.Obj.getObjectByName(PolyCube.CubeFaceString(cube_2.ID, PolyCube.dir_to_opp[dir1]))
 
 			if(ObjectExists(face_1) && ObjectExists(face_2))
 			{
-				AdjacencyGraph.AddNeighboringFaces(PolyCube.CubeFaceString(cube, dir2), face_1, PolyCube.CubeFaceString(cube_2, PolyCube.dir_to_opp[dir1]), face_2)
+				AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1, face_2.name, face_2)
 			}
 		}
 	}
@@ -186,8 +230,10 @@ function PolyCube(position, name = ""){
 					d2 = PolyCube.dir_keys[k]
 					if(d1 != d2 && PolyCube.dir_to_opp[d1] != d2)
 					{
-						AdjacencyGraph.AddNeighboringFaces(PolyCube.CubeFaceString(cube, d1), cube.Obj.getObjectByName(d1), 
-							PolyCube.CubeFaceString(cube, d2), cube.Obj.getObjectByName(d2))
+						var face_1 = cube.Obj.getObjectByName(PolyCube.CubeFaceString(cube.ID, d1))
+						var face_2 = cube.Obj.getObjectByName(PolyCube.CubeFaceString(cube.ID, d2))
+						AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1, 
+							face_2.name, face_2)
 					}
 				}
 			}
@@ -196,17 +242,17 @@ function PolyCube(position, name = ""){
 	//This is a utility function for removing a face from both a cube and the face dual graph
 	var HandleFaceRemoval = function(cube, dir){
 
-		var facename = PolyCube.CubeFaceString(cube, dir)
+		var facename = PolyCube.CubeFaceString(cube.ID, dir)
 
 		AdjacencyGraph.RemoveFace(facename)
-		cube.RemoveFace(dir)
+		cube.RemoveFace(facename)
 
-		var colorHexString = FaceName2ColorHex_Map[facename]
+		var color = FaceName2Color_Map[facename]
 
-		if(ObjectExists(colorHexString))
+		if(ObjectExists(color))
 		{
-			delete FaceName2ColorHex_Map[facename]
-			delete ColorHex2Face_Map[colorHexString]
+			delete FaceName2Color_Map[facename]
+			delete Color2Face_Map[color]
 		}
 	}
 
@@ -215,12 +261,16 @@ function PolyCube(position, name = ""){
 		return position.x+","+position.y+","+position.z
 	}
 
+
+	this.SwitchToContext('face')
+
 }
 
 PolyCube.ID = 0
 PolyCube.name_being_changed = ""
 PolyCube.Active_Polycube = null
 PolyCube.L_Polycubes = []
+PolyCube.ID2Poly = []
 
 //The keys that we use to both denote directions from cube to cube and the labeling of each face in the cube
 PolyCube.dir_keys = ["up", "down", "right", "left", "front", "back"]
@@ -236,22 +286,10 @@ PolyCube.key_to_dir = {
 	"back": new THREE.Vector3(0, 0, -1),
 }
 
-PolyCube.SwitchMode = {
-	"face" : function(){
-		if(ObjectExists(PolyCube.Active_PolyCube))
-			return PolyCube.Active_Polycube.face_picking_scene}, 
-	"hinge": function(){
-		if(ObjectExists(PolyCube.Active_PolyCube))
-			return PolyCube.Active_Polycube.hinge_picking_scene}, 
-	"cube" : function(){
-		if(ObjectExists(PolyCube.Active_PolyCube))
-			return PolyCube.Active_Polycube.cube_picking_scene}
-	}
-
 //A static utility function for taking a cube id and the label of a face on that cube and turning it into an id for usage in the dual graph
-PolyCube.CubeFaceString = function(cube, dir)
+PolyCube.CubeFaceString = function(cubeID, dir)
 {
-	return cube.ToIDString() + dir
+	return "c" + cubeID + dir
 }
 
 //A static utility function for generating a new polycube object.
@@ -264,6 +302,7 @@ PolyCube.GenerateNewPolyCube = function(position, name)
 {
 	var new_pcube = new PolyCube(position, name)
 	PolyCube.L_Polycubes[name] = new_pcube
+	PolyCube.ID2Poly[new_pcube.id] = new_pcube
 
 
 	PolyCube.ID++
@@ -302,9 +341,4 @@ PolyCube.SwitchToNewActive = function(new_active)
 PolyCube.CalculateFaceID = function(facename, cube)
 {
 	return PolyCube.dir_keys.indexOf(facename) + cube.ID + cube.ID*18
-}
-
-PolyCube.CalculateHingeID = function(cube)
-{
-	
 }

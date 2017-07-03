@@ -70,14 +70,12 @@ function SceneHandler(){
 		active_picking_scene = defaultPickingScene
 	}
 
-
-	this.SetEvent = function(eventtype, element, func){
-		$(element).on(eventtype, func)
+	this.GetMousePos = function(){
+		return mouse_pos
 	}
 
 	this.Pick = function(){
 		renderer.render(active_picking_scene, CAMERA, picking_texture)
-
 		return GetPixelColor()
 	}
 
@@ -107,6 +105,8 @@ function SceneHandler(){
 		renderer.setSize(WIDTH, HEIGHT)
 		renderer.domElement.id = 'canvas'
 		renderer.setClearColor(0xFFFFE6, 1)
+		renderer.setPixelRatio(window.devicePixelRatio)
+		renderer.sortObjects = false
 
 		container.append(renderer.domElement)
 
@@ -139,6 +139,7 @@ function SceneHandler(){
 		CAMERA.updateProjectionMatrix()
 
 		renderer.setSize(window.innerWidth, window.innerHeight)
+		renderer.setPixelRatio(window.devicePixelRatio)
 		picking_texture.setSize(window.innerWidth, window.innerHeight)
 	}
 

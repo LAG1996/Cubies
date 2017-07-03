@@ -3,7 +3,7 @@ function Toolbar_Handler(){
 	var buttons = []
 	var mode_text = ''
 
-	var amt_buttons_for_context = {"camera-control" : 2, "poly-view" : 2 }
+	var amt_buttons_for_context = {"camera-control" : 2, "world-context" : 1, "poly-context" : 3 }
 
 	//Initialize the sidebars
 	Init_Modals()
@@ -11,8 +11,8 @@ function Toolbar_Handler(){
 
 	var that = this
 
-	this.Switch_Context_H = function(mode){
-		if(that.mode_h == mode)
+	this.Switch_Context_H = function(mode, polycube = null){
+		if(this.mode_h == mode && this.mode_h != 'poly-context')
 		{
 			return
 		}
@@ -25,8 +25,15 @@ function Toolbar_Handler(){
 
 			if(mode == 'camera-control')
 				_Switch_To_Camera_Mode(amt_buttons_for_context[mode])
-			else if(mode == 'poly-view')
-				_Switch_To_Polycube_Mode(amt_buttons_for_context[mode])
+			else if(mode == 'world-context')
+				_Switch_To_World_Context(amt_buttons_for_context[mode])
+			else if(mode == 'poly-context')
+			{
+				if(ObjectExists(polycube))
+					_Switch_To_Polycube_Context(amt_buttons_for_context[mode], polycube)
+				else
+					_Switch_To_World_Context(amt_buttons_for_context['world-context'])
+			}
 
 			for(i = 0; i < buttons.length; i++)
 			{	
@@ -91,7 +98,7 @@ function Toolbar_Handler(){
 		mode_text = "Camera Control"
 	}
 
-	function _Switch_To_Polycube_Mode(amt_btns){
+	function _Switch_To_World_Context(amt_btns){
 		for(i = 0; i < amt_btns; i++)
 		{
 			buttons[i] = document.createElement("button")
@@ -103,23 +110,41 @@ function Toolbar_Handler(){
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 			$("#add_poly_modal").show()})
 
+		mode_text = "World View"
+	}
+
+	function _Switch_To_Polycube_Context(amt_btns, polycube){
+		for(i = 0; i < amt_btns; i++)
+		{
+			buttons[i] = document.createElement("button")
+		}
 		//Add a button for adding cubes to the active polycube (selected by the user)
-		$(buttons[1]).text("Add Cube")
-		$(buttons[1]).click(function(){
+		$(buttons[0]).text("Add Cube")
+		$(buttons[0]).click(function(){
 			if(PolyCube.Active_Polycube != null)
 			{
 				//TODO: Make these console logs actual alerts on the screen
-				console.log("Adding cube to active polycube")
 				$("#add_cube_to_poly_modal").show()
-			}
-			else
-			{
-				//TODO: Make these console logs actual alerts on the screen
-				console.log("No active polycube")
 			}
 		})
 
-		mode_text = "Edit Polycube"
+		$(buttons[1]).text("Face Context")
+		$(buttons[1]).click(function(){
+			if(PolyCube.Active_Polycube != null)
+			{
+				PolyCube.Active_Polycube.SwitchToContext('face')
+			}
+		})
+
+		$(buttons[2]).text("Hinge Context")
+		{
+			if(PolyCube.Active_Polycube != null)
+			{
+				PolyCube.Active_Polycube.SwitchToContext('hinge')
+			}
+		}
+
+		mode_text = "Edit " + polycube.name
 	}
 
 	function Init_Sidebars()
@@ -131,7 +156,7 @@ function Toolbar_Handler(){
 			_Toggle_Object_L()
 		})
 		//Set the function for the left sidebar buttons
-		$("#s_polyview").click(function(){that.Switch_Context_H("poly-view")})
+		$("#s_worldview").click(function(){that.Switch_Context_H("world-context")})
 		$("#s_camera_control").click(function(){that.Switch_Context_H("camera-control")})
 
 		//Hide DOM templates
@@ -184,6 +209,7 @@ function Toolbar_Handler(){
 						$(thingy).hide()
 						$(this).attr("class", "w3-button w3-black w3-right obj_data_trigger")
 						PolyCube.SwitchToNewActive(null)
+						that.Switch_Context_H('world-context')
 					}
 					else
 					{
@@ -192,6 +218,7 @@ function Toolbar_Handler(){
 						$(thingy).show()
 						$(this).attr("class", "w3-button w3-white w3-right obj_data_trigger")
 						PolyCube.SwitchToNewActive(PolyCube.L_Polycubes[$(this).text()])
+						that.Switch_Context_H('poly-context', PolyCube.Active_Polycube)
 					}
 				})
 
@@ -236,6 +263,7 @@ function Toolbar_Handler(){
 			scene_handler.RequestAddToScene(p_cube.Obj)
 			scene_handler.RequestAddToPickingScene(p_cube.picking_polycube)
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
+			that.Switch_Context_H('poly-context', p_cube)
 		})
 
 		//The add_cube_to_poly_modal handles setting the cube's coordinates in relation to the polycube's origin

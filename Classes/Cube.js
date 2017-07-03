@@ -3,7 +3,7 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 		this.Polycube = polycube
 
 		this.Obj = Cube.new_cube.clone()
-		this.Obj.name = "Cube_" + this.ID
+		this.Obj.name = this.ID
 		this.Obj.position.copy(LatticeToReal(latt_pos))
 		
 		this.polycube_picking_cube = null
@@ -11,6 +11,8 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 		this.cube_picking_cube = null
 
 		this.setupPickingCube = setupPickingCube
+
+		this.faceColors = {"front" : null, "back" : null, "left" : null, "right" : null, "up" : null, "down" : null}
 
 		var missing_face = {"front" : false, "back" : false, "left" : false, "right" : false, "up" : false, "down" : false}
 		var lattice_position = latt_pos
@@ -102,6 +104,7 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 			{
 				var color = that.ID + faceNum + that.ID*18
 				var face = that.face_picking_cube.children[faceNum]
+				that.faceColors[face.name] = color
 
 				for(meshNum = 0; meshNum < face.children.length; meshNum++)
 				{
@@ -131,7 +134,6 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 }
 
 Cube.new_cube = new THREE.Group()
-Cube.cube_placeholder = null
 Cube.face = null
 Cube.hinge = null
 
@@ -169,8 +171,6 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	var left_hinge = Cube.hinge.clone()
 	left_hinge.position.x -= 1
 	left_hinge.name = "hinge"
-
-	var picking_geom = new THREE.BufferGeometry()
 
 	for(i = 0; i < 6; i++)
 	{
@@ -211,15 +211,8 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 			new_face.rotateY(ninety_deg)
 		}
 
-		for(k = 0; k < new_face.children.length; k++)
-		{
-			picking_geom.merge(new_face.children[k].geometry)
-		}
-
 		Cube.new_cube.add(new_face)
 	}
-
-	Cube.cube_placeholder = new THREE.Mesh(picking_geom)
 
 	Cube.new_cube.scale.set(0.9, 0.9, 0.9)
 }
