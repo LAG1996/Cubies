@@ -1,4 +1,8 @@
 function SceneHandler(){
+
+	var viewportOffset_x
+	var viewportOffset_y
+
 	var WIDTH, HEIGHT, INIT, CLOCK, CAMERA
 	var container, renderer, picking_texture
 
@@ -79,6 +83,15 @@ function SceneHandler(){
 		return GetPixelColor()
 	}
 
+
+	this.SetViewportOffset = function(x, y){
+		viewportOffset_x = x
+		viewportOffset_y = y
+
+		picking_texture.setSize(window.innerWidth + viewportOffset_x, window.innerHeight + viewportOffset_y)
+	}
+
+
 	function initScene(){
 		WIDTH = window.innerWidth;
 		HEIGHT = window.innerHeight;
@@ -106,7 +119,7 @@ function SceneHandler(){
 		renderer.domElement.id = 'canvas'
 		renderer.setClearColor(0xFFFFE6, 1)
 		renderer.setPixelRatio(window.devicePixelRatio)
-		renderer.sortObjects = false
+		renderer.sortObjects = true
 
 		container.append(renderer.domElement)
 
@@ -140,7 +153,7 @@ function SceneHandler(){
 
 		renderer.setSize(window.innerWidth, window.innerHeight)
 		renderer.setPixelRatio(window.devicePixelRatio)
-		picking_texture.setSize(window.innerWidth, window.innerHeight)
+		picking_texture.setSize(window.innerWidth + viewportOffset_x, window.innerHeight + viewportOffset_y)
 	}
 
 	function onMouseMove(event){
@@ -151,6 +164,7 @@ function SceneHandler(){
 	function update() {
 		deltaTime = CLOCK.getDelta();
 		renderer.render(active_scene, CAMERA)
+
 		requestAnimationFrame(update)
 	}
 

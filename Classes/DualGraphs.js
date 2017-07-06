@@ -34,6 +34,35 @@ function FaceEdgeDualGraph(){
 		new_face_2["currneighbors"][name_1] = new_face_1
 	}
 
+	this.AddNeighboringEdges = function(name_1, edge_1, name_2, edge_2)
+	{
+		var new_edge_1
+		var new_edge_2
+
+		if(!(name_1 in Hinges))
+		{
+			new_edge_1 = {"name": name_1, "edge": edge_1, "neighbors": [], "currneighbors": []}
+			Edges[name_1] = new_edge_1
+		}
+		else
+		{
+			new_edge_1 = Edge[name_1]
+		}
+
+		if(!(name_2 in Faces))
+		{
+			new_edge_2 = {"name": name_2, "edge": edge_2, "neighbors": [], "currneighbors": []}
+			Edge[name_2] = new_edge_2
+		}
+		else
+		{
+			new_edge_2 = Edges[name_2]
+		}
+
+		new_edge_1["neighbors"][name_2] = new_edge_2
+		new_edge_2["neighbors"][name_1] = new_edge_1
+	}
+
 	this.RemoveFace = function(name){
 		var face = Faces[name]
 

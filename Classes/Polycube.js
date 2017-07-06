@@ -27,12 +27,13 @@ function PolyCube(position, name = ""){
 	var _lattice_position = position
 	var L_Cubes = []
 	var L_CubeNames = []
+	var L_Hinges = []
+
 	var Color2Face_Map = []
 	var FaceName2Color_Map = []
-	var Hinge_Color_Map = []
+	var Hinge2Color_Map = []
+	var Color2Hinge_Map = []
 	var Cube_Color_Map = []
-
-	var amt_new_cube_spots = 0
 
 	var that = this
 
@@ -46,12 +47,48 @@ function PolyCube(position, name = ""){
 			L_Cubes[key] = cube
 			latt_pos = cube.GetLatticePosition()
 
-			//Rename all faces
+			//Rename all hinges and faces of the cube
+			//The pattern for face names is c<cube_id><direction>. For example, cube 0's front face would be called c0front, and its top face would be called c0up
+			//The pattern for hinge names is c<cube_id><direction>_h<local_position>. This has to do with the way faces are rotated around in the cube instantiation.
+			//It's rather unintuitive, but the back face's "up" direction is the world's "down". The only face with an intuitive direction is the front. See the cube
+			//instantiation function Cube.GenerateCube for a more detailed explanation
 			for(faceNum = 0; faceNum < cube.Obj.children.length; faceNum++)
 			{
 				var face = cube.Obj.children[faceNum]
+				var dir = face.name
 				face.name = PolyCube.CubeFaceString(cube.ID, face.name)
+
+				for(childNum = 0; childNum < face.children.length; childNum++)
+				{
+					var facePart = face.children[childNum]
+					if(facePart.name != "body")
+					{
+						facePart.name = face.name + "_"+facePart.name
+					}
+				}
 			}
+
+			var hinge_picking_cube = cube.Obj.clone()
+			for(faceNum = 0; faceNum < hinge_picking_cube.children.length; faceNum++)
+			{
+				var face = hinge_picking_cube.children[faceNum]
+
+				for(childNum = 0; childNum < face.children.length; childNum++)
+				{
+					var facePart = face.children[childNum]
+					if(facePart.name == "body")
+					{
+						facePart.material = new THREE.MeshBasicMaterial({'color' : 0})
+					}
+					else
+					{
+						var color = cube.ID + cube.ID*24 + childNum
+						facePart.material = new THREE.MeshBasicMaterial({'color' : color})
+					}
+				}
+			}
+
+			cube.hinge_picking_cube = hinge_picking_cube
 
 			//Cube faces have adjacency with each other, so let's set this first
 			SetAdjacentFacesWithSelf(cube)
@@ -67,8 +104,9 @@ function PolyCube(position, name = ""){
 				if(ObjectExists(cube_2))
 				{
 					console.log("Adjacency with " + key)
-					HandleFaceRemoval(cube, PolyCube.CubeFaceString(cube.ID, key))
+					HandleFaceRemoval(cube, key)
 					HandleFaceRemoval(cube_2, PolyCube.dir_to_opp[key])
+
 					SetAdjacentFaces(cube, cube_2, key)
 				}
 			}
@@ -145,6 +183,10 @@ function PolyCube(position, name = ""){
 		return L_Cubes
 	}
 
+	this.Get_Hinges = function(){
+		return L_Hinges
+	}
+
 	this.SwitchToContext = function(context_name){
 		if(ObjectExists(contexts[context_name]))
 		{
@@ -189,6 +231,8 @@ function PolyCube(position, name = ""){
 				{
 					AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1,
 					face_2.name, face_2)
+
+					HandleEdgeComparisons(cube_1, cube_2, face_1, face_2)
 				}
 				else
 				{
@@ -216,7 +260,9 @@ function PolyCube(position, name = ""){
 			{
 				AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1, face_2.name, face_2)
 			}
-		}
+
+			HandleEdgeComparisons(cube, cube_2, face_1, face_2)
+		}	
 	}
 
 	//For each face in a cube, we can say that it is adjacent to any other face in the same cube if and only if they are not facing opposite directions
@@ -243,6 +289,29 @@ function PolyCube(position, name = ""){
 	var HandleFaceRemoval = function(cube, dir){
 
 		var facename = PolyCube.CubeFaceString(cube.ID, dir)
+		
+		for(var key in PolyCube.dir_keys)
+		{
+			var secondaryDir = PolyCube.dir_keys[key]
+			if(secondaryDir != 'front' && secondaryDir != 'back')
+			{
+				var edge_pos = cube.edges[dir + '_' + secondaryDir].position
+
+				var edge_pair = L_Hinges[PosToKey(edge_pos)]
+
+				if(ObjectExists(edge_pair))
+				{
+					if(edge_pair[0].name.slice(0, 2) == "c" + cube.Obj.name)
+					{
+						delete L_Hinges[PosToKey(edge_pos)][0]
+					}
+					else
+					{
+						delete L_Hinges[PosToKey(edge_pos)][1]
+					}	
+				}
+			}
+		}
 
 		AdjacencyGraph.RemoveFace(facename)
 		cube.RemoveFace(facename)
@@ -256,14 +325,48 @@ function PolyCube(position, name = ""){
 		}
 	}
 
-	//Utility function for converting the lattice position of a cube to a key to look up in L_Cubes
-	var PosToKey = function(position){
-		return position.x+","+position.y+","+position.z
+	var HandleEdgeComparisons = function(cube_1, cube_2, face_1, face_2)
+	{
+		var face_dir_word_1 = face_1.name.slice(2, face_1.name.length)
+		var face_dir_word_2 = face_2.name.slice(2, face_2.name.length)
+
+		for(var keys_1 in PolyCube.dir_keys)
+		{
+			var second_dir_1 = PolyCube.dir_keys[keys_1]
+
+			if(second_dir_1 != 'front' && second_dir_1 != 'back')
+			{
+				for(var keys_2 in PolyCube.dir_keys)
+				{
+					var second_dir_2 = PolyCube.dir_keys[keys_2]
+
+					if(second_dir_2 != 'front' && second_dir_2 != 'back')
+					{
+						var dir_word_1 = face_dir_word_1 + '_' + second_dir_1
+						var dir_word_2 = face_dir_word_2 + '_' + second_dir_2
+
+						var edge_1 = cube_1.edges[dir_word_1]
+						var edge_2 = cube_2.edges[dir_word_2]
+
+						var edge_1_pos = edge_1.position
+						var edge_2_pos = edge_2.position
+
+						if(edge_1_pos.distanceTo(edge_2_pos) == 0)
+						{
+							L_Hinges[PosToKey(edge_1_pos)] = [cube_1.Obj.getObjectByName(face_1.name + '_' + second_dir_1), cube_2.Obj.getObjectByName(face_2.name + '_' + second_dir_2)]
+						}
+					}
+				}
+			}
+		}
 	}
 
+	//Utility function for converting the lattice position of a cube to a key to look up in L_Cubes
+	var PosToKey = function(position){
+		return position.x.toFixed(1)+","+position.y.toFixed(1)+","+position.z.toFixed(1)
+	}
 
 	this.SwitchToContext('face')
-
 }
 
 PolyCube.ID = 0
@@ -276,7 +379,7 @@ PolyCube.ID2Poly = []
 PolyCube.dir_keys = ["up", "down", "right", "left", "front", "back"]
 //Mapping keys to their opposite labels
 PolyCube.dir_to_opp = {"up": "down", "down": "up", "right": "left", "left": "right", "front": "back", "back": "front"}
-//Mapping keys to the vectors that they represent
+//Mapping keys to the vectors that they represent, and vice-versa
 PolyCube.key_to_dir = {
 	"up" : new THREE.Vector3(0, 1, 0),
 	"down": new THREE.Vector3(0, -1, 0),
@@ -284,6 +387,14 @@ PolyCube.key_to_dir = {
 	"right": new THREE.Vector3(1, 0, 0),
 	"front": new THREE.Vector3(0, 0, 1),
 	"back": new THREE.Vector3(0, 0, -1),
+}
+PolyCube.dir_to_key = {
+	"0,1,0" : "up",
+	"0,-1,0" : "down",
+	"1,0,0" : "left",
+	"-1,0,0" : "right",
+	"0,0,1" : "front",
+	"0,0,-1" : "back"
 }
 
 //A static utility function for taking a cube id and the label of a face on that cube and turning it into an id for usage in the dual graph
@@ -336,9 +447,4 @@ PolyCube.SwitchToNewActive = function(new_active)
 	{
 		PolyCube.Active_Polycube.trans_helper.visible = true
 	}
-}
-
-PolyCube.CalculateFaceID = function(facename, cube)
-{
-	return PolyCube.dir_keys.indexOf(facename) + cube.ID + cube.ID*18
 }

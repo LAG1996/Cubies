@@ -1,5 +1,6 @@
 function Toolbar_Handler(){
 	this.mode_h = ''
+	this.Obj = $("#toolbar")
 	var buttons = []
 	var mode_text = ''
 
@@ -137,12 +138,12 @@ function Toolbar_Handler(){
 		})
 
 		$(buttons[2]).text("Hinge Context")
-		{
+		$(buttons[2]).click(function(){
 			if(PolyCube.Active_Polycube != null)
 			{
 				PolyCube.Active_Polycube.SwitchToContext('hinge')
 			}
-		}
+		})
 
 		mode_text = "Edit " + polycube.name
 	}
