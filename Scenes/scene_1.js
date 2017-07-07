@@ -17,7 +17,7 @@ $(document).ready(function(){
 	toolbar_handler.Switch_Context_H('world-context')
 
 	scene_handler.RequestAddToScene(gridHelper)
-	scene_handler.SetViewportOffset(0, toolbar_handler.Obj.innerHeight())
+	//scene_handler.SetViewportOffset(0, toolbar_handler.Obj.innerHeight())
 
 	$('#container').on('mousedown', StoreMouseVals)
 	$('#container').on('mouseup', HandlePick)
@@ -28,36 +28,38 @@ function StoreMouseVals(event){
 }
 
 function HandlePick() {
-	var pick_val = scene_handler.Pick()
-	var p_cube = PolyCube.ID2Poly[pick_val]
 
-	if(ObjectExists(p_cube))
+	if(old_mouse_pos.distanceTo(scene_handler.GetMousePos()) == 0)
 	{
-		if(!ObjectExists(PolyCube.Active_Polycube))
+		var pick_val = scene_handler.Pick()
+		var p_cube = PolyCube.ID2Poly[pick_val]
+
+		if(ObjectExists(p_cube))
 		{
-			PolyCube.SwitchToNewActive(p_cube)
-			toolbar_handler.Switch_Context_H('poly-context', p_cube)
-		}
-		else if(p_cube.id != PolyCube.Active_Polycube.id)
-		{
-			PolyCube.SwitchToNewActive(p_cube)
-			toolbar_handler.Switch_Context_H('poly-context', p_cube)
+			if(!ObjectExists(PolyCube.Active_Polycube))
+			{
+				PolyCube.SwitchToNewActive(p_cube)
+				toolbar_handler.Switch_Context_H('poly-context', p_cube)
+			}
+			else if(p_cube.id != PolyCube.Active_Polycube.id)
+			{
+				PolyCube.SwitchToNewActive(p_cube)
+				toolbar_handler.Switch_Context_H('poly-context', p_cube)
+			}
+			else
+			{
+				console.log("Looking at " + p_cube.context_name + " context")
+				scene_handler.RequestSwitchToPickingScene(p_cube.pick_context)
+				var id = scene_handler.Pick()
+				scene_handler.SwitchToDefaultPickingScene()
+				p_cube.HandlePick(id)
+			}	
 		}
 		else
 		{
-			console.log("Looking at " + p_cube.context_name + " context")
-			scene_handler.RequestSwitchToPickingScene(p_cube.pick_context)
-			var id = scene_handler.Pick()
-			scene_handler.SwitchToDefaultPickingScene()
-			p_cube.HandlePick(id)
-		}	
+				PolyCube.SwitchToNewActive(null)
+				toolbar_handler.Switch_Context_H('world-context')	
+		}
 	}
-	else
-	{
-		if(old_mouse_pos.distanceTo(scene_handler.GetMousePos()) == 0)
-		{
-			PolyCube.SwitchToNewActive(null)
-			toolbar_handler.Switch_Context_H('world-context')
-		}	
-	}
+	
 }

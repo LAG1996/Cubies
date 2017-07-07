@@ -1,7 +1,7 @@
 function SceneHandler(){
 
-	var viewportOffset_x
-	var viewportOffset_y
+	var viewportOffset_x = 0
+	var viewportOffset_y = 0
 
 	var WIDTH, HEIGHT, INIT, CLOCK, CAMERA
 	var container, renderer, picking_texture
@@ -88,7 +88,7 @@ function SceneHandler(){
 		viewportOffset_x = x
 		viewportOffset_y = y
 
-		picking_texture.setSize(window.innerWidth + viewportOffset_x, window.innerHeight + viewportOffset_y)
+		picking_texture.setSize(window.innerWidth, window.innerHeight)
 	}
 
 
@@ -153,7 +153,7 @@ function SceneHandler(){
 
 		renderer.setSize(window.innerWidth, window.innerHeight)
 		renderer.setPixelRatio(window.devicePixelRatio)
-		picking_texture.setSize(window.innerWidth + viewportOffset_x, window.innerHeight + viewportOffset_y)
+		picking_texture.setSize(window.innerWidth, window.innerHeight)
 	}
 
 	function onMouseMove(event){
@@ -172,8 +172,8 @@ function SceneHandler(){
 	function GetPixelColor(){
 		var pixelBuffer = new Uint8Array(4)
 
-		renderer.readRenderTargetPixels(picking_texture, mouse_pos.x, 
-			picking_texture.height - mouse_pos.y, 1, 1, pixelBuffer)
+		renderer.readRenderTargetPixels(picking_texture, mouse_pos.x + viewportOffset_x, 
+			picking_texture.height - (mouse_pos.y + viewportOffset_y), 1, 1, pixelBuffer)
 
 		var id = (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | (pixelBuffer[2])
 

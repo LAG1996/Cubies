@@ -13,7 +13,7 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 
 		this.setupPickingCube = setupPickingCube
 
-		this.faceColors = {"front" : null, "back" : null, "left" : null, "right" : null, "up" : null, "down" : null}
+		this.faceColors = {}
 
 		this.edges = {}
 
@@ -24,9 +24,6 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 
 		CalculateEdgeData()
 
-		if(this.setupPickingCube)
-			SetUpPickingCubes()
-
 		this.RemoveFace = function(name)
 		{
 			if(!missing_face[name])
@@ -34,7 +31,17 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 				var face = this.Obj.getObjectByName(name)
 				var pick_face = this.face_picking_cube.getObjectByName(name)
 				this.Obj.remove(face)
-				this.face_picking_cube.remove(pick_face)
+
+				if(ObjectExists(this.face_picking_cube))
+				{
+					this.face_picking_cube.remove(pick_face)
+				}
+
+				if(ObjectExists(this.hinge_picking_cube))
+				{
+					this.hinge_picking_cube.remove(pick_face)
+				}
+
 				delete face
 				delete pick_face
 
@@ -70,33 +77,33 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 			return "c"+this.ID
 		}
 
-		function SetUpPickingCubes()
+		this.SetUpPickingCubes = function()
 		{
-			if(ObjectExists(that.face_picking_cube)){
-				delete that.face_picking_cube
+			if(ObjectExists(this.face_picking_cube)){
+				delete this.face_picking_cube
 			}
 
-			that.face_picking_cube = that.Obj.clone()
+			this.face_picking_cube = this.Obj.clone()
 
 			SetUpFaceColor()
 
-			if(!ObjectExists(that.cube_picking_cube))
+			if(!ObjectExists(this.cube_picking_cube))
 			{
-				that.cube_picking_cube = that.Obj.clone()
+				this.cube_picking_cube = this.Obj.clone()
 				SetUpCubeColor()
 			}
 
-			if(!ObjectExists(that.polycube_picking_cube))
+			if(!ObjectExists(this.polycube_picking_cube))
 			{
-				that.polycube_picking_cube = that.Obj.clone()
+				this.polycube_picking_cube = this.Obj.clone()
 
-				for(faceNum = 0; faceNum < that.polycube_picking_cube.children.length; faceNum++)
+				for(faceNum = 0; faceNum < this.polycube_picking_cube.children.length; faceNum++)
 				{
-					var face = that.polycube_picking_cube.children[faceNum]
+					var face = this.polycube_picking_cube.children[faceNum]
 
 					for(meshNum = 0; meshNum < face.children.length; meshNum++)
 					{
-						face.children[meshNum].material = new THREE.MeshBasicMaterial({'color' : that.Polycube.id})
+						face.children[meshNum].material = new THREE.MeshBasicMaterial({'color' : this.Polycube.id})
 					}
 				}
 			}
@@ -107,7 +114,7 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 			//Set up face colors
 			for(faceNum = 0; faceNum < that.face_picking_cube.children.length; faceNum++)
 			{
-				var color = that.ID + faceNum
+				var color = that.ID + faceNum + that.ID*6
 				var face = that.face_picking_cube.children[faceNum]
 				that.faceColors[face.name] = color
 
@@ -253,8 +260,11 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 }
 
 Cube.new_cube = new THREE.Group()
-Cube.face = null
-Cube.hinge = null
+Cube.face = null //A bit of a misnomer here. Cube.face is really the body of a face on the surface of a cube
+Cube.hinge = null //Similarly, this is just an edge, not really a hinge. A hinge is two incident faces
+
+Cube.highlightHinge = null
+Cube.highlightFace = null
 
 //Function that generates a cube object that can be cloned when needed. This function should only be called only when the program is instantiated, since
 //the template for the cube object is stored as Cube.new_cube.
@@ -287,9 +297,6 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	var face_names = ["front", "back", "left", "right", "up", "down"]
 	var ninety_deg = DEG2RAD(90)
 
-	Cube.face = new THREE.Group()
-	Cube.hinge = new THREE.Group()
-
 	Cube.face = cubeFaceMesh.clone()
 	Cube.hinge = cubeHingeMesh.clone()
 
@@ -316,6 +323,17 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	left_hinge.position.x -= 1
 	left_hinge.name = "left"
 	left_hinge.rotateZ(2*ninety_deg)
+
+	Cube.highlightFace = new THREE.Group()
+
+	Cube.highlightFace.add(body.clone())
+	Cube.highlightFace.add(top_hinge.clone())
+	Cube.highlightFace.add(down_hinge.clone())
+	Cube.highlightFace.add(right_hinge.clone())
+	Cube.highlightFace.add(left_hinge.clone())
+
+	Cube.highlightHinge = Cube.hinge.clone()
+	Cube.highlightHinge.scale.set(1.2, 1.2, 1.2)
 
 	for(i = 0; i < 6; i++)
 	{

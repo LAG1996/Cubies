@@ -30,9 +30,12 @@ function PolyCube(position, name = ""){
 	var L_Hinges = []
 
 	var Color2Face_Map = []
+	var Color2Edge_Map = []
+
+
 	var FaceName2Color_Map = []
 	var Hinge2Color_Map = []
-	var Color2Hinge_Map = []
+	
 	var Cube_Color_Map = []
 
 	var that = this
@@ -68,6 +71,9 @@ function PolyCube(position, name = ""){
 				}
 			}
 
+			cube.SetUpPickingCubes()
+
+			//Color all hinges with some unique color, leaving the body black
 			var hinge_picking_cube = cube.Obj.clone()
 			for(faceNum = 0; faceNum < hinge_picking_cube.children.length; faceNum++)
 			{
@@ -82,16 +88,14 @@ function PolyCube(position, name = ""){
 					}
 					else
 					{
-						var color = cube.ID + cube.ID*24 + childNum
+						var color = cube.ID*24 + faceNum*4 + childNum
 						facePart.material = new THREE.MeshBasicMaterial({'color' : color})
 					}
 				}
 			}
 
-			cube.hinge_picking_cube = hinge_picking_cube
+			cube.hinge_picking_cube = hinge_picking_cube.clone()
 
-			//Cube faces have adjacency with each other, so let's set this first
-			SetAdjacentFacesWithSelf(cube)
 
 			/*///////////////////////////
 			START CLEANING CUBE AND SETTING UP ADJACENCY
@@ -110,6 +114,8 @@ function PolyCube(position, name = ""){
 					SetAdjacentFaces(cube, cube_2, key)
 				}
 			}
+
+			SetAdjacentFacesWithSelf(cube)
 			/*////////////////////////
 			FINISH CLEANING CUBE AND SETTING UP ADJACENCY
 			*///////////////////////
@@ -119,24 +125,42 @@ function PolyCube(position, name = ""){
 			*////////////////////
 			//The cube automatically has the faces of the picking cube colored
 			face_picking_polycube.add(cube.face_picking_cube)
-			for(var dir in cube.faceColors)
+			for(var faceNum in cube.Obj.children)
 			{
-				var face = cube.Obj.getObjectByName(PolyCube.CubeFaceString(cube.ID, dir))
+				var face = cube.Obj.children[faceNum]
 
 				if(ObjectExists(face))
 				{
-					Color2Face_Map[cube.faceColors[dir]] = face
+					Color2Face_Map[cube.faceColors[face.name]] = face
 				}
 			}
 			//Adding to the cube picking scene would also be trivial because the cube automatically has its color stored as well
 			cube_picking_polycube.add(cube.cube_picking_cube)
-			//Adding to the new cube picking scene would just
+			//Add this cube's hinge picking cube to the scene
+			hinge_picking_polycube.add(cube.hinge_picking_cube)
+			for(var faceNum in cube.hinge_picking_cube.children)
+			{
+				var face = hinge_picking_cube.children[faceNum]
 
+				if(ObjectExists(face))
+				{
+					for(var childNum = 1; childNum < face.children.length; childNum++)
+					{
+						var edge = face.children[childNum]
+						var real_edge = cube.Obj.getObjectByName(edge.name)
+
+						var edge_color = edge.material.color.getHex()
+						Color2Edge_Map[edge_color] = real_edge
+					}
+				}
+			}
 
 			/*//////////////////////
 			FINISH MAPPING EACH FACE TO A COLOR 
 			*//////////////////////
 
+			console.log(Color2Face_Map)
+			console.log(Color2Edge_Map)
 			this.Obj.add(cube.Obj)
 			this.picking_polycube.add(cube.polycube_picking_cube)
 
@@ -200,14 +224,18 @@ function PolyCube(position, name = ""){
 		{
 			var face = Color2Face_Map[id]
 
-			console.log(face.name)
+			return face
+		}
+		else if(this.context_name == 'hinge')
+		{
+			var hinge = Color2Edge_Map[id]
+
+			return hinge
 		}
 		else
 		{
-			return false
+			return null
 		}
-
-		return true
 	}
 
 	//Let cube1 be the cube we are adding to the polycube, and cube2 be a cube adjacent to cube1. Then dir is the Vector3 representing the direction from
@@ -269,20 +297,29 @@ function PolyCube(position, name = ""){
 	var SetAdjacentFacesWithSelf = function(cube)
 	{
 		for(i = 0; i < PolyCube.dir_keys.length; i++)
+		{
+			d1 = PolyCube.dir_keys[i]
+			var face_1 = cube.Obj.getObjectByName(PolyCube.CubeFaceString(cube.ID, d1))
+			if(ObjectExists(face_1))
 			{
-				d1 = PolyCube.dir_keys[i]
 				for(k = 0; k < PolyCube.dir_keys.length; k++)
 				{
 					d2 = PolyCube.dir_keys[k]
 					if(d1 != d2 && PolyCube.dir_to_opp[d1] != d2)
-					{
-						var face_1 = cube.Obj.getObjectByName(PolyCube.CubeFaceString(cube.ID, d1))
+					{		
 						var face_2 = cube.Obj.getObjectByName(PolyCube.CubeFaceString(cube.ID, d2))
-						AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1, 
+
+						if(ObjectExists(face_2))
+						{
+							AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1, 
 							face_2.name, face_2)
+
+							HandleEdgeComparisons(cube, cube, face_1, face_2)
+						}
 					}
 				}
-			}
+			}		
+		}
 	}
 
 	//This is a utility function for removing a face from both a cube and the face dual graph
@@ -301,14 +338,12 @@ function PolyCube(position, name = ""){
 
 				if(ObjectExists(edge_pair))
 				{
-					if(edge_pair[0].name.slice(0, 2) == "c" + cube.Obj.name)
+					if(ObjectExists(cube.Obj.getObjectByName(facename + '_' + secondaryDir)))
 					{
-						delete L_Hinges[PosToKey(edge_pos)][0]
+						AdjacencyGraph.RemoveEdge(facename + '_' + secondaryDir)
 					}
-					else
-					{
-						delete L_Hinges[PosToKey(edge_pos)][1]
-					}	
+
+					delete L_Hinges[edge_pos]
 				}
 			}
 		}
@@ -353,7 +388,20 @@ function PolyCube(position, name = ""){
 
 						if(edge_1_pos.distanceTo(edge_2_pos) == 0)
 						{
-							L_Hinges[PosToKey(edge_1_pos)] = [cube_1.Obj.getObjectByName(face_1.name + '_' + second_dir_1), cube_2.Obj.getObjectByName(face_2.name + '_' + second_dir_2)]
+							var inc_edge_1 = cube_1.Obj.getObjectByName(face_1.name + '_' + second_dir_1)
+							var inc_edge_2 = cube_2.Obj.getObjectByName(face_2.name + '_' + second_dir_2)
+							L_Hinges[PosToKey(edge_1_pos)] = [inc_edge_1, inc_edge_2]
+							
+							AdjacencyGraph.AddIncidentEdges(face_1.name + '_' + second_dir_1, inc_edge_1,
+								face_2.name + '_' + second_dir_2, inc_edge_2)
+
+							cube_2.hinge_picking_cube.getObjectByName(face_2.name + '_' + second_dir_2).material = cube_1.hinge_picking_cube.getObjectByName(face_1.name + '_' + second_dir_1).material.clone()
+						}
+						else if(edge_1.endPoints[0].distanceTo(edge_2.endPoints[0] == 0) || edge_1.endPoints[0].distanceTo(edge_2.endPoints[1] == 0)
+							|| edge_1.endPoints[1].distanceTo(edge_2.endPoints[0] == 0) || edge_1.endPoints[1].distanceTo(edge_2.endPoints[1]) == 0)
+						{
+							AdjacencyGraph.AddNeighboringEdges(face_1.name + '_' + second_dir_1, inc_edge_1,
+								face_2.name + '_' + second_dir_2, inc_edge_2)
 						}
 					}
 				}
