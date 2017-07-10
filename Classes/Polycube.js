@@ -158,8 +158,6 @@ function PolyCube(position, name = ""){
 			/*//////////////////////
 			FINISH MAPPING EACH FACE TO A COLOR 
 			*//////////////////////
-
-			console.log(Color2Face_Map)
 			console.log(Color2Edge_Map)
 			this.Obj.add(cube.Obj)
 			this.picking_polycube.add(cube.polycube_picking_cube)
@@ -223,15 +221,18 @@ function PolyCube(position, name = ""){
 		if(this.context_name == 'face')
 		{
 			var face = Color2Face_Map[id]
-
-			return face
+			return {'parent' : AdjacencyGraph.GetFace(face.name), 'children' : AdjacencyGraph.GetNeighboringFaces(face.name)}
 		}
 		else if(this.context_name == 'hinge')
 		{
-			var hinge = Color2Edge_Map[id]
-
-			return hinge
-		}
+			if(id > 0)
+			{
+				var edge = Color2Edge_Map[id]
+				return {'parent' : [AdjacencyGraph.GetEdge(edge.name), AdjacencyGraph.GetIncidentEdge(edge.name)], 'children' : AdjacencyGraph.GetNeighboringEdges(edge.name)}
+			}
+			else
+				return null
+		}	
 		else
 		{
 			return null
@@ -332,7 +333,7 @@ function PolyCube(position, name = ""){
 			var secondaryDir = PolyCube.dir_keys[key]
 			if(secondaryDir != 'front' && secondaryDir != 'back')
 			{
-				var edge_pos = cube.edges[dir + '_' + secondaryDir].position
+				var edge_pos = PolyCube.EdgeCalculator.CalculateEdgeData(cube, dir+'_'+secondaryDir).position
 
 				var edge_pair = L_Hinges[PosToKey(edge_pos)]
 
@@ -362,8 +363,8 @@ function PolyCube(position, name = ""){
 
 	var HandleEdgeComparisons = function(cube_1, cube_2, face_1, face_2)
 	{
-		var face_dir_word_1 = face_1.name.slice(2, face_1.name.length)
-		var face_dir_word_2 = face_2.name.slice(2, face_2.name.length)
+		var face_dir_word_1 = face_1.name.split('c'+cube_1.ID)[1]
+		var face_dir_word_2 = face_2.name.split('c'+cube_2.ID)[1]
 
 		for(var keys_1 in PolyCube.dir_keys)
 		{
@@ -380,16 +381,17 @@ function PolyCube(position, name = ""){
 						var dir_word_1 = face_dir_word_1 + '_' + second_dir_1
 						var dir_word_2 = face_dir_word_2 + '_' + second_dir_2
 
-						var edge_1 = cube_1.edges[dir_word_1]
-						var edge_2 = cube_2.edges[dir_word_2]
+						var edge_1 = PolyCube.EdgeCalculator.CalculateEdgeData(cube_1, dir_word_1)
+						var edge_2 = PolyCube.EdgeCalculator.CalculateEdgeData(cube_2, dir_word_2)
 
 						var edge_1_pos = edge_1.position
 						var edge_2_pos = edge_2.position
 
+						var inc_edge_1 = cube_1.Obj.getObjectByName(face_1.name + '_' + second_dir_1)
+						var inc_edge_2 = cube_2.Obj.getObjectByName(face_2.name + '_' + second_dir_2)
+
 						if(edge_1_pos.distanceTo(edge_2_pos) == 0)
 						{
-							var inc_edge_1 = cube_1.Obj.getObjectByName(face_1.name + '_' + second_dir_1)
-							var inc_edge_2 = cube_2.Obj.getObjectByName(face_2.name + '_' + second_dir_2)
 							L_Hinges[PosToKey(edge_1_pos)] = [inc_edge_1, inc_edge_2]
 							
 							AdjacencyGraph.AddIncidentEdges(face_1.name + '_' + second_dir_1, inc_edge_1,
@@ -397,11 +399,13 @@ function PolyCube(position, name = ""){
 
 							cube_2.hinge_picking_cube.getObjectByName(face_2.name + '_' + second_dir_2).material = cube_1.hinge_picking_cube.getObjectByName(face_1.name + '_' + second_dir_1).material.clone()
 						}
-						else if(edge_1.endPoints[0].distanceTo(edge_2.endPoints[0] == 0) || edge_1.endPoints[0].distanceTo(edge_2.endPoints[1] == 0)
-							|| edge_1.endPoints[1].distanceTo(edge_2.endPoints[0] == 0) || edge_1.endPoints[1].distanceTo(edge_2.endPoints[1]) == 0)
+						else if(PosToKey(edge_1.endPoints[0]) == PosToKey(edge_2.endPoints[0])|| PosToKey(edge_1.endPoints[0]) == PosToKey(edge_2.endPoints[1])
+							|| PosToKey(edge_1.endPoints[1]) == PosToKey(edge_2.endPoints[0]) || PosToKey(edge_1.endPoints[1]) == PosToKey(edge_2.endPoints[1]))
 						{
 							AdjacencyGraph.AddNeighboringEdges(face_1.name + '_' + second_dir_1, inc_edge_1,
 								face_2.name + '_' + second_dir_2, inc_edge_2)
+
+							//console.log(face_1.name + '_' + second_dir_1 + " and " + face_2.name + '_' + second_dir_2 + " are adjacent edges")
 						}
 					}
 				}
@@ -422,6 +426,7 @@ PolyCube.name_being_changed = ""
 PolyCube.Active_Polycube = null
 PolyCube.L_Polycubes = []
 PolyCube.ID2Poly = []
+PolyCube.EdgeCalculator = new Cube.CubeDataCalculator()
 
 //The keys that we use to both denote directions from cube to cube and the labeling of each face in the cube
 PolyCube.dir_keys = ["up", "down", "right", "left", "front", "back"]

@@ -28,15 +28,23 @@ function SceneHandler(){
 	requestAnimationFrame(update)
 
 	this.RequestAddToScene = function(object){
-		if(object.isObject3D && ObjectExists(object)){
+		if(ObjectExists(object) && object.isObject3D){
 			defaultScene.add(object)
 			return true
 		}
 		return false
 	}
 
+	this.RequestRemoveFromScene = function(object){
+		if(ObjectExists(object) && object.isObject3D){
+			defaultScene.remove(object)
+			return true
+		}
+		return false
+	}
+
 	this.RequestAddToPickingScene = function(object){
-		if(object.isObject3D && ObjectExists(object)){
+		if(ObjectExists(object) && object.isObject3D){
 			defaultPickingScene.add(object)
 			return true
 		}

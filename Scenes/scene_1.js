@@ -4,6 +4,11 @@ var p_cube_pick_context = null
 
 var old_mouse_pos = new THREE.Vector2()
 
+var parentHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xDD0000})
+var childrenHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0x001AAA})
+
+var junk = []
+
 $(document).ready(function(){
 	Initialize()
 	scene_handler = new SceneHandler()
@@ -31,6 +36,7 @@ function HandlePick() {
 
 	if(old_mouse_pos.distanceTo(scene_handler.GetMousePos()) == 0)
 	{
+		ClearJunk()
 		var pick_val = scene_handler.Pick()
 		var p_cube = PolyCube.ID2Poly[pick_val]
 
@@ -52,7 +58,19 @@ function HandlePick() {
 				scene_handler.RequestSwitchToPickingScene(p_cube.pick_context)
 				var id = scene_handler.Pick()
 				scene_handler.SwitchToDefaultPickingScene()
-				p_cube.HandlePick(id)
+
+				var data = p_cube.HandlePick(id)
+				if(ObjectExists(data))
+				{
+					if(p_cube.context_name == 'face')
+					{
+						ShowFaceData(data)
+					}
+					else if(p_cube.context_name == 'hinge')
+					{
+						ShowEdgeData(data)
+					}
+				}
 			}	
 		}
 		else
@@ -61,5 +79,88 @@ function HandlePick() {
 				toolbar_handler.Switch_Context_H('world-context')	
 		}
 	}
-	
+}
+
+function ShowFaceData(data){
+	console.log(data)
+	var parentHighlight = Cube.highlightFace.clone()
+	parentHighlight.position.copy(data["parent"]['face'].getWorldPosition())
+	parentHighlight.rotation.copy(data["parent"]['face'].getWorldRotation())
+
+	junk.push(parentHighlight)
+
+	var index = 0
+	var childrenHighlight = []
+	for(var faceName in data["children"])
+	{
+		childrenHighlight[index] = Cube.highlightFace.clone()
+		childrenHighlight[index].position.copy(data["children"][faceName]["face"].getWorldPosition())
+		childrenHighlight[index].rotation.copy(data["children"][faceName]["face"].getWorldRotation())
+		junk.push(childrenHighlight[index])
+		index++
+	}
+
+	for(var partNum = 0; partNum < parentHighlight.children.length; partNum++)
+	{
+		var part = parentHighlight.children[partNum]
+		if(part.name == 'body')
+		{
+			part.material = parentHighlightMaterial.clone()
+		}
+		
+		scene_handler.RequestAddToScene(parentHighlight)
+	}
+
+	for(var index = 0; index < childrenHighlight.length; index++)
+	{
+		for(var partNum = 0; partNum < childrenHighlight[index].children.length; partNum++)
+		{
+			var part = childrenHighlight[index].children[partNum]
+			if(part.name == 'body')
+			{
+				part.material = childrenHighlightMaterial.clone()
+			}
+		}
+
+		scene_handler.RequestAddToScene(childrenHighlight[index])
+	}
+}
+
+function ShowEdgeData(data){
+	console.log(data)
+	var parentHighlight = Cube.highlightEdge.clone()
+	parentHighlight.position.copy(data['parent'][0]['edge'].getWorldPosition())
+	parentHighlight.rotation.copy(data['parent'][0]['edge'].getWorldRotation())
+	parentHighlight.material = parentHighlightMaterial.clone()
+	scene_handler.RequestAddToScene(parentHighlight)
+	junk.push(parentHighlight)
+
+	var parentHighlight = Cube.highlightEdge.clone()
+	parentHighlight.position.copy(data['parent'][1]['edge'].getWorldPosition())
+	parentHighlight.rotation.copy(data['parent'][1]['edge'].getWorldRotation())
+	parentHighlight.material = parentHighlightMaterial.clone()
+	scene_handler.RequestAddToScene(parentHighlight)
+	junk.push(parentHighlight)
+
+	var index = 0
+	var childrenHighlight = []
+	for(var N in data['children'])
+	{
+		childrenHighlight[index] = Cube.highlightEdge.clone()
+		childrenHighlight[index].position.copy(data["children"][N]['edge'].getWorldPosition())
+		childrenHighlight[index].rotation.copy(data["children"][N]['edge'].getWorldRotation())
+		childrenHighlight[index].material = childrenHighlightMaterial.clone()
+		junk.push(childrenHighlight[index])
+		scene_handler.RequestAddToScene(childrenHighlight[index])
+		index++
+	}
+}
+
+function ClearJunk(){
+	for(var i = 0; i < junk.length; i++)
+	{
+		scene_handler.RequestRemoveFromScene(junk[i])
+		delete junk[i]
+	}
+	junk = []
 }

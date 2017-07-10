@@ -22,6 +22,9 @@ function Toolbar_Handler(){
 			that.mode_h = mode
 			buttons = []
 
+			//Clear junk from the scene
+			ClearJunk()
+
 			$(".toolbar_btn").remove()
 
 			if(mode == 'camera-control')

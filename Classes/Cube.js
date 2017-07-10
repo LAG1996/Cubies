@@ -22,28 +22,29 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 
 		var that = this
 
-		CalculateEdgeData()
-
 		this.RemoveFace = function(name)
 		{
 			if(!missing_face[name])
 			{
 				var face = this.Obj.getObjectByName(name)
-				var pick_face = this.face_picking_cube.getObjectByName(name)
 				this.Obj.remove(face)
 
 				if(ObjectExists(this.face_picking_cube))
 				{
+					var pick_face = this.face_picking_cube.getObjectByName(name)
 					this.face_picking_cube.remove(pick_face)
+					delete pick_face
 				}
 
 				if(ObjectExists(this.hinge_picking_cube))
 				{
-					this.hinge_picking_cube.remove(pick_face)
+					var hinge_pick_face = this.hinge_picking_cube.getObjectByName(name)
+					this.hinge_picking_cube.remove(hinge_pick_face)
+					delete hinge_pick_face
 				}
 
 				delete face
-				delete pick_face
+
 
 				missing_face[name] = true
 			}
@@ -69,7 +70,7 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 
 		this.GetLatticePosition = function()
 		{
-			return lattice_position
+			return lattice_position.clone()
 		}
 
 		this.ToIDString = function()
@@ -139,120 +140,6 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 			}
 		}
 
-		function CalculateEdgeData()
-		{
-			var pos = lattice_position
-
-			var up = new THREE.Vector3(0, .5, 0)
-			var down = new THREE.Vector3(0, -.5, 0)
-			var left = new THREE.Vector3(-.5, 0, 0)
-			var right = new THREE.Vector3(.5, 0, 0)
-			var back = new THREE.Vector3(0, 0, -.5)
-			var front = new THREE.Vector3(0, 0, .5)
-
-			//The front edges
-			that.edges["front_up"] = {}
-			that.edges["front_up"]["position"] = SumOfVectors([pos, up, front])
-			that.edges["front_up"]["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, up, front, right])]
-
-			that.edges["front_right"] = {}
-			that.edges["front_right"]["position"] = SumOfVectors([pos, right, front])
-			that.edges["front_right"]["endPoints"] = [SumOfVectors([pos, up, front, right]), SumOfVectors([pos, down, front, right])]
-
-			that.edges["front_left"] = {}
-			that.edges["front_left"]["position"] = SumOfVectors([pos, left, front])
-			that.edges["front_left"]["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, down, front, left])]
-
-			that.edges["front_down"] = {}
-			that.edges["front_down"]["position"] = SumOfVectors([pos, down, front])
-			that.edges["front_down"]["endPoints"] = [SumOfVectors([pos, down, front, left]), SumOfVectors([pos, down, front, right])]
-
-			//The top edges
-			that.edges["up_up"] = {}
-			that.edges["up_up"]["position"] = SumOfVectors([pos, back, up])
-			that.edges["up_up"]["endPoints"] = [SumOfVectors([pos, up, back, left]), SumOfVectors([pos, up, back, right])]
-
-			that.edges["up_right"] = {}
-			that.edges["up_right"]["position"] = SumOfVectors([pos, right, up])
-			that.edges["up_right"]["endPoints"] = [SumOfVectors([pos, up, front, right]), SumOfVectors([pos, up, back, right])]
-
-			that.edges["up_left"] = {}
-			that.edges["up_left"]["position"] = SumOfVectors([pos, left, up])
-			that.edges["up_left"]["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, up, back, left])]
-
-			that.edges["up_down"] = {}
-			that.edges["up_down"]["position"] = SumOfVectors([pos, front, up])
-			that.edges["up_down"]["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, up, front, right])]
-
-			//The back edges
-			that.edges["back_up"] = {}
-			that.edges["back_up"]["position"] = SumOfVectors([pos, down, back])
-			that.edges["back_up"]["endPoints"] = [SumOfVectors([pos, down, back, left]), SumOfVectors([pos, down, back, right])]
-
-			that.edges["back_right"] = {}
-			that.edges["back_right"]["position"] = SumOfVectors([pos, left, back])
-			that.edges["back_right"]["endPoints"] = [SumOfVectors([pos, up, back, left]), SumOfVectors([pos, down, back, left])]
-
-			that.edges["back_left"] = {}
-			that.edges["back_left"]["position"] = SumOfVectors([pos, right, back])
-			that.edges["back_left"]["endPoints"] = [SumOfVectors([pos, up, back, right]), SumOfVectors([pos, down, back, right])]
-
-			that.edges["back_down"] = {}
-			that.edges["back_down"]["position"] = SumOfVectors([pos, up, back])
-			that.edges["back_down"]["endPoints"] = [SumOfVectors([pos, up, back, left]), SumOfVectors([pos, up, back, right])]
-
-			//The bottom edges
-			that.edges["down_up"] = {}
-			that.edges["down_up"]["position"] = SumOfVectors([pos, front, down])
-			that.edges["down_up"]["endPoints"] = [SumOfVectors([pos, down, front, left]), SumOfVectors([pos, down, front, right])]
-
-			that.edges["down_right"] = {}
-			that.edges["down_right"]["position"] = SumOfVectors([pos, left, down])
-			that.edges["down_right"]["endPoints"] = [SumOfVectors([pos, down, front, left]), SumOfVectors([pos, down, back, left])]
-
-			that.edges["down_left"] = {}
-			that.edges["down_left"]["position"] = SumOfVectors([pos, right, down])
-			that.edges["down_left"]["endPoints"] = [SumOfVectors([pos, down, front, right]), SumOfVectors([pos, down, back, right])]
-
-			that.edges["down_down"] = {}
-			that.edges["down_down"]["position"] = SumOfVectors([pos, back, down])
-			that.edges["down_down"]["endPoints"] = [SumOfVectors([pos, down, back, left]), SumOfVectors([pos, down, back, right])]
-
-			//The left edges
-			that.edges["left_up"] = {}
-			that.edges["left_up"]["position"] = SumOfVectors([pos, down, left])
-			that.edges["left_up"]["endPoints"] = [SumOfVectors([pos, down, front, left]), SumOfVectors([pos, down, back, left])]
-
-			that.edges["left_right"] = {}
-			that.edges["left_right"]["position"] = SumOfVectors([pos, front, left])
-			that.edges["left_right"]["endPoints"] = [SumOfVectors([pos, up, back, left]), SumOfVectors([pos, down, back, left])]
-
-			that.edges["left_left"] = {}
-			that.edges["left_left"]["position"] = SumOfVectors([pos, back, left])
-			that.edges["left_left"]["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, down, front, left])]
-
-			that.edges["left_down"] = {}
-			that.edges["left_down"]["position"] = SumOfVectors([pos, up, left])
-			that.edges["left_down"]["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, up, back, left])]
-
-			//The right edges
-			that.edges["right_up"] = {}
-			that.edges["right_up"]["position"] = SumOfVectors([pos, up, right])
-			that.edges["right_up"]["endPoints"] = [SumOfVectors([pos, up, front, right]), SumOfVectors([pos, up, back, right])]
-
-			that.edges["right_right"] = {}
-			that.edges["right_right"]["position"] = SumOfVectors([pos, back, right])
-			that.edges["right_right"]["endPoints"] = [SumOfVectors([pos, up, back, right]), SumOfVectors([pos, down, back, right])]
-
-			that.edges["right_left"] = {}
-			that.edges["right_left"]["position"] = SumOfVectors([pos, front, right])
-			that.edges["right_left"]["endPoints"] = [SumOfVectors([pos, up, front, right]), SumOfVectors([pos, down, front, right])]
-
-			that.edges["right_down"] = {}
-			that.edges["right_down"]["position"] = SumOfVectors([pos, down, right])
-			that.edges["right_down"]["endPoints"] = [SumOfVectors([pos, down, front, right]), SumOfVectors([pos, down, back, right])]
-		}
-
 		var ResetCube = function()
 		{
 			console.log("To be written later")
@@ -263,7 +150,7 @@ Cube.new_cube = new THREE.Group()
 Cube.face = null //A bit of a misnomer here. Cube.face is really the body of a face on the surface of a cube
 Cube.hinge = null //Similarly, this is just an edge, not really a hinge. A hinge is two incident faces
 
-Cube.highlightHinge = null
+Cube.highlightEdge = null
 Cube.highlightFace = null
 
 //Function that generates a cube object that can be cloned when needed. This function should only be called only when the program is instantiated, since
@@ -304,25 +191,30 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 
 	var body = Cube.face.clone()
 	body.name = "body"
+	body.material.color.setHex(0xC0BD88)
 
 	var top_hinge = Cube.hinge.clone()
 	top_hinge.rotateZ(ninety_deg)
 	top_hinge.position.y += 1
 	top_hinge.name = "up"
+	top_hinge.material.color.setHex(0x010101)
 
 	var down_hinge = Cube.hinge.clone()
 	down_hinge.rotateZ(ninety_deg)
 	down_hinge.position.y -= 1
 	down_hinge.name = "down"
+	down_hinge.material.color.setHex(0x010101)
 
 	var right_hinge = Cube.hinge.clone()
 	right_hinge.position.x += 1
 	right_hinge.name = "right"
+	right_hinge.material.color.setHex(0x010101)
 
 	var left_hinge = Cube.hinge.clone()
 	left_hinge.position.x -= 1
 	left_hinge.name = "left"
 	left_hinge.rotateZ(2*ninety_deg)
+	left_hinge.material.color.setHex(0x010101)
 
 	Cube.highlightFace = new THREE.Group()
 
@@ -332,8 +224,8 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	Cube.highlightFace.add(right_hinge.clone())
 	Cube.highlightFace.add(left_hinge.clone())
 
-	Cube.highlightHinge = Cube.hinge.clone()
-	Cube.highlightHinge.scale.set(1.2, 1.2, 1.2)
+	Cube.highlightEdge = Cube.hinge.clone()
+	Cube.highlightEdge.scale.set(1.2, 1.2, 1.2)
 
 	for(i = 0; i < 6; i++)
 	{
@@ -370,6 +262,7 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 		{
 			new_face.position.x = -1
 			new_face.rotateY(-ninety_deg)
+			new_face.rotateX(ninety_deg*2)
 		}
 		else if(face_names[i] == "right")
 		{
@@ -381,4 +274,145 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	}
 
 	Cube.new_cube.scale.set(0.9, 0.9, 0.9)
+}
+
+Cube.CubeDataCalculator = function(){
+	var up = new THREE.Vector3(0, .5, 0)
+	var down = new THREE.Vector3(0, -.5, 0)
+	var left = new THREE.Vector3(-.5, 0, 0)
+	var right = new THREE.Vector3(.5, 0, 0)
+	var back = new THREE.Vector3(0, 0, -.5)
+	var front = new THREE.Vector3(0, 0, .5)
+
+	this.CalculateEdgeData = function(cube, dir_word){
+		var pos = cube.GetLatticePosition()
+		var edge = {"name": null, "position": null, "endPoints": null}
+
+		switch(dir_word)
+		{
+			case "front_up":
+				edge["name"] = "front_up"
+				edge["position"] = SumOfVectors([pos, up, front])
+				edge["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, up, front, right])]
+				break;
+			case "front_right":
+				edge["name"] = "front_right"
+				edge["position"] = SumOfVectors([pos, right, front])
+				edge["endPoints"] = [SumOfVectors([pos, up, front, right]), SumOfVectors([pos, down, front, right])]
+				break;
+			case "front_left":
+				edge["name"] = "front_left"
+				edge["position"] = SumOfVectors([pos, left, front])
+				edge["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, down, front, left])]
+				break;
+			case "front_down":
+				edge["name"] = "front_down"
+				edge["position"] = SumOfVectors([pos, down, front])
+				edge["endPoints"] = [SumOfVectors([pos, down, front, left]), SumOfVectors([pos, down, front, right])]
+			break;
+			case "up_up":
+				edge["name"] = "up_up"
+				edge["position"] = SumOfVectors([pos, back, up])
+				edge["endPoints"] = [SumOfVectors([pos, up, back, left]), SumOfVectors([pos, up, back, right])]
+				break;
+			case "up_right":
+				edge["name"] = "up_right"
+				edge["position"] = SumOfVectors([pos, right, up])
+				edge["endPoints"] = [SumOfVectors([pos, up, front, right]), SumOfVectors([pos, up, back, right])]
+			break;
+			case "up_left":
+				edge["name"] = "up_left"
+				edge["position"] = SumOfVectors([pos, left, up])
+				edge["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, up, back, left])]
+			break;
+			case "up_down":
+				edge["name"] = "up_down"
+				edge["position"] = SumOfVectors([pos, front, up])
+				edge["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, up, front, right])]
+			break;
+			case "back_up":
+				edge["name"] = "back_up"
+				edge["position"] = SumOfVectors([pos, down, back])
+				edge["endPoints"] = [SumOfVectors([pos, down, back, left]), SumOfVectors([pos, down, back, right])]
+			break;
+			case "back_right":
+				edge["name"] = "back_right"
+				edge["position"] = SumOfVectors([pos, left, back])
+				edge["endPoints"] = [SumOfVectors([pos, up, back, left]), SumOfVectors([pos, down, back, left])]
+			break;
+			case "back_left":
+				edge["name"] = "back_left"
+				edge["position"] = SumOfVectors([pos, right, back])
+				edge["endPoints"] = [SumOfVectors([pos, up, back, right]), SumOfVectors([pos, down, back, right])]
+			break;
+			case "back_down":
+				edge["name"] = "back_down"
+				edge["position"] = SumOfVectors([pos, up, back])
+				edge["endPoints"] = [SumOfVectors([pos, up, back, left]), SumOfVectors([pos, up, back, right])]
+			break;
+			case "down_up":
+				edge["name"] = "down_up"
+				edge["position"] = SumOfVectors([pos, front, down])
+				edge["endPoints"] = [SumOfVectors([pos, down, front, left]), SumOfVectors([pos, down, front, right])]
+			break;
+			case "down_right":
+				edge["name"] = "down_right"
+				edge["position"] = SumOfVectors([pos, left, down])
+				edge["endPoints"] = [SumOfVectors([pos, down, front, left]), SumOfVectors([pos, down, back, left])]
+			break;
+			case "down_left":
+				edge["name"] = "down_left"
+				edge["position"] = SumOfVectors([pos, right, down])
+				edge["endPoints"] = [SumOfVectors([pos, down, front, right]), SumOfVectors([pos, down, back, right])]
+			break;
+			case "down_down":
+				edge["name"] = "down_left"
+				edge["position"] = SumOfVectors([pos, back, down])
+				edge["endPoints"] = [SumOfVectors([pos, down, back, left]), SumOfVectors([pos, down, back, right])]
+			break;
+			case "left_up":
+				edge["name"] = "left_up"
+				edge["position"] = SumOfVectors([pos, down, left])
+				edge["endPoints"] = [SumOfVectors([pos, down, front, left]), SumOfVectors([pos, down, back, left])]
+			break;
+			case "left_right":
+				edge["name"] = "left_right"
+				edge["position"] = SumOfVectors([pos, front, left])
+				edge["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, down, front, left])]
+			break;
+			case "left_left":
+				edge["name"] = "left_left"
+				edge["position"] = SumOfVectors([pos, back, left])
+				edge["endPoints"] = [SumOfVectors([pos, up, back, left]), SumOfVectors([pos, down, back, left])]
+			break;
+			case "left_down":
+				edge["name"] = "left_down"
+				edge["position"] = SumOfVectors([pos, up, left])
+				edge["endPoints"] = [SumOfVectors([pos, up, front, left]), SumOfVectors([pos, up, back, left])]
+			break;
+			case "right_up":
+				edge["name"] = "right_up"
+				edge["position"] = SumOfVectors([pos, up, right])
+				edge["endPoints"] = [SumOfVectors([pos, up, front, right]), SumOfVectors([pos, up, back, right])]
+			break;
+			case "right_right":
+				edge["name"] = "right_right"
+				edge["position"] = SumOfVectors([pos, back, right])
+				edge["endPoints"] = [SumOfVectors([pos, up, back, right]), SumOfVectors([pos, down, back, right])]
+			break;
+			case "right_left":
+				edge["name"] = "right_left"
+				edge["position"] = SumOfVectors([pos, front, right])
+				edge["endPoints"] = [SumOfVectors([pos, up, front, right]), SumOfVectors([pos, down, front, right])]
+			break;
+			case "right_down":
+				edge["name"] = "right_down"
+				edge["position"] = SumOfVectors([pos, down, right])
+				edge["endPoints"] = [SumOfVectors([pos, down, front, right]), SumOfVectors([pos, down, back, right])]
+			break;
+			default: console.log("This shouldn't be happening")
+		}
+
+		return edge
+	}
 }
