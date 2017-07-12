@@ -43,7 +43,7 @@ function PolyCube(position, name = ""){
 	this.Add_Cube = function(position){
 		var key = PosToKey(position)
 
-		if(!(key in L_Cubes))
+		if(!ObjectExists(L_Cubes[key]))
 		{
 			cube = new Cube(position, this)
 
@@ -107,7 +107,6 @@ function PolyCube(position, name = ""){
 				var cube_2 = L_Cubes[dir]
 				if(ObjectExists(cube_2))
 				{
-					console.log("Adjacency with " + key)
 					HandleFaceRemoval(cube, key)
 					HandleFaceRemoval(cube_2, PolyCube.dir_to_opp[key])
 
@@ -140,7 +139,7 @@ function PolyCube(position, name = ""){
 			hinge_picking_polycube.add(cube.hinge_picking_cube)
 			for(var faceNum in cube.hinge_picking_cube.children)
 			{
-				var face = hinge_picking_cube.children[faceNum]
+				var face = cube.hinge_picking_cube.children[faceNum]
 
 				if(ObjectExists(face))
 				{
@@ -158,7 +157,6 @@ function PolyCube(position, name = ""){
 			/*//////////////////////
 			FINISH MAPPING EACH FACE TO A COLOR 
 			*//////////////////////
-			console.log(Color2Edge_Map)
 			this.Obj.add(cube.Obj)
 			this.picking_polycube.add(cube.polycube_picking_cube)
 
@@ -239,6 +237,20 @@ function PolyCube(position, name = ""){
 		}
 	}
 
+	this.toJSON = function(){
+		var j_obj = {"name" : null, "position" : null, "cubes" : []}
+
+		j_obj.name = this.name
+		j_obj.position = [_lattice_position.x, _lattice_position.y, _lattice_position.z]
+
+		for(var val in L_Cubes)
+		{
+			j_obj.cubes.push([L_Cubes[val].GetLatticePosition().x, L_Cubes[val].GetLatticePosition().y, L_Cubes[val].GetLatticePosition().z])
+		}
+
+		return j_obj
+	}
+
 	//Let cube1 be the cube we are adding to the polycube, and cube2 be a cube adjacent to cube1. Then dir is the Vector3 representing the direction from
 	//cube1 to cube2. For each face that is not facing the same or opposite direction to dir, check if each cube has the corresponding face.
 	//If so, then the respective faces of each cube are adjacent.
@@ -263,10 +275,8 @@ function PolyCube(position, name = ""){
 
 					HandleEdgeComparisons(cube_1, cube_2, face_1, face_2)
 				}
-				else
-				{
-					CheckAndSetAdjacentWithDiagonal(cube_1, dir, dir2)
-				}
+
+				CheckAndSetAdjacentWithDiagonal(cube_1, dir, dir2)
 			}
 		}
 	}

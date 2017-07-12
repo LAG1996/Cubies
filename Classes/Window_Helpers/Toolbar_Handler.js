@@ -3,12 +3,23 @@ function Toolbar_Handler(){
 	this.Obj = $("#toolbar")
 	var buttons = []
 	var mode_text = ''
+	var Cube_Add_Handler_List = []
 
-	var amt_buttons_for_context = {"camera-control" : 2, "world-context" : 1, "poly-context" : 3 }
+	var amt_buttons_for_context = {"camera-control" : 2, "world-context" : 1, "poly-context" : 4 }
 
 	//Initialize the sidebars
 	Init_Modals()
 	Init_Sidebars()
+
+	//Some data can be manipulated independently from toolbars. For example, a polycube could be deactivated by
+	//clicking the screen. The sidebar object representing it, however, will show it as being activated, which could
+	//be quite confusing. There are a few ways we could handle this, but I'll choose this approach. We create a simple
+	//check that runs every frame step that will simply deactivate and activate objects accordingly.
+
+	setInterval(function(){
+		Update_Object_Viewer()
+		Update_Cube_Add_Handlers()
+	}, 10)
 
 	var that = this
 
@@ -148,6 +159,14 @@ function Toolbar_Handler(){
 			}
 		})
 
+		$(buttons[3]).text("Save Polycube")
+		$(buttons[3]).click(function(){
+			if(PolyCube.Active_Polycube != null)
+			{
+				saveTextAs(JSON.stringify(PolyCube.Active_Polycube.toJSON()), PolyCube.Active_Polycube.name) //Thank you Eli Grey
+			}
+		})
+
 		mode_text = "Edit " + polycube.name
 	}
 
@@ -162,6 +181,12 @@ function Toolbar_Handler(){
 		//Set the function for the left sidebar buttons
 		$("#s_worldview").click(function(){that.Switch_Context_H("world-context")})
 		$("#s_camera_control").click(function(){that.Switch_Context_H("camera-control")})
+
+		//Set the functions for the object list sidebar buttons
+		$("#dropdown_add_polycube").click(function(){
+			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
+			$("#add_poly_modal").show()
+		})
 
 		//Hide DOM templates
 		$("#object_template").hide()
@@ -178,10 +203,93 @@ function Toolbar_Handler(){
 			//TODO: handle verfication
 
 			//Items have been verified. Make a new polycube
-			var p_cube = PolyCube.GenerateNewPolyCube(new THREE.Vector3(parseInt($("#add_poly_modal_x").val(), 10), 
+			AddPolyCube(new THREE.Vector3(parseInt($("#add_poly_modal_x").val(), 10), 
 				parseInt($("#add_poly_modal_y").val(), 10), 
 				parseInt($("#add_poly_modal_z").val(), 10)), 
 				$("#add_poly_modal_new_name").val())
+
+			$("#add_poly_modal").hide()
+		})
+
+		$("#polycube_file_read").on("change", function(){
+			//Instantiate a file reader that will read the file specified
+			var reader = new FileReader()
+			this.addPolycube_intervNum
+			var that = this
+	
+			reader.onload = function(){
+				data = reader.result
+				var obj = JSON.parse(data)
+
+				//TODO: Verify the file
+
+				//The file has been verified. Create a new polycube with all of the specified cubes
+
+				var p = AddPolyCube(new THREE.Vector3(obj.position[0], obj.position[1], obj.position[2]), obj.name)
+
+				Cube_Add_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
+
+				$("#add_poly_modal").hide()
+			}
+			reader.onerror = function(){
+				data = ""
+			}
+			reader.onabort = function(){
+				data = ""
+			}
+			reader.readAsText(event.target.files[0])
+		})
+
+
+		//The add_cube_to_poly_modal handles setting the cube's coordinates in relation to the polycube's origin
+		$("#add_cube_to_poly_modal_close").click(function(){$("#add_cube_to_poly_modal").hide()})
+		$("#add_cube_to_poly_modal_submit").click(function(){
+			//TODO: handle verification
+
+			//Data has been verified. Make a new polycube
+			PolyCube.Active_Polycube.Add_Cube(new THREE.Vector3(parseInt($("#add_cube_to_poly_modal_x").val(), 10), parseInt($("#add_cube_to_poly_modal_y").val(), 10), parseInt($("#add_cube_to_poly_modal_z").val(), 10)))
+		})
+	}
+
+	function Update_Object_Viewer()
+	{
+		if(ObjectExists(PolyCube.Active_Polycube))
+		{
+			var activePolycubeDataDOM = $("#" + PolyCube.Active_Polycube.name + "_data")
+			var activePolyCubeDataEditDOM = activePolycubeDataDOM.find("#"+PolyCube.Active_Polycube.name + "_data_edit")
+
+			if(!activePolyCubeDataEditDOM.attr(":visible"))
+			{
+				$(".obj_data_edit").hide()
+				$(".obj_data_trigger").attr("class", "w3-button w3-black obj_data_trigger")	
+				activePolyCubeDataEditDOM.show()
+				activePolycubeDataDOM.find("#active_toggle").attr("class", "w3-button w3-white w3-right obj_data_trigger")
+			}
+		}
+		else
+		{
+			$(".obj_data_edit").hide()
+			$(".obj_data_trigger").attr("class", "w3-button w3-black obj_data_trigger")	
+		}
+	}
+
+	function Update_Cube_Add_Handlers()
+	{
+		for(var key in Cube_Add_Handler_List)
+		{
+			if(Cube_Add_Handler_List[key].finished == true)
+			{
+				delete Cube_Add_Handler_List[key]
+			}
+			else
+			{
+				Cube_Add_Handler_List[key].Add_Another_Cube()
+			}
+		}
+	}
+
+	function AddPolyCube(position, name){
+		var p_cube = PolyCube.GenerateNewPolyCube(position, name)
 
 			//Now add that polycube to the scene
 			var object_data_space = $("#object_template").clone()
@@ -211,14 +319,14 @@ function Toolbar_Handler(){
 					if($(thingy).is(":visible"))
 					{
 						$(thingy).hide()
-						$(this).attr("class", "w3-button w3-black w3-right obj_data_trigger")
+						$(this).attr("class", "w3-button w3-black obj_data_trigger")
 						PolyCube.SwitchToNewActive(null)
 						that.Switch_Context_H('world-context')
 					}
 					else
 					{
 						$(".obj_data_edit").hide()
-						$(".obj_data_trigger").attr("class", "w3-button w3-black w3-right obj_data_trigger")
+						$(".obj_data_trigger").attr("class", "w3-button w3-black obj_data_trigger")
 						$(thingy).show()
 						$(this).attr("class", "w3-button w3-white w3-right obj_data_trigger")
 						PolyCube.SwitchToNewActive(PolyCube.L_Polycubes[$(this).text()])
@@ -266,17 +374,10 @@ function Toolbar_Handler(){
 
 			scene_handler.RequestAddToScene(p_cube.Obj)
 			scene_handler.RequestAddToPickingScene(p_cube.picking_polycube)
+			
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 			that.Switch_Context_H('poly-context', p_cube)
-		})
 
-		//The add_cube_to_poly_modal handles setting the cube's coordinates in relation to the polycube's origin
-		$("#add_cube_to_poly_modal_close").click(function(){$("#add_cube_to_poly_modal").hide()})
-		$("#add_cube_to_poly_modal_submit").click(function(){
-			//TODO: handle verification
-
-			//Data has been verified. Make a new polycube
-			PolyCube.Active_Polycube.Add_Cube(new THREE.Vector3(parseInt($("#add_cube_to_poly_modal_x").val(), 10), parseInt($("#add_cube_to_poly_modal_y").val(), 10), parseInt($("#add_cube_to_poly_modal_z").val(), 10)))
-		})
+			return p_cube
 	}
 }

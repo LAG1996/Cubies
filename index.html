@@ -30,8 +30,8 @@
 			<button class = "w3-button w3-black w3-hover-white" id = "object_list_trigger">P</button>
 			<div class = "w3-dropdown-content w3-bar-block w3-sand" id = "object_list">
 				<div id = "object_data_list" class = "w3-sidebar w3-bar-block w3-sand" style = "width:25%; height:50%">
-					<div id = "object_template" class = "w3-hover-red">
-						<button class = "w3-button w3-black w3-right obj_data_trigger" id = "active_toggle">objName</button>
+					<div id = "object_template">
+						<button class = "w3-button w3-black obj_data_trigger" id = "active_toggle">objName</button>
 						<div id = "objName_data_edit" class ="w3-container obj_data_edit" style = "display:none">
 							<input id = "poly_obj_name_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "">
 							<input id = "poly_obj_x_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "">
@@ -39,6 +39,7 @@
 							<input id = "poly_obj_z_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "">
 						</div>
 					</div>
+					<button class = "w3-button w3-red w3-hover-white" id = "dropdown_add_polycube">New Polycube</button>
 				</div>
 			</div>
 		</div>
@@ -50,6 +51,8 @@
 <div id = "add_poly_modal" class = "w3-modal">
 	<div class = "w3-modal-content w3-sand">
 		<div class = "w3-container">
+			<label class = "w3-button w3-black" for = "polycube_file_read">Open from file...</label>
+			<input type = "file" id = "polycube_file_read" style = "display:none"/>
 			<form class = "w3-container w3-sand">
 			<label>New Polycube's Name</label>
 			<input id = "add_poly_modal_new_name" class = "w3-input w3-border w3-light-grey" type="text" value = "Name">
@@ -87,6 +90,7 @@
 <script src = "third_party_src/THREE/three.js"></script>
 <script src = "third_party_src/THREE/OBJLoader.js"></script>
 <script src = "third_party_src/THREE/OrbitControls.js"></script>
+<script src = "third_party_src/FileSaver/FileSaver.js"></script>
 <script src = "third_party_src/JQUERY/jquery-3.2.1.min.js"></script>
 
 
@@ -98,6 +102,7 @@
 <script src = "Classes/Camera_Handler.js"></script>
 <script src = "Classes/Window_Helpers/Toolbar_Handler.js"></script>
 <script src = "Classes/SceneHandler.js"></script>
+<script src = "Classes/Window_Helpers/Cube_Add_Handler.js"></script>
 
 <!--
 	The real meat of the program

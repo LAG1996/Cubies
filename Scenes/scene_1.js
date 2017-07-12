@@ -82,7 +82,6 @@ function HandlePick() {
 }
 
 function ShowFaceData(data){
-	console.log(data)
 	var parentHighlight = Cube.highlightFace.clone()
 	parentHighlight.position.copy(data["parent"]['face'].getWorldPosition())
 	parentHighlight.rotation.copy(data["parent"]['face'].getWorldRotation())
@@ -127,7 +126,6 @@ function ShowFaceData(data){
 }
 
 function ShowEdgeData(data){
-	console.log(data)
 	var parentHighlight = Cube.highlightEdge.clone()
 	parentHighlight.position.copy(data['parent'][0]['edge'].getWorldPosition())
 	parentHighlight.rotation.copy(data['parent'][0]['edge'].getWorldRotation())
