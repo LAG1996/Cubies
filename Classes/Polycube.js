@@ -112,6 +112,21 @@ function PolyCube(position, name = ""){
 
 					SetAdjacentFaces(cube, cube_2, key)
 				}
+
+				//For every other cube around the new cube, check them against cube_2 to see if they are diagonally adjacent.
+					for(var key_2 in PolyCube.key_to_dir)
+					{		
+						if(key_2 != key && key_2 != PolyCube.dir_to_opp[key])
+						{	
+							var dir_2 = PosToKey(SumOfVectors([PolyCube.key_to_dir[key_2], latt_pos]))
+							var cube_3 = L_Cubes[dir_2]
+
+							if(ObjectExists(cube_3))
+							{
+								CheckAndSetAdjacentWithDiagonal(cube_3, PolyCube.dir_to_opp[key_2], key)
+							}
+						}
+					}
 			}
 
 			SetAdjacentFacesWithSelf(cube)
