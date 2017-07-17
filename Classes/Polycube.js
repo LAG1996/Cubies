@@ -33,12 +33,6 @@ function PolyCube(position, name = ""){
 	var Color2Edge_Map = []
 	var Color2Cube_Map = []
 
-
-	var FaceName2Color_Map = []
-	var Hinge2Color_Map = []
-	
-	var Cube_Color_Map = []
-
 	var that = this
 
 	this.Add_Cube = function(position, custom_id = -1){
@@ -152,6 +146,7 @@ function PolyCube(position, name = ""){
 			}
 			//Adding to the cube picking scene would also be trivial because the cube automatically has its color stored as well
 			cube_picking_polycube.add(cube.cube_picking_cube)
+			Color2Cube_Map[cube.ID] = cube
 			//Add this cube's hinge picking cube to the scene
 			hinge_picking_polycube.add(cube.hinge_picking_cube)
 			for(var faceNum in cube.hinge_picking_cube.children)
@@ -254,6 +249,17 @@ function PolyCube(position, name = ""){
 		}
 	}
 
+	this.RemoveFace = function(face){
+		var re = new RegExp('\\d')
+		var face_name_split = face.name.split(re)
+		var cube_id_part = face.name.slice(1, face.name.indexOf(face_name_split[face_name_split.length - 1]))
+		var dir_part = face.name.slice(face.name.indexOf(face_name_split[face_name_split.length - 1]), face.name.length)
+
+		var cube = Color2Cube_Map[cube_id_part]
+
+		HandleFaceRemoval(cube, dir_part)
+	}
+
 	this.toJSON = function(){
 		var j_obj = {"name" : null, "position" : null, "cubes" : []}
 
@@ -266,6 +272,36 @@ function PolyCube(position, name = ""){
 		}
 
 		return j_obj
+	}
+
+	this.Destroy = function(){
+		if(ObjectExists(this.Obj.parent))
+			this.Obj.parent.remove(this.Obj)
+		if(ObjectExists(face_picking_polycube.parent))
+			face_picking_polycube.parent.remove(face_picking_polycube)
+		if(ObjectExists(hinge_picking_polycube.parent))
+			hinge_picking_polycube.parent.remove(hinge_picking_polycube)
+		if(ObjectExists(cube_picking_polycube.parent))
+			cube_picking_polycube.parent.remove(cube_picking_polycube)
+		if(ObjectExists(new_cube_picking_polycube.parent))
+			new_cube_picking_polycube.parent.remove(new_cube_picking_polycube)
+
+		for(var cube in L_Cubes)
+		{
+			L_Cubes[cube].Destroy()
+		}
+
+		delete face_picking_polycube
+		delete hinge_picking_polycube
+		delete cube_picking_polycube
+		delete new_cube_picking_polycube
+
+		for(var c in contexts)
+		{
+			delete contexts[c]
+		}
+
+		delete this
 	}
 
 	//Let cube1 be the cube we are adding to the polycube, and cube2 be a cube adjacent to cube1. Then dir is the Vector3 representing the direction from
@@ -289,8 +325,6 @@ function PolyCube(position, name = ""){
 				{
 					AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1,
 					face_2.name, face_2)
-
-					//HandleEdgeComparisons(cube_1, cube_2, face_1, face_2)
 				}
 
 				CheckAndSetAdjacentWithDiagonal(cube_1, dir, dir2)
@@ -318,8 +352,6 @@ function PolyCube(position, name = ""){
 			{
 				AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1, face_2.name, face_2)
 			}
-
-			//HandleEdgeComparisons(cube, cube_2, face_1, face_2)
 			HandleEdgeComparisons(cube, cube_2)
 		}	
 	}
@@ -344,8 +376,6 @@ function PolyCube(position, name = ""){
 						{
 							AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1, 
 							face_2.name, face_2)
-
-							//HandleEdgeComparisons(cube, cube, face_1, face_2)
 						}
 					}
 				}
@@ -383,14 +413,6 @@ function PolyCube(position, name = ""){
 
 		AdjacencyGraph.RemoveFace(facename)
 		cube.RemoveFace(facename)
-
-		var color = FaceName2Color_Map[facename]
-
-		if(ObjectExists(color))
-		{
-			delete FaceName2Color_Map[facename]
-			delete Color2Face_Map[color]
-		}
 	}
 
 	var HandleEdgeComparisons = function(cube_1, cube_2)
@@ -457,57 +479,7 @@ function PolyCube(position, name = ""){
 		}
 
 	}
-/*
-	var HandleEdgeComparisons = function(cube_1, cube_2, face_1, face_2)
-	{
-		var face_dir_word_1 = face_1.name.split('c'+cube_1.ID)[1]
-		var face_dir_word_2 = face_2.name.split('c'+cube_2.ID)[1]
 
-		for(var keys_1 in PolyCube.dir_keys)
-		{
-			var second_dir_1 = PolyCube.dir_keys[keys_1]
-
-			if(second_dir_1 != 'front' && second_dir_1 != 'back')
-			{
-				for(var keys_2 in PolyCube.dir_keys)
-				{
-					var second_dir_2 = PolyCube.dir_keys[keys_2]
-
-					if(second_dir_2 != 'front' && second_dir_2 != 'back')
-					{
-						var dir_word_1 = face_dir_word_1 + '_' + second_dir_1
-						var dir_word_2 = face_dir_word_2 + '_' + second_dir_2
-
-						var edge_1 = PolyCube.EdgeCalculator.CalculateEdgeData(cube_1, dir_word_1)
-						var edge_2 = PolyCube.EdgeCalculator.CalculateEdgeData(cube_2, dir_word_2)
-
-						var edge_1_pos = edge_1.position
-						var edge_2_pos = edge_2.position
-
-						var inc_edge_1 = cube_1.Obj.getObjectByName(face_1.name + '_' + second_dir_1)
-						var inc_edge_2 = cube_2.Obj.getObjectByName(face_2.name + '_' + second_dir_2)
-
-						if(edge_1_pos.distanceTo(edge_2_pos) == 0)
-						{
-							L_Hinges[PosToKey(edge_1_pos)] = [inc_edge_1, inc_edge_2]
-							
-							AdjacencyGraph.AddIncidentEdges(face_1.name + '_' + second_dir_1, inc_edge_1,
-								face_2.name + '_' + second_dir_2, inc_edge_2)
-
-							cube_2.hinge_picking_cube.getObjectByName(face_2.name + '_' + second_dir_2).material = cube_1.hinge_picking_cube.getObjectByName(face_1.name + '_' + second_dir_1).material.clone()
-						}
-						else if(PosToKey(edge_1.endPoints[0]) == PosToKey(edge_2.endPoints[0])|| PosToKey(edge_1.endPoints[0]) == PosToKey(edge_2.endPoints[1])
-							|| PosToKey(edge_1.endPoints[1]) == PosToKey(edge_2.endPoints[0]) || PosToKey(edge_1.endPoints[1]) == PosToKey(edge_2.endPoints[1]))
-						{
-							AdjacencyGraph.AddNeighboringEdges(face_1.name + '_' + second_dir_1, inc_edge_1,
-								face_2.name + '_' + second_dir_2, inc_edge_2)
-						}
-					}
-				}
-			}
-		}
-	}
-*/
 	//Utility function for converting the lattice position of a cube to a key to look up in L_Cubes
 	var PosToKey = function(position){
 		return position.x.toFixed(1)+","+position.y.toFixed(1)+","+position.z.toFixed(1)
@@ -549,6 +521,11 @@ PolyCube.dir_to_key = {
 PolyCube.CubeFaceString = function(cubeID, dir)
 {
 	return "c" + cubeID + dir
+}
+
+PolyCube.ToPolyCubeIDString = function(p_cube)
+{
+	return "p" + p_cube.id
 }
 
 //A static utility function for generating a new polycube object.
@@ -595,4 +572,11 @@ PolyCube.SwitchToNewActive = function(new_active)
 	{
 		PolyCube.Active_Polycube.trans_helper.visible = true
 	}
+}
+
+PolyCube.DestroyPolyCube = function(polycube)
+{
+	delete PolyCube.L_Polycubes[polycube.name]	
+	polycube.Destroy()
+	PolyCube.SwitchToNewActive(null)
 }

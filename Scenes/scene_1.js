@@ -8,23 +8,25 @@ var parentHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xDD0000})
 var childrenHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0x001AAA})
 
 var highlights_are_on = false
+var pick_mode = 'nada'
 var junk = []
 
 $(document).ready(function(){
-	Initialize()
-	scene_handler = new SceneHandler()
+	Initialize() //Load the cube part models and then initialize the cube class with said models
+	scene_handler = new SceneHandler() //Initialize the scene
 
+	//Add a grid to the scene so we can orient ourselves
 	var gridHelper = new THREE.GridHelper(1000, 500, 0x0000FF, 0x020202)
 	gridHelper.position.y = -1
 	gridHelper.position.x = -1
 	gridHelper.position.z = -1
+	scene_handler.RequestAddToScene(gridHelper)
 
+	//Add the toolbars and their functionality
 	toolbar_handler = new Toolbar_Handler()
 	toolbar_handler.Switch_Context_H('world-context')
 
-	scene_handler.RequestAddToScene(gridHelper)
-	//scene_handler.SetViewportOffset(0, toolbar_handler.Obj.innerHeight())
-
+	//Add a couple of events that'll help in mouse picking
 	$('#container').on('mousedown', StoreMouseVals)
 	$('#container').on('mouseup', HandlePick)
 })
@@ -64,12 +66,21 @@ function HandlePick() {
 				{
 					if(p_cube.context_name == 'face')
 					{
-						ShowFaceData(data)
-						
+						if(pick_mode == 'adj')
+						{
+							ShowFaceData(data)
+						}
+						else if(pick_mode == 'rem')
+						{
+							p_cube.RemoveFace(data["parent"]["face"])
+						}
 					}
 					else if(p_cube.context_name == 'hinge')
 					{
-						ShowEdgeData(data)
+						if(pick_mode == 'adj')
+						{
+							ShowEdgeData(data)
+						}
 					}
 
 					highlights_are_on = true

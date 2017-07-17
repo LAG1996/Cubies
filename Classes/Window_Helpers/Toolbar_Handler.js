@@ -8,11 +8,11 @@ function Toolbar_Handler(){
 	var right_sidebar = {'context' : 'nada', 'buttons' : []}
 
 	var right_sidebar_contexts = {
-		'face' : [{"text" : "Adjacency"}, {"text" : "Remove"}],
+		'face' : [{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'})}, {"text" : "Remove", "click" : (function(){pick_mode = 'rem'})}],
 		'hinge' : [{"text" : "Adjacency"}, {"text" : "Cut"}]
 	}
 
-	var amt_buttons_for_context = {"camera-control" : 2, "world-context" : 1, "poly-context" : 4 }
+	var amt_buttons_for_context = {"camera-control" : 2, "world-context" : 1, "poly-context" : 5 }
 
 	var that = this
 
@@ -182,13 +182,24 @@ function Toolbar_Handler(){
 			}
 		})
 
+		$(buttons[4]).text("Remove Polycube")
+		$(buttons[4]).click(function(){
+			if(PolyCube.Active_Polycube)
+			{
+				$("#" + PolyCube.ToPolyCubeIDString(PolyCube.Active_Polycube) + "_data").remove()
+				PolyCube.DestroyPolyCube(PolyCube.Active_Polycube)
+
+				that.Switch_Context_H('world-context')
+			}
+		})
+
 		mode_text = "Edit " + polycube.name
 	}
 
 	function Init_Sidebars()
 	{
 		//Position the right sidebar to be under the toolbar
-		$("#right_sidebar").offset({top: that.Obj.innerHeight()})
+		//$("#right_sidebar").offset({top: that.Obj.innerHeight()})
 		$("#sidebar_trigger").click(function(){
 			_Toggle_V()
 		})
@@ -231,6 +242,7 @@ function Toolbar_Handler(){
 		$("#polycube_file_read").on("change", function(){
 			//Instantiate a file reader that will read the file specified
 			var reader = new FileReader()
+			var that = this
 	
 			reader.onload = function(){
 				data = reader.result
@@ -244,6 +256,7 @@ function Toolbar_Handler(){
 
 				Cube_Add_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
 
+				$(that).val("")
 				$("#add_poly_modal").hide()
 			}
 			reader.onerror = function(){
@@ -278,8 +291,8 @@ function Toolbar_Handler(){
 	{
 		if(ObjectExists(PolyCube.Active_Polycube))
 		{
-			var activePolycubeDataDOM = $("#" + PolyCube.Active_Polycube.name + "_data")
-			var activePolyCubeDataEditDOM = activePolycubeDataDOM.find("#"+PolyCube.Active_Polycube.name + "_data_edit")
+			var activePolycubeDataDOM = $("#" + PolyCube.ToPolyCubeIDString(PolyCube.Active_Polycube) + "_data")
+			var activePolyCubeDataEditDOM = activePolycubeDataDOM.find("#"+ PolyCube.ToPolyCubeIDString(PolyCube.Active_Polycube) + "_data_edit")
 
 			if(!activePolyCubeDataEditDOM.attr(":visible"))
 			{
@@ -318,7 +331,9 @@ function Toolbar_Handler(){
 			{
 				$("#context_text").show()
 			}
-			$("#context_text").text(PolyCube.Active_Polycube.context_name)
+
+			if($("#context").text() != PolyCube.Active_Polycube.context_name)
+				$("#context_text").text(PolyCube.Active_Polycube.context_name)
 		}
 		else
 		{
@@ -336,12 +351,13 @@ function Toolbar_Handler(){
 				right_sidebar.context = PolyCube.Active_Polycube.context_name
 				var context = right_sidebar_contexts[PolyCube.Active_Polycube.context_name]
 
-				for(var index in context)
+				for(var index = 0; index < context.length; index++)
 				{
 					var new_button = $("#right_sidebar_btn_template").clone()
 					new_button.text(context[index].text)
-					new_button.attr("id", context[index].text)
+					new_button.attr("id", "right_sidebar_btn_"+index)
 					new_button.addClass("right_sidebar_btns")
+					new_button.on("click", context[index].click)
 					new_button.show()
 					$("#right_sidebar").append($(new_button))
 				}
@@ -357,12 +373,12 @@ function Toolbar_Handler(){
 	}
 
 	function AddPolyCube(position, name){
-		var p_cube = PolyCube.GenerateNewPolyCube(position, name)
+			var p_cube = PolyCube.GenerateNewPolyCube(position, name)
 
 			//Now add that polycube to the scene
 			var object_data_space = $("#object_template").clone()
 
-			var id_string = p_cube.name + "_data"
+			var id_string = PolyCube.ToPolyCubeIDString(p_cube) + "_data"
 
 			$(object_data_space).attr("id", id_string)
 
@@ -382,7 +398,7 @@ function Toolbar_Handler(){
 			//Set up what happens when you click the button that triggers this polycube's active state
 			//The button that I'm talking about would be found in the dropdown that shows all polycube data
 			$(object_data_space).find("#active_toggle").click(function(){
-					var thingy = $("#"+$(this).text() + "_data_edit")
+					var thingy = $("#"+ id_string + "_edit")
 
 					if($(thingy).is(":visible"))
 					{

@@ -50,11 +50,23 @@ function Cube(latt_pos, polycube, custom_id = -1){
 
 		this.Destroy = function()
 		{
-			this.Obj.parent.remove(this.Obj)
-			this.face_picking_cube.parent.remove(this.face_picking_cube)
-			this.hinge_picking_cube.parent.remove(this.hinge_picking_cube)
-			this.cube_picking_cube.parent.remove(this.cube_picking_cube)
-			this.polycube_picking_cube.parent.remove(this.polycube_picking_cube)
+			if(ObjectExists(this.Obj.parent))
+				this.Obj.parent.remove(this.Obj)
+			if(ObjectExists(this.face_picking_cube.parent))
+				this.face_picking_cube.parent.remove(this.face_picking_cube)
+			if(ObjectExists(this.hinge_picking_cube.parent))
+				this.hinge_picking_cube.parent.remove(this.hinge_picking_cube)
+			if(ObjectExists(this.cube_picking_cube.parent))
+				this.cube_picking_cube.parent.remove(this.cube_picking_cube)
+			if(ObjectExists(this.polycube_picking_cube))
+				this.polycube_picking_cube.parent.remove(this.polycube_picking_cube)
+
+			RecurseRemoveFromCube(this.Obj)
+			RecurseRemoveFromCube(this.face_picking_cube)
+			RecurseRemoveFromCube(this.cube_picking_cube)
+			RecurseRemoveFromCube(this.polycube_picking_cube)
+			RecurseRemoveFromCube(this.hinge_picking_cube)
+
 			delete this.Obj
 			delete this.face_picking_cube
 			delete this.cube_picking_cube
@@ -140,9 +152,17 @@ function Cube(latt_pos, polycube, custom_id = -1){
 			}
 		}
 
-		var ResetCube = function()
+		function RecurseRemoveFromCube(cube)
 		{
-			console.log("To be written later")
+			for(var face in cube.children)
+			{
+				for(var part in cube.children[face].children)
+				{
+					delete cube.children[face].children[part]
+				}
+
+				delete cube.children[face]
+			}
 		}
 }
 
