@@ -1,5 +1,5 @@
-function Cube(latt_pos, polycube, setupPickingCube = true){
-		this.ID = Object.keys(polycube.Get_Cubes()).length
+function Cube(latt_pos, polycube, custom_id = -1){
+		this.ID = (custom_id == -1) ? Object.keys(polycube.Get_Cubes()).length : this.ID = custom_id
 		this.Polycube = polycube
 
 		this.Obj = Cube.new_cube.clone()
@@ -10,8 +10,6 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 		this.face_picking_cube = null
 		this.cube_picking_cube = null
 		this.hinge_picking_cube = null
-
-		this.setupPickingCube = setupPickingCube
 
 		this.faceColors = {}
 
@@ -50,16 +48,18 @@ function Cube(latt_pos, polycube, setupPickingCube = true){
 			}
 		}
 
-		this.RepairCube = function()
+		this.Destroy = function()
 		{
-			for(var names in this.missing_face)
-			{
-				if(missing_face[names])
-				{
-					this.Obj.add(Cube.new_cube.getObjectByName(names).clone())
-					missing_face[names] = false
-				}
-			}
+			this.Obj.parent.remove(this.Obj)
+			this.face_picking_cube.parent.remove(this.face_picking_cube)
+			this.hinge_picking_cube.parent.remove(this.hinge_picking_cube)
+			this.cube_picking_cube.parent.remove(this.cube_picking_cube)
+			this.polycube_picking_cube.parent.remove(this.polycube_picking_cube)
+			delete this.Obj
+			delete this.face_picking_cube
+			delete this.cube_picking_cube
+			delete this.polycube_picking_cube
+			delete this.hinge_picking_cube
 		}
 
 		this.MoveTo = function(position)

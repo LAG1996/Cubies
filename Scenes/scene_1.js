@@ -7,6 +7,7 @@ var old_mouse_pos = new THREE.Vector2()
 var parentHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xDD0000})
 var childrenHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0x001AAA})
 
+var highlights_are_on = false
 var junk = []
 
 $(document).ready(function(){
@@ -54,7 +55,6 @@ function HandlePick() {
 			}
 			else
 			{
-				console.log("Looking at " + p_cube.context_name + " context")
 				scene_handler.RequestSwitchToPickingScene(p_cube.pick_context)
 				var id = scene_handler.Pick()
 				scene_handler.SwitchToDefaultPickingScene()
@@ -65,18 +65,25 @@ function HandlePick() {
 					if(p_cube.context_name == 'face')
 					{
 						ShowFaceData(data)
+						
 					}
 					else if(p_cube.context_name == 'hinge')
 					{
 						ShowEdgeData(data)
 					}
+
+					highlights_are_on = true
 				}
 			}	
 		}
-		else
+		else if(!highlights_are_on)
 		{
 				PolyCube.SwitchToNewActive(null)
 				toolbar_handler.Switch_Context_H('world-context')	
+		}
+		else
+		{
+			highlights_are_on = false
 		}
 	}
 }
