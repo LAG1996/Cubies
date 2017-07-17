@@ -31,6 +31,7 @@ function PolyCube(position, name = ""){
 
 	var Color2Face_Map = []
 	var Color2Edge_Map = []
+	var Color2Cube_Map = []
 
 
 	var FaceName2Color_Map = []
@@ -40,12 +41,12 @@ function PolyCube(position, name = ""){
 
 	var that = this
 
-	this.Add_Cube = function(position){
+	this.Add_Cube = function(position, custom_id = -1){
 		var key = PosToKey(position)
 
 		if(!ObjectExists(L_Cubes[key]))
 		{
-			cube = new Cube(position, this)
+			cube = new Cube(position, this, custom_id)
 
 			L_Cubes[key] = cube
 			latt_pos = cube.GetLatticePosition()
@@ -111,6 +112,7 @@ function PolyCube(position, name = ""){
 					HandleFaceRemoval(cube_2, PolyCube.dir_to_opp[key])
 
 					SetAdjacentFaces(cube, cube_2, key)
+					//HandleEdgeComparisons(cube, cube_2, face_1, face_2)
 				}
 
 				//For every other cube around the new cube, check them against cube_2 to see if they are diagonally adjacent.
@@ -288,12 +290,14 @@ function PolyCube(position, name = ""){
 					AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1,
 					face_2.name, face_2)
 
-					HandleEdgeComparisons(cube_1, cube_2, face_1, face_2)
+					//HandleEdgeComparisons(cube_1, cube_2, face_1, face_2)
 				}
 
 				CheckAndSetAdjacentWithDiagonal(cube_1, dir, dir2)
 			}
 		}
+
+		HandleEdgeComparisons(cube_1, cube_2)
 	}
 
 	//Let cube1 be the cube we are adding to the polycube, and cube2 be a cube adjacent to cube1. Then, dir1 is the Vector3 representing the direction from cube1 to cube2,
@@ -315,7 +319,8 @@ function PolyCube(position, name = ""){
 				AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1, face_2.name, face_2)
 			}
 
-			HandleEdgeComparisons(cube, cube_2, face_1, face_2)
+			//HandleEdgeComparisons(cube, cube_2, face_1, face_2)
+			HandleEdgeComparisons(cube, cube_2)
 		}	
 	}
 
@@ -340,12 +345,14 @@ function PolyCube(position, name = ""){
 							AdjacencyGraph.AddNeighboringFaces(face_1.name, face_1, 
 							face_2.name, face_2)
 
-							HandleEdgeComparisons(cube, cube, face_1, face_2)
+							//HandleEdgeComparisons(cube, cube, face_1, face_2)
 						}
 					}
 				}
 			}		
 		}
+
+		HandleEdgeComparisons(cube, cube)
 	}
 
 	//This is a utility function for removing a face from both a cube and the face dual graph
@@ -386,6 +393,71 @@ function PolyCube(position, name = ""){
 		}
 	}
 
+	var HandleEdgeComparisons = function(cube_1, cube_2)
+	{
+		var l_faces_1 = []
+		var l_faces_2 = []
+
+		for(var face in cube_1.Obj.children)
+		{
+			l_faces_1.push(cube_1.Obj.children[face])
+		}
+
+		for(var face in cube_2.Obj.children)
+		{
+			l_faces_2.push(cube_2.Obj.children[face])
+		}
+
+		for(var faceNum_1 in l_faces_1)
+		{
+			var face_1 = l_faces_1[faceNum_1]
+
+			for(var facePart_1 = 1; facePart_1 < face_1.children.length; facePart_1++)
+			{
+				var edge_1 = face_1.children[facePart_1]
+
+				for(var faceNum_2 in l_faces_2)
+				{
+					var face_2 = l_faces_2[faceNum_2]
+
+					for(var facePart_2 = 1; facePart_2 < face_2.children.length; facePart_2++)
+					{
+						var edge_2 = face_2.children[facePart_2]
+
+						if(edge_1.name == edge_2.name)
+						{
+							break
+						}
+
+
+						var edge_word_1 = edge_1.name.split('c'+cube_1.ID)[1]
+						var edge_word_2 = edge_2.name.split('c'+cube_2.ID)[1]
+
+						var d_edge_1 = PolyCube.EdgeCalculator.CalculateEdgeData(cube_1, edge_word_1)
+						var d_edge_2 = PolyCube.EdgeCalculator.CalculateEdgeData(cube_2, edge_word_2)
+
+						if(d_edge_1.position.distanceTo(d_edge_2.position) == 0)
+						{
+							L_Hinges[PosToKey(d_edge_1.position)] = [edge_1, edge_2]
+							
+							AdjacencyGraph.AddIncidentEdges(edge_1.name, edge_1,
+								edge_2.name, edge_2)
+
+							cube_2.hinge_picking_cube.getObjectByName(edge_2.name).material = cube_1.hinge_picking_cube.getObjectByName(edge_1.name).material.clone()
+						}
+						else if(PosToKey(d_edge_1.endPoints[0]) == PosToKey(d_edge_2.endPoints[0])|| PosToKey(d_edge_1.endPoints[0]) == PosToKey(d_edge_2.endPoints[1])
+							|| PosToKey(d_edge_1.endPoints[1]) == PosToKey(d_edge_2.endPoints[0]) || PosToKey(d_edge_1.endPoints[1]) == PosToKey(d_edge_2.endPoints[1]))
+						{
+							AdjacencyGraph.AddNeighboringEdges(edge_1.name, edge_1,
+								edge_2.name, edge_2)
+						}
+					}
+				}
+			}
+		}
+
+	}
+/*
 	var HandleEdgeComparisons = function(cube_1, cube_2, face_1, face_2)
 	{
 		var face_dir_word_1 = face_1.name.split('c'+cube_1.ID)[1]
@@ -429,15 +501,13 @@ function PolyCube(position, name = ""){
 						{
 							AdjacencyGraph.AddNeighboringEdges(face_1.name + '_' + second_dir_1, inc_edge_1,
 								face_2.name + '_' + second_dir_2, inc_edge_2)
-
-							//console.log(face_1.name + '_' + second_dir_1 + " and " + face_2.name + '_' + second_dir_2 + " are adjacent edges")
 						}
 					}
 				}
 			}
 		}
 	}
-
+*/
 	//Utility function for converting the lattice position of a cube to a key to look up in L_Cubes
 	var PosToKey = function(position){
 		return position.x.toFixed(1)+","+position.y.toFixed(1)+","+position.z.toFixed(1)

@@ -45,7 +45,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_1 in Edges))
 		{
-			new_edge_1 = {"name": name_1, "edge": edge_1, "neighbors": [], "currneighbors": []}
+			new_edge_1 = {"name": name_1, "edge": edge_1, "neighbors": [], "currneighbors": [], "status" : "cut"}
 			Edges[name_1] = new_edge_1
 		}
 		else
@@ -55,7 +55,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_2 in Edges))
 		{
-			new_edge_2 = {"name": name_2, "edge": edge_2, "neighbors": [], "currneighbors": []}
+			new_edge_2 = {"name": name_2, "edge": edge_2, "neighbors": [], "currneighbors": [], "status" : "cut"}
 			Edges[name_2] = new_edge_2
 		}
 		else
@@ -115,7 +115,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_1 in Edges))
 		{
-			new_edge_1 = {"name": name_1, "edge": edge_1, "neighbors": [], "currneighbors": []}
+			new_edge_1 = {"name": name_1, "edge": edge_1, "neighbors": [], "currneighbors": [], "status" : "glued"}
 			Edges[name_1] = new_edge_1
 		}
 		else
@@ -125,7 +125,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_2 in Edges))
 		{
-			new_edge_2 = {"name": name_2, "edge": edge_2, "neighbors": [], "currneighbors": []}
+			new_edge_2 = {"name": name_2, "edge": edge_2, "neighbors": [], "currneighbors": [], "status" : "glued"}
 			Edges[name_2] = new_edge_2
 		}
 		else
@@ -192,6 +192,8 @@ function FaceEdgeDualGraph(){
 					edge["incidentEdge"]["neighbors"].push(edge["neighbors"][N])
 					edge["incidentEdge"]["currneighbors"].push(edge["currneighbors"][N])
 				}
+
+				edge["incidentEdge"]["status"] = "cut"
 				
 				delete edge["incidentEdge"]["incidentEdge"]
 			}

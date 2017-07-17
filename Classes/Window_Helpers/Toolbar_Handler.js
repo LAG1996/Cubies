@@ -5,11 +5,27 @@ function Toolbar_Handler(){
 	var mode_text = ''
 	var Cube_Add_Handler_List = []
 
+	var right_sidebar = {'context' : 'nada', 'buttons' : []}
+
+	var right_sidebar_contexts = {
+		'face' : [{"text" : "Adjacency"}, {"text" : "Remove"}],
+		'hinge' : [{"text" : "Adjacency"}, {"text" : "Cut"}]
+	}
+
 	var amt_buttons_for_context = {"camera-control" : 2, "world-context" : 1, "poly-context" : 4 }
+
+	var that = this
 
 	//Initialize the sidebars
 	Init_Modals()
 	Init_Sidebars()
+
+	//Initialize the object with a clicking function
+	this.Obj.on("click", function(){
+		//Clear junk from the scene
+		ClearJunk()
+	})
+
 
 	//Some data can be manipulated independently from toolbars. For example, a polycube could be deactivated by
 	//clicking the screen. The sidebar object representing it, however, will show it as being activated, which could
@@ -19,6 +35,8 @@ function Toolbar_Handler(){
 	setInterval(function(){
 		Update_Object_Viewer()
 		Update_Cube_Add_Handlers()
+		Update_Toolbar()
+		Update_Right_Sidebar()
 	}, 10)
 
 	var that = this
@@ -32,9 +50,6 @@ function Toolbar_Handler(){
 		{
 			that.mode_h = mode
 			buttons = []
-
-			//Clear junk from the scene
-			ClearJunk()
 
 			$(".toolbar_btn").remove()
 
@@ -172,6 +187,8 @@ function Toolbar_Handler(){
 
 	function Init_Sidebars()
 	{
+		//Position the right sidebar to be under the toolbar
+		$("#right_sidebar").offset({top: that.Obj.innerHeight()})
 		$("#sidebar_trigger").click(function(){
 			_Toggle_V()
 		})
@@ -214,8 +231,6 @@ function Toolbar_Handler(){
 		$("#polycube_file_read").on("change", function(){
 			//Instantiate a file reader that will read the file specified
 			var reader = new FileReader()
-			this.addPolycube_intervNum
-			var that = this
 	
 			reader.onload = function(){
 				data = reader.result
@@ -237,7 +252,15 @@ function Toolbar_Handler(){
 			reader.onabort = function(){
 				data = ""
 			}
-			reader.readAsText(event.target.files[0])
+
+			if(event.target.files[0])
+			{
+				reader.readAsText(event.target.files[0])
+			}
+			else
+			{
+				reader.abort()
+			}
 		})
 
 
@@ -285,6 +308,51 @@ function Toolbar_Handler(){
 			{
 				Cube_Add_Handler_List[key].Add_Another_Cube()
 			}
+		}
+	}
+
+	function Update_Toolbar(){
+		if(ObjectExists(PolyCube.Active_Polycube))
+		{
+			if(!$("#context_text").attr(":visible"))
+			{
+				$("#context_text").show()
+			}
+			$("#context_text").text(PolyCube.Active_Polycube.context_name)
+		}
+		else
+		{
+			$("#context_text").hide()
+		}
+	}
+
+	function Update_Right_Sidebar(){
+
+		if(ObjectExists(PolyCube.Active_Polycube))
+		{	
+			if(right_sidebar.context != PolyCube.Active_Polycube.context_name)
+			{
+				$(".right_sidebar_btns").remove()
+				right_sidebar.context = PolyCube.Active_Polycube.context_name
+				var context = right_sidebar_contexts[PolyCube.Active_Polycube.context_name]
+
+				for(var index in context)
+				{
+					var new_button = $("#right_sidebar_btn_template").clone()
+					new_button.text(context[index].text)
+					new_button.attr("id", context[index].text)
+					new_button.addClass("right_sidebar_btns")
+					new_button.show()
+					$("#right_sidebar").append($(new_button))
+				}
+			}
+
+			$("#right_sidebar").show()
+		}
+		else
+		{
+			right_sidebar.context = 'nada'
+			$("#right_sidebar").hide()
 		}
 	}
 
