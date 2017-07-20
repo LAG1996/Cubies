@@ -8,8 +8,13 @@ function Toolbar_Handler(){
 	var right_sidebar = {'context' : 'nada', 'buttons' : []}
 
 	var right_sidebar_contexts = {
-		'face' : [{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'})}, {"text" : "Remove", "click" : (function(){pick_mode = 'rem'})}],
-		'hinge' : [{"text" : "Adjacency"}, {"text" : "Cut"}]
+		'face' : [{"mode" : "nada"}, 
+			{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'; right_sidebar_contexts['face'][0]["mode"] = "adj"; ClearJunk()})}, 
+			{"text" : "Remove", "click" : (function(){pick_mode = 'rem'; right_sidebar_contexts['face'][0]["mode"] = "rem"; ClearJunk()})}],
+
+		'hinge' : [{"mode" : "nada"}, 
+			{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'; right_sidebar_contexts['hinge'][0]["mode"] = "adj"; ClearJunk()})}, 
+			{"text" : "Cut", "click": (function(){pick_mode = 'cut'; right_sidebar_contexts['hinge'][0]["mode"] = "cut"; ShowCutEdgeData()})}]
 	}
 
 	var amt_buttons_for_context = {"camera-control" : 2, "world-context" : 1, "poly-context" : 5 }
@@ -190,6 +195,10 @@ function Toolbar_Handler(){
 				PolyCube.DestroyPolyCube(PolyCube.Active_Polycube)
 
 				that.Switch_Context_H('world-context')
+
+				cut_edges = {} 
+				invalid_cut_edges = {}
+				ClearEdgeJunk()
 			}
 		})
 
@@ -351,7 +360,7 @@ function Toolbar_Handler(){
 				right_sidebar.context = PolyCube.Active_Polycube.context_name
 				var context = right_sidebar_contexts[PolyCube.Active_Polycube.context_name]
 
-				for(var index = 0; index < context.length; index++)
+				for(var index = 1; index < context.length; index++)
 				{
 					var new_button = $("#right_sidebar_btn_template").clone()
 					new_button.text(context[index].text)
@@ -361,9 +370,10 @@ function Toolbar_Handler(){
 					new_button.show()
 					$("#right_sidebar").append($(new_button))
 				}
-			}
 
-			$("#right_sidebar").show()
+				pick_mode = context[0]["mode"]
+				$("#right_sidebar").show()
+			}
 		}
 		else
 		{

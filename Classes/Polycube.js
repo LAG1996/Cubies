@@ -260,6 +260,10 @@ function PolyCube(position, name = ""){
 		HandleFaceRemoval(cube, dir_part)
 	}
 
+	this.CutEdge = function(edge){
+		AdjacencyGraph.HandleCut(edge)
+	}
+
 	this.toJSON = function(){
 		var j_obj = {"name" : null, "position" : null, "cubes" : []}
 
@@ -302,6 +306,16 @@ function PolyCube(position, name = ""){
 		}
 
 		delete this
+	}
+
+	this.GetCutEdges = function()
+	{
+		return AdjacencyGraph.GetCutEdges()
+	}
+
+	this.GetInvalidEdges = function()
+	{
+		return AdjacencyGraph.GetInvalidEdges()
 	}
 
 	//Let cube1 be the cube we are adding to the polycube, and cube2 be a cube adjacent to cube1. Then dir is the Vector3 representing the direction from

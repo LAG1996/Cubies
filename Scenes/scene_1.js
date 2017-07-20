@@ -6,10 +6,15 @@ var old_mouse_pos = new THREE.Vector2()
 
 var parentHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xDD0000})
 var childrenHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0x001AAA})
+var cutEdgeHighlightMaterial = new THREE.MeshBasicMaterial({'color':0xFFFF00})
+var invalidEdgeHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xAAAAAA})
 
 var highlights_are_on = false
 var pick_mode = 'nada'
 var junk = []
+var edge_junk = []
+var cut_edges = {}
+var invalid_cut_edges = {}
 
 $(document).ready(function(){
 	Initialize() //Load the cube part models and then initialize the cube class with said models
@@ -68,7 +73,7 @@ function HandlePick() {
 					{
 						if(pick_mode == 'adj')
 						{
-							ShowFaceData(data)
+							ShowFaceAdjacency(data)
 						}
 						else if(pick_mode == 'rem')
 						{
@@ -79,7 +84,11 @@ function HandlePick() {
 					{
 						if(pick_mode == 'adj')
 						{
-							ShowEdgeData(data)
+							ShowHingeAdjacency(data)
+						}
+						else if(pick_mode == 'cut')
+						{
+							p_cube.CutEdge(data["parent"][0])
 						}
 					}
 
@@ -96,14 +105,22 @@ function HandlePick() {
 		{
 			highlights_are_on = false
 		}
+
+		if(pick_mode == 'cut' && ObjectExists(PolyCube.Active_Polycube))
+		{
+			var edge_data = {"cuts" : PolyCube.Active_Polycube.GetCutEdges(), "invalids" : PolyCube.Active_Polycube.GetInvalidEdges()}
+			UpdateCutEdgeData(edge_data)
+			ShowCutEdgeData()
+		}
 	}
 }
 
-function ShowFaceData(data){
+function ShowFaceAdjacency(data){
 	var parentHighlight = Cube.highlightFace.clone()
 	parentHighlight.position.copy(data["parent"]['face'].getWorldPosition())
 	parentHighlight.rotation.copy(data["parent"]['face'].getWorldRotation())
-
+	parentHighlight.material = parentHighlightMaterial.clone()
+	scene_handler.RequestAddToScene(parentHighlight)
 	junk.push(parentHighlight)
 
 	var index = 0
@@ -113,37 +130,14 @@ function ShowFaceData(data){
 		childrenHighlight[index] = Cube.highlightFace.clone()
 		childrenHighlight[index].position.copy(data["children"][faceName]["face"].getWorldPosition())
 		childrenHighlight[index].rotation.copy(data["children"][faceName]["face"].getWorldRotation())
+		childrenHighlight[index].material = childrenHighlightMaterial.clone()
 		junk.push(childrenHighlight[index])
-		index++
-	}
-
-	for(var partNum = 0; partNum < parentHighlight.children.length; partNum++)
-	{
-		var part = parentHighlight.children[partNum]
-		if(part.name == 'body')
-		{
-			part.material = parentHighlightMaterial.clone()
-		}
-		
-		scene_handler.RequestAddToScene(parentHighlight)
-	}
-
-	for(var index = 0; index < childrenHighlight.length; index++)
-	{
-		for(var partNum = 0; partNum < childrenHighlight[index].children.length; partNum++)
-		{
-			var part = childrenHighlight[index].children[partNum]
-			if(part.name == 'body')
-			{
-				part.material = childrenHighlightMaterial.clone()
-			}
-		}
-
 		scene_handler.RequestAddToScene(childrenHighlight[index])
+		index++
 	}
 }
 
-function ShowEdgeData(data){
+function ShowHingeAdjacency(data){
 	var parentHighlight = Cube.highlightEdge.clone()
 	parentHighlight.position.copy(data['parent'][0]['edge'].getWorldPosition())
 	parentHighlight.rotation.copy(data['parent'][0]['edge'].getWorldRotation())
@@ -172,6 +166,54 @@ function ShowEdgeData(data){
 	}
 }
 
+function UpdateCutEdgeData(data){
+	for(var E in cut_edges)
+	{
+		delete cut_edges[E]
+	}
+
+	for(var E in invalid_cut_edges)
+	{
+		delete invalid_cut_edges[E]
+	}
+
+	var cut_data = data['cuts']
+	var invalid_cut_data = data['invalids']
+
+	for(var E in cut_data)
+	{
+		cut_edges[E] = cut_data[E]['edge']
+	}
+
+	for(var E in invalid_cut_data)
+	{
+		invalid_cut_edges[E] = invalid_cut_data[E]['edge']
+	}
+}
+
+function ShowCutEdgeData(){
+	ClearEdgeJunk()
+	for(var E in cut_edges)
+	{
+		var cutHighlight = Cube.highlightEdge.clone()
+		cutHighlight.position.copy(cut_edges[E].getWorldPosition())
+		cutHighlight.rotation.copy(cut_edges[E].getWorldRotation())
+		cutHighlight.material = cutEdgeHighlightMaterial.clone()
+		scene_handler.RequestAddToScene(cutHighlight)
+		edge_junk.push(cutHighlight)
+	}
+
+	for(var E in invalid_cut_edges)
+	{
+		var invalidHighlight = Cube.highlightEdge.clone()
+		invalidHighlight.position.copy(invalid_cut_edges[E].getWorldPosition())
+		invalidHighlight.rotation.copy(invalid_cut_edges[E].getWorldRotation())
+		invalidHighlight.material = invalidEdgeHighlightMaterial.clone()
+		scene_handler.RequestAddToScene(invalidHighlight)
+		edge_junk.push(invalidHighlight)
+	}
+}
+
 function ClearJunk(){
 	for(var i = 0; i < junk.length; i++)
 	{
@@ -179,4 +221,13 @@ function ClearJunk(){
 		delete junk[i]
 	}
 	junk = []
+}
+
+function ClearEdgeJunk(){
+	for(var i = 0; i < edge_junk.length; i++)
+	{
+		scene_handler.RequestRemoveFromScene(edge_junk[i])
+		delete edge_junk[i]
+	}
+	edge_junk = []
 }
