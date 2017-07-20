@@ -67,3 +67,25 @@ function SumOfVectors(l_vectors)
 
 	return vec
 }
+
+function MakePositiveVector(vector)
+{
+	var new_vec = vector.clone()
+
+	if(new_vec.x < 0)
+	{
+		new_vec.x *= -1
+	}
+
+	if(new_vec.y < 0)
+	{
+		new_vec.y *= -1
+	}
+
+	if(new_vec.z < 0)
+	{
+		new_vec.z *= -1
+	}
+
+	return new_vec.clone()
+}

@@ -318,6 +318,11 @@ function PolyCube(position, name = ""){
 		return AdjacencyGraph.GetInvalidEdges()
 	}
 
+	this.GetCutPaths = function()
+	{
+		return AdjacencyGraph.GetCutPaths()
+	}
+
 	//Let cube1 be the cube we are adding to the polycube, and cube2 be a cube adjacent to cube1. Then dir is the Vector3 representing the direction from
 	//cube1 to cube2. For each face that is not facing the same or opposite direction to dir, check if each cube has the corresponding face.
 	//If so, then the respective faces of each cube are adjacent.
@@ -465,7 +470,6 @@ function PolyCube(position, name = ""){
 							break
 						}
 
-
 						var edge_word_1 = edge_1.name.split('c'+cube_1.ID)[1]
 						var edge_word_2 = edge_2.name.split('c'+cube_2.ID)[1]
 
@@ -476,16 +480,16 @@ function PolyCube(position, name = ""){
 						{
 							L_Hinges[PosToKey(d_edge_1.position)] = [edge_1, edge_2]
 							
-							AdjacencyGraph.AddIncidentEdges(edge_1.name, edge_1,
-								edge_2.name, edge_2)
+							AdjacencyGraph.AddIncidentEdges(edge_1.name, edge_1, d_edge_1.endPoints,
+								edge_2.name, edge_2, d_edge_2.endPoints)
 
 							cube_2.hinge_picking_cube.getObjectByName(edge_2.name).material = cube_1.hinge_picking_cube.getObjectByName(edge_1.name).material.clone()
 						}
 						else if(PosToKey(d_edge_1.endPoints[0]) == PosToKey(d_edge_2.endPoints[0])|| PosToKey(d_edge_1.endPoints[0]) == PosToKey(d_edge_2.endPoints[1])
 							|| PosToKey(d_edge_1.endPoints[1]) == PosToKey(d_edge_2.endPoints[0]) || PosToKey(d_edge_1.endPoints[1]) == PosToKey(d_edge_2.endPoints[1]))
 						{
-							AdjacencyGraph.AddNeighboringEdges(edge_1.name, edge_1,
-								edge_2.name, edge_2)
+							AdjacencyGraph.AddNeighboringEdges(edge_1.name, edge_1, d_edge_1.endPoints,
+								edge_2.name, edge_2, d_edge_2.endPoints)
 						}
 					}
 				}

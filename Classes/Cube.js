@@ -237,13 +237,6 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	left_hinge.material.color.setHex(0x010101)
 
 	Cube.highlightFace = Cube.face.clone()
-	/*
-	Cube.highlightFace = new THREE.Group()
-	Cube.highlightFace.add(body.clone())
-	Cube.highlightFace.add(top_hinge.clone())
-	Cube.highlightFace.add(down_hinge.clone())
-	Cube.highlightFace.add(right_hinge.clone())
-	Cube.highlightFace.add(left_hinge.clone())*/
 
 	Cube.highlightEdge = Cube.hinge.clone()
 	Cube.highlightEdge.scale.set(1.2, 1.2, 1.2)
@@ -436,4 +429,6 @@ Cube.CubeDataCalculator = function(){
 
 		return edge
 	}
+
+	
 }

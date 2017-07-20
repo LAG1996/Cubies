@@ -6,7 +6,10 @@ function FaceEdgeDualGraph(){
 	var Invalid_Edges = []
 
 	var Visited_Faces = []
-	var Visted_Edges = []
+	var Visited_Edges = []
+
+	var Edge2CutPath = {} //An object that maps each edge to a path
+	var L_CutPaths = []
 
 	var that = this
 
@@ -43,14 +46,14 @@ function FaceEdgeDualGraph(){
 		return Faces[name]["neighbors"]
 	}
 
-	this.AddNeighboringEdges = function(name_1, edge_1, name_2, edge_2)
+	this.AddNeighboringEdges = function(name_1, edge_1, endPoints_1, name_2, edge_2, endPoints_2)
 	{
 		var new_edge_1
 		var new_edge_2
 
 		if(!(name_1 in Edges))
 		{
-			new_edge_1 = {"name": name_1, "edge": edge_1, "neighbors": [], "cut" : true, "invalid": false, "visited": false}
+			new_edge_1 = {"name": name_1, "edge": edge_1, "endPoints" : endPoints_1, "neighbors": [], "cut" : true, "invalid": false, "visited": false}
 			Edges[name_1] = new_edge_1
 		}
 		else
@@ -60,7 +63,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_2 in Edges))
 		{
-			new_edge_2 = {"name": name_2, "edge": edge_2, "neighbors": [], "cut" : true, "invalid": false, "visited": false}
+			new_edge_2 = {"name": name_2, "edge": edge_2, "neighbors": [], "endPoints" : endPoints_2, "cut" : true, "invalid": false, "visited": false}
 			Edges[name_2] = new_edge_2
 		}
 		else
@@ -109,14 +112,14 @@ function FaceEdgeDualGraph(){
 		return list
 	}
 
-	this.AddIncidentEdges = function(name_1, edge_1, name_2, edge_2)
+	this.AddIncidentEdges = function(name_1, edge_1, endPoints_1, name_2, edge_2, endPoints_2)
 	{
 		var new_edge_1
 		var new_edge_2
 
 		if(!(name_1 in Edges))
 		{
-			new_edge_1 = {"name": name_1, "edge": edge_1, "neighbors": [], "cut" : false, "invalid": false, "visited": false}
+			new_edge_1 = {"name": name_1, "edge": edge_1, "endPoints" : endPoints_1, "neighbors": [], "cut" : false, "invalid": false, "visited": false}
 			Edges[name_1] = new_edge_1
 		}
 		else
@@ -128,7 +131,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_2 in Edges))
 		{
-			new_edge_2 = {"name": name_2, "edge": edge_2, "neighbors": [], "cut" : false, "invalid": false, "visited": false}
+			new_edge_2 = {"name": name_2, "edge": edge_2, "endPoints" : endPoints_2, "neighbors": [], "cut" : false, "invalid": false, "visited": false}
 			Edges[name_2] = new_edge_2
 		}
 		else
@@ -235,6 +238,9 @@ function FaceEdgeDualGraph(){
 				}	
 			}
 		}
+
+		BuildCutPaths()
+		BuildHingePaths()
 	}
 
 	this.RemoveFace = function(name){
@@ -323,22 +329,175 @@ function FaceEdgeDualGraph(){
 		return Invalid_Edges
 	}
 
-	function CheckIfGloballyDisconnected(c_face_1, c_face_2){
+	this.GetCutPaths = function(){
+		return L_CutPaths
+	}
+
+	function BuildCutPaths(){
+		var start_cut
+		var path_num = 0
+		//Clear the cut path list
+		//MEMO: This is a slow grow. I'm pretty sure I can do this faster with some preprocessing. We'll come back to this later.
+		Edge2CutPath = {}
+
+		//Get the first edge in the cut list. Start growing greedily, getting all cuts in the path
+		for(var E in Cut_Edges)
+		{
+			if(Object.keys(Edge2CutPath).length == Object.keys(Cut_Edges).length)
+			{
+				break
+			}
+
+			var new_cut_path = []
+			start_cut = Cut_Edges[E]
+			
+			if(!start_cut['visited'])
+			{
+				start_cut = Cut_Edges[E]
+				start_cut['visited'] = true
+				start_cut['incidentEdge']['visited'] = true
+
+				Visited_Edges.push(start_cut)
+				Visited_Edges.push(start_cut['incidentEdge'])
+
+				new_cut_path.push(start_cut)
+				new_cut_path.push(start_cut['incidentEdge'])
+
+				Edge2CutPath[start_cut['name']] = path_num
+				Edge2CutPath[start_cut['incidentEdge']['name']] = path_num
+
+				GreedyPathGrow(start_cut)
+				GreedyPathGrow(start_cut['incidentEdge'])
+
+				L_CutPaths[path_num] = new_cut_path
+
+				path_num+=1
+			}
+		}
+
+		ClearVisitedEdges()
+
+		function GreedyPathGrow(cut){
+			for(var N in cut['neighbors'])
+			{
+				var neighbor = cut['neighbors'][N]
+				
+				if(!neighbor['visited'] && neighbor['cut'])
+				{
+					Edge2CutPath[neighbor['name']] = path_num
+					Edge2CutPath[neighbor['incidentEdge']['name']] = path_num
+
+					neighbor['visited'] = true
+					neighbor['incidentEdge']['visited'] = true
+
+					Visited_Edges.push(neighbor)
+					Visited_Edges.push(neighbor['incidentEdge'])
+
+					new_cut_path.push(neighbor)
+					new_cut_path.push(neighbor['incidentEdge'])
+
+					GreedyPathGrow(neighbor)
+					GreedyPathGrow(neighbor['incidentEdge'])
+				}
+			}
+		}
+	}
+
+	function BuildHingePaths(){
+
+		for(var index in L_CutPaths)
+		{
+			for(var edge in L_CutPaths[index])
+			{
+				for(var other_edge in L_CutPaths[index])
+				{
+					var edge_1 = L_CutPaths[index][edge]
+					var edge_2 = L_CutPaths[index][other_edge]
+					if(edge_1['name'] != edge_2['name'] && !edge_2['visited'])
+					{
+
+						if(ObjectExists(edge_1['incidentEdge']) && edge_1['incidentEdge']['name'] == edge_2['name'])
+							continue
+
+						if(AreCollinear(edge_1, edge_2))
+						{
+							//console.log(edge_1['name'] + " and " + edge_2['name'] + "are collinear")
+						}
+
+						edge_1['visited'] = true
+						edge_1['incidentEdge']['visited'] = true
+
+						Visited_Edges.push(edge_1)
+						Visited_Edges.push(edge_1['incidentEdge'])
+					}
+
+				}
+			}
+		}
+
+		ClearVisitedEdges()
+
+
+		function AreCollinear(edge_1, edge_2)
+		{
+			var dir_1 = new THREE.Vector3().copy(edge_1['endPoints'][0])
+			dir_1.sub(edge_1['endPoints'][1])
+
+			//Make all axes of this vector positive
+			dir_1 = MakePositiveVector(dir_1)
+
+			var dir_2 = new THREE.Vector3().copy(edge_2['endPoints'][0])
+			dir_2.sub(edge_2['endPoints'][1])
+
+			dir_2 = MakePositiveVector(dir_2)
+
+			if(dir_1.equals(dir_2))
+			{
+				var dir_3 = new THREE.Vector3().copy(edge_1['endPoints'][0])
+				dir_3.sub(edge_2['endPoints'][0])
+				dir_3 = MakePositiveVector(dir_3)
+				dir_3.normalize()
+
+				if(dir_3.equals(dir_1))
+					return true
+				else
+				{
+					dir_3 = new THREE.Vector3().copy(edge_1['endPoints'][0])
+					dir_3.sub(edge_2['endPoints'][1])
+					dir_3 = MakePositiveVector(dir_3)
+					dir_3.normalize()
+
+					if(dir_3.equals(dir_1))
+						return true
+				}
+			}
+
+			return false
+		}
+
+		function ArePerpendicular(edge_1, edge_2)
+		{}
+
+		function AreParallel(edge_1, edge_2)
+		{}
+	}
+
+	function CheckIfGloballyDisconnected(part_1, part_2){
 		var disc = true
 
-		if(c_face_1['name'] == c_face_2['name'])
+		if(part_1['name'] == part_2['name'])
 		{
 			return false
 		}
 		else
 		{
-			c_face_1['visited'] = true
-			Visited_Faces.push(c_face_1)
-			for(var N in c_face_1['neighbors'])
+			part_1['visited'] = true
+			Visited_Faces.push(part_1)
+			for(var N in part_1['neighbors'])
 			{
-				if(!c_face_1['neighbors'][N]['visited'] && disc)
+				if(!part_1['neighbors'][N]['visited'] && disc)
 				{	
-					disc = CheckIfGloballyDisconnected(c_face_1['neighbors'][N], c_face_2)
+					disc = CheckIfGloballyDisconnected(part_1['neighbors'][N], part_2)
 				}
 
 				if(!disc)
@@ -357,6 +516,16 @@ function FaceEdgeDualGraph(){
 		}
 
 		Visited_Faces = []
+	}
+
+	function ClearVisitedEdges()
+	{
+		for(var index in Visited_Edges)
+		{
+			Visited_Edges[index]['visited'] = false
+		}
+
+		Visited_Edges = []
 	}
 
 	var UndoCut = function(edge_1, edge_2, face_1, face_2)
