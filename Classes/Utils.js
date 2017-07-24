@@ -51,7 +51,7 @@ function WorldToPolycube(coord, polycoord)
 
 function ObjectExists(obj)
 {
-	if(obj)
+	if(obj && obj !== null && obj !== undefined)
 		return true
 	else
 		return false

@@ -73,7 +73,7 @@ function HandlePick() {
 					{
 						if(pick_mode == 'adj')
 						{
-							ShowFaceAdjacency(data)
+							ShowFaceData(data)
 						}
 						else if(pick_mode == 'rem')
 						{
@@ -84,11 +84,26 @@ function HandlePick() {
 					{
 						if(pick_mode == 'adj')
 						{
-							ShowHingeAdjacency(data)
+							ShowHingeData(data)
 						}
 						else if(pick_mode == 'cut')
 						{
 							p_cube.CutEdge(data["parent"][0])
+						}
+						else if(pick_mode == 'col')
+						{
+							data = p_cube.GetCollinearCuts(data['parent'][0])
+							ShowHingeData(data)
+						}
+						else if(pick_mode == 'perp')
+						{
+							data = p_cube.GetPerpendicularCuts(data['parent'][0])
+							ShowHingeData(data)
+						}
+						else if(pick_mode == 'para')
+						{
+							data = p_cube.GetParallelCuts(data['parent'][0])
+							ShowHingeData(data)
 						}
 					}
 
@@ -115,7 +130,7 @@ function HandlePick() {
 	}
 }
 
-function ShowFaceAdjacency(data){
+function ShowFaceData(data){
 	var parentHighlight = Cube.highlightFace.clone()
 	parentHighlight.position.copy(data["parent"]['face'].getWorldPosition())
 	parentHighlight.rotation.copy(data["parent"]['face'].getWorldRotation())
@@ -137,7 +152,7 @@ function ShowFaceAdjacency(data){
 	}
 }
 
-function ShowHingeAdjacency(data){
+function ShowHingeData(data){
 	var parentHighlight = Cube.highlightEdge.clone()
 	parentHighlight.position.copy(data['parent'][0]['edge'].getWorldPosition())
 	parentHighlight.rotation.copy(data['parent'][0]['edge'].getWorldRotation())
@@ -145,13 +160,16 @@ function ShowHingeAdjacency(data){
 	scene_handler.RequestAddToScene(parentHighlight)
 	junk.push(parentHighlight)
 
-	var parentHighlight = Cube.highlightEdge.clone()
-	parentHighlight.position.copy(data['parent'][1]['edge'].getWorldPosition())
-	parentHighlight.rotation.copy(data['parent'][1]['edge'].getWorldRotation())
-	parentHighlight.material = parentHighlightMaterial.clone()
-	scene_handler.RequestAddToScene(parentHighlight)
-	junk.push(parentHighlight)
-
+	if(ObjectExists(data['parent'][1]))
+	{
+		var parentHighlight = Cube.highlightEdge.clone()
+		parentHighlight.position.copy(data['parent'][1]['edge'].getWorldPosition())
+		parentHighlight.rotation.copy(data['parent'][1]['edge'].getWorldRotation())
+		parentHighlight.material = parentHighlightMaterial.clone()
+		scene_handler.RequestAddToScene(parentHighlight)
+		junk.push(parentHighlight)
+	}
+	
 	var index = 0
 	var childrenHighlight = []
 	for(var N in data['children'])

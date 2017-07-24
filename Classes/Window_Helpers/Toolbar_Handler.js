@@ -14,7 +14,10 @@ function Toolbar_Handler(){
 
 		'hinge' : [{"mode" : "nada"}, 
 			{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'; right_sidebar_contexts['hinge'][0]["mode"] = "adj"; ClearJunk()})}, 
-			{"text" : "Cut", "click": (function(){pick_mode = 'cut'; right_sidebar_contexts['hinge'][0]["mode"] = "cut"; ShowCutEdgeData()})}]
+			{"text" : "Cut", "click": (function(){pick_mode = 'cut'; right_sidebar_contexts['hinge'][0]["mode"] = "cut"; ShowCutEdgeData()})},
+			{"text" : "Collinear", "click": (function(){pick_mode = 'col'; right_sidebar_contexts['hinge'][0]["mode"] = "col"; ClearJunk()})},
+			{"text" : "Parallel", "click": (function(){pick_mode = 'para'; right_sidebar_contexts['hinge'][0]["mode"] = "para"; ClearJunk()})},
+			{"text" : "Perpendicular", "click": (function(){pick_mode = 'perp'; right_sidebar_contexts['hinge'][0]["mode"] = "perp"; ClearJunk()})}]
 	}
 
 	var amt_buttons_for_context = {"camera-control" : 2, "world-context" : 1, "poly-context" : 5 }

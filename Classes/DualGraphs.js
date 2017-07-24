@@ -11,6 +11,10 @@ function FaceEdgeDualGraph(){
 	var Edge2CutPath = {} //An object that maps each edge to a path
 	var L_CutPaths = []
 
+	var PerpendicularCuts = {}//An object that maps each edge to perpendicular edges
+	var ParallelCuts = {} //An object that maps each edge to parallel edges
+	var CollinearCuts = {} //An object that maps each edge to collinear edges
+
 	var that = this
 
 	this.AddNeighboringFaces = function(name_1, face_1, name_2, face_2)
@@ -333,12 +337,82 @@ function FaceEdgeDualGraph(){
 		return L_CutPaths
 	}
 
+	this.GetCollinearCuts = function(edgeName){
+		var l_1 = CollinearCuts[edgeName]
+
+		if(!ObjectExists(l_1))
+		{
+			l_1 = []
+		}
+
+		var i_edge = Edges[edgeName]['incidentEdge']
+
+		if(ObjectExists(i_edge))
+		{
+			var l_2 = CollinearCuts[i_edge['name']]
+
+			if(ObjectExists(l_2))
+			{
+				l_1 =  l_1.concat(CollinearCuts[i_edge['name']])
+			}
+		}
+
+		return l_1
+	}
+
+	this.GetPerpendicularCuts = function(edgeName){
+		var l_1 = PerpendicularCuts[edgeName]
+
+		if(!ObjectExists(l_1))
+		{
+			l_1 = []
+		}
+
+		var i_edge = Edges[edgeName]['incidentEdge']
+
+		if(ObjectExists(i_edge))
+		{
+			var l_2 = PerpendicularCuts[i_edge['name']]
+
+			if(ObjectExists(l_2))
+			{
+				l_1 =  l_1.concat(PerpendicularCuts[i_edge['name']])
+			}
+		}
+
+		return l_1
+	}
+
+	this.GetParallelCuts = function(edgeName){
+		var l_1 = ParallelCuts[edgeName]
+
+		if(!ObjectExists(l_1))
+		{
+			l_1 = []
+		}
+
+		var i_edge = Edges[edgeName]['incidentEdge']
+
+		if(ObjectExists(i_edge))
+		{
+			var l_2 = ParallelCuts[i_edge['name']]
+
+			if(ObjectExists(l_2))
+			{
+				l_1 =  l_1.concat(ParallelCuts[i_edge['name']])
+			}
+		}
+
+		return l_1
+	}
+
 	function BuildCutPaths(){
 		var start_cut
 		var path_num = 0
 		//Clear the cut path list
 		//MEMO: This is a slow grow. I'm pretty sure I can do this faster with some preprocessing. We'll come back to this later.
 		Edge2CutPath = {}
+		L_CutPaths = []
 
 		//Get the first edge in the cut list. Start growing greedily, getting all cuts in the path
 		for(var E in Cut_Edges)
@@ -409,11 +483,17 @@ function FaceEdgeDualGraph(){
 		{
 			for(var edge in L_CutPaths[index])
 			{
+				var edge_1 = L_CutPaths[index][edge]
+
+				CollinearCuts[edge_1.name] = []
+				ParallelCuts[edge_1.name] = []
+				PerpendicularCuts[edge_1.name] = []
+
 				for(var other_edge in L_CutPaths[index])
 				{
-					var edge_1 = L_CutPaths[index][edge]
 					var edge_2 = L_CutPaths[index][other_edge]
-					if(edge_1['name'] != edge_2['name'] && !edge_2['visited'])
+
+					if(edge_1['name'] != edge_2['name'])
 					{
 
 						if(ObjectExists(edge_1['incidentEdge']) && edge_1['incidentEdge']['name'] == edge_2['name'])
@@ -421,38 +501,48 @@ function FaceEdgeDualGraph(){
 
 						if(AreCollinear(edge_1, edge_2))
 						{
-							//console.log(edge_1['name'] + " and " + edge_2['name'] + "are collinear")
+							CollinearCuts[edge_1['name']].push(edge_2)
 						}
-
-						edge_1['visited'] = true
-						edge_1['incidentEdge']['visited'] = true
-
-						Visited_Edges.push(edge_1)
-						Visited_Edges.push(edge_1['incidentEdge'])
+						else if(ArePerpendicular(edge_1, edge_2))
+						{
+							PerpendicularCuts[edge_1['name']].push(edge_2)
+						}
+						else if(AreParallel(edge_1, edge_2))
+						{
+							ParallelCuts[edge_1['name']].push(edge_2)
+						}
 					}
 
 				}
 			}
 		}
 
-		ClearVisitedEdges()
-
-
 		function AreCollinear(edge_1, edge_2)
 		{
+			//Get the direction between the edge_1's endpoints, normalize it, and then make it point to a positive direction
 			var dir_1 = new THREE.Vector3().copy(edge_1['endPoints'][0])
 			dir_1.sub(edge_1['endPoints'][1])
 
 			//Make all axes of this vector positive
 			dir_1 = MakePositiveVector(dir_1)
+			dir_1.normalize()
 
+			//Same as above, but with edge_2
 			var dir_2 = new THREE.Vector3().copy(edge_2['endPoints'][0])
 			dir_2.sub(edge_2['endPoints'][1])
 
 			dir_2 = MakePositiveVector(dir_2)
+			dir_2.normalize()
 
+
+			//Check if the two directions point to the same direction
 			if(dir_1.equals(dir_2))
 			{
+				if(ObjectExists(edge_1['neighbors'][edge_2.name]))
+					return true
+
+				//If they do, we now have to check if we can draw a line between an endpoint from edge_1 to an endpoint from edge_2. If the direction that line is pointing is 
+				//the same as the dir_1 (and, by equivalence, dir_2), then the edges are collinear. If not, they may be parallel, but that's a different check entirely.
 				var dir_3 = new THREE.Vector3().copy(edge_1['endPoints'][0])
 				dir_3.sub(edge_2['endPoints'][0])
 				dir_3 = MakePositiveVector(dir_3)
@@ -462,6 +552,8 @@ function FaceEdgeDualGraph(){
 					return true
 				else
 				{
+					//There is a second check to be made because the two edges may be neighbors. Since they may be neighbors, the first check may yield a dir_3 of zero, since the two endpoints used in the check may
+					//be at the same point.
 					dir_3 = new THREE.Vector3().copy(edge_1['endPoints'][0])
 					dir_3.sub(edge_2['endPoints'][1])
 					dir_3 = MakePositiveVector(dir_3)
@@ -476,10 +568,157 @@ function FaceEdgeDualGraph(){
 		}
 
 		function ArePerpendicular(edge_1, edge_2)
-		{}
+		{
+			//HACK: If the two edges are neighbors, they must be perpendicular. This is only true if the collinearity check is made FIRST.
+			if(ObjectExists(edge_1['neighbors'][edge_2['name']]))
+			{
+				return true
+			}
+			else if(ObjectExists(edge_1['incidentEdge']) && ObjectExists(edge_1['incidentEdge']['neighbors'][edge_2['name']]))
+			{
+				return true
+			}
+
+			//Get the direction between the edge_1's endpoints, normalize it, and then make it point to a positive direction
+			var dir_1 = new THREE.Vector3().copy(edge_1['endPoints'][0])
+			dir_1.sub(edge_1['endPoints'][1])
+
+			//Make all axes of this vector positive
+			dir_1 = MakePositiveVector(dir_1)
+			dir_1.normalize()
+
+			//Same as above, but with edge_2
+			var dir_2 = new THREE.Vector3().copy(edge_2['endPoints'][0])
+			dir_2.sub(edge_2['endPoints'][1])
+
+			dir_2 = MakePositiveVector(dir_2)
+			dir_2.normalize()
+
+			//The two vectors should not be equal. If they are, they may be parallel or collinear, but not perpendicular.
+			if(!dir_1.equals(dir_2))
+			{
+				//Now check between endPoint_1 of edge_1 and the endpoints of edge_2.
+				//If the direction between endPoint_1 and one endpoint of edge_2 is equal to the direction edge_1 is pointing, and the direction between endPoint_2 and the other endpoint of edge_2
+				//is not equal to the direction edge_1 is pointing in, then the edges are collinear.
+
+				var dir_3 = new THREE.Vector3().copy(edge_1['endPoints'][0])
+				dir_3.sub(edge_2['endPoints'][0])
+				dir_3 = MakePositiveVector(dir_3)
+				dir_3.normalize()
+
+				var dir_4 = new THREE.Vector3().copy(edge_1['endPoints'][0])
+				dir_4.sub(edge_2['endPoints'][1])
+				dir_4 = MakePositiveVector(dir_4)
+				dir_4.normalize()
+
+				if(dir_3.equals(dir_4))
+				{
+					return true
+				}
+				
+				if((dir_3.equals(dir_1) && !dir_4.equals(dir_1)) || (!dir_3.equals(dir_1) && dir_4.equals(dir_1)))
+				{
+					return true
+				}
+				else if((dir_3.equals(dir_2) && !dir_4.equals(dir_2)) || (!dir_3.equals(dir_2) && dir_4.equals(dir_2)))
+				{
+					return true
+				}
+
+				dir_3 = new THREE.Vector3().copy(edge_1['endPoints'][1])
+				dir_3.sub(edge_2['endPoints'][0])
+				dir_3 = MakePositiveVector(dir_3)
+				dir_3.normalize()
+				
+				dir_4 = new THREE.Vector3().copy(edge_1['endPoints'][1])
+				dir_4.sub(edge_2['endPoints'][1])
+				dir_4 = MakePositiveVector(dir_4)
+				dir_4.normalize()
+
+				if(dir_3.equals(dir_4))
+				{
+					return true
+				}
+
+				if((dir_3.equals(dir_1) && !dir_4.equals(dir_1)) || (!dir_3.equals(dir_1) && dir_4.equals(dir_1)))
+				{
+					return true
+				}
+				else if((dir_3.equals(dir_2) && !dir_4.equals(dir_2)) || (!dir_3.equals(dir_2) && dir_4.equals(dir_2)))
+				{
+					return true
+				}
+			}
+
+			return false
+		}
 
 		function AreParallel(edge_1, edge_2)
-		{}
+		{
+			//Get the direction between the edge_1's endpoints, normalize it, and then make it point to a positive direction
+			var dir_1 = new THREE.Vector3().copy(edge_1['endPoints'][0])
+			dir_1.sub(edge_1['endPoints'][1])
+
+			//Make all axes of this vector positive
+			dir_1 = MakePositiveVector(dir_1)
+			dir_1.normalize()
+
+			//Same as above, but with edge_2
+			var dir_2 = new THREE.Vector3().copy(edge_2['endPoints'][0])
+			dir_2.sub(edge_2['endPoints'][1])
+
+			dir_2 = MakePositiveVector(dir_2)
+			dir_2.normalize()
+
+
+			//Check if the two directions point to the same direction
+			if(dir_1.equals(dir_2))
+			{
+				//If they do, then we first check between endPoint_1 of edge_1 and the endpoints of edge_2. If the direction between endPoint_1 and one of the endpoints of edge_2
+				//is a normalized basis vector in R^3 (that is, <1, 0, 0>, <0, 1, 0>, or <0, 0, 1>), but the direction between endPoint_1 and the other endpoint is different, 
+				//then we do the next check. Let endPoint_21 and endPoint_22 be the endpoints of edge_2, where endPoint_21 is the endPoint, that, when calculating the direction from
+				//endPoint_1 of edge_1 to it, we get a normalized basis vector. Then, our check needs to see if the direction between endPoint_2 of edge_1 and endPoint_22 is the same
+				//normalized basis vector.
+
+				var dir_3 = new THREE.Vector3().copy(edge_1['endPoints'][0])
+				dir_3.sub(edge_2['endPoints'][0])
+				dir_3 = MakePositiveVector(dir_3)
+				dir_3.normalize()
+
+				var dir_4 = new THREE.Vector3().copy(edge_1['endPoints'][0])
+				dir_4.sub(edge_2['endPoints'][1])
+				dir_4 = MakePositiveVector(dir_4)
+				dir_4.normalize()
+
+				if(!dir_3.equals(dir_4))
+				{
+					var dir_5
+
+					if(dir_3.equals(new THREE.Vector3(1, 0, 0)) || dir_3.equals(new THREE.Vector3(0, 1, 0)) || dir_3.equals(new THREE.Vector3(0, 0, 1)))
+					{	
+						dir_5 = new THREE.Vector3().copy(edge_1['endPoints'][1])
+						dir_5.sub(edge_2['endPoints'][1])
+						dir_5 = MakePositiveVector(dir_5)
+						dir_5.normalize()
+
+						if(dir_5.equals(dir_3))
+							return true
+					}
+					else if(dir_4.equals(new THREE.Vector3(1, 0, 0)) || dir_4.equals(new THREE.Vector3(0, 1, 0)) || dir_4.equals(new THREE.Vector3(0, 0, 1)))
+					{
+						dir_5 = new THREE.Vector3().copy(edge_1['endPoints'][1])
+						dir_5.sub(edge_2['endPoints'][0])
+						dir_5 = MakePositiveVector(dir_5)
+						dir_5.normalize()
+
+						if(dir_5.equals(dir_4))
+							return true
+					}
+				}
+			}
+
+			return false
+		}
 	}
 
 	function CheckIfGloballyDisconnected(part_1, part_2){
