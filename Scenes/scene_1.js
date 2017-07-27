@@ -156,6 +156,11 @@ function HandlePick() {
 							data = p_cube.GetParallelCuts(data['parent'][0])
 							ShowHingeData(data)
 						}
+						else if(pick_mode == 'hinge')
+						{
+							data = p_cube.GetSubGraphs(data['parent'][0])
+							ShowFaceGraphs(data)
+						}
 					}
 
 					highlights_are_on = true
@@ -309,6 +314,22 @@ function ShowCutEdgeData(){
 		rotationHighlight.material = rotationEdgeHighlightMaterial.clone()
 		scene_handler.RequestAddToScene(rotationHighlight)
 		edge_junk.push(rotationHighlight)
+	}
+}
+
+function ShowFaceGraphs(data){
+	for(var index in data)
+	{
+		for(var kindex in data[index])
+		{
+			var face = data[index][kindex]['face']
+			var faceHighlight = Cube.highlightFace.clone()
+			faceHighlight.position.copy(face.getWorldPosition())
+			faceHighlight.rotation.copy(face.getWorldRotation())
+			faceHighlight.material = index == 0 ? parentHighlightMaterial.clone() : childrenHighlightMaterial.clone()
+			scene_handler.RequestAddToScene(faceHighlight)
+			junk.push(faceHighlight)
+		}
 	}
 }
 

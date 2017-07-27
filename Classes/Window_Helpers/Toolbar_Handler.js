@@ -17,7 +17,8 @@ function Toolbar_Handler(){
 			{"text" : "Cut", "click": (function(){pick_mode = 'cut'; right_sidebar_contexts['hinge'][0]["mode"] = "cut"; ShowCutEdgeData()})},
 			{"text" : "Collinear", "click": (function(){pick_mode = 'col'; right_sidebar_contexts['hinge'][0]["mode"] = "col"; ClearJunk()})},
 			{"text" : "Parallel", "click": (function(){pick_mode = 'para'; right_sidebar_contexts['hinge'][0]["mode"] = "para"; ClearJunk()})},
-			{"text" : "Perpendicular", "click": (function(){pick_mode = 'perp'; right_sidebar_contexts['hinge'][0]["mode"] = "perp"; ClearJunk()})}]
+			{"text" : "Perpendicular", "click": (function(){pick_mode = 'perp'; right_sidebar_contexts['hinge'][0]["mode"] = "perp"; ClearJunk()})},
+			{"text" : "Hinge", "click": (function(){pick_mode = 'hinge'; right_sidebar_contexts['hinge'][0]["mode"] = "hinge"; ClearJunk()})}]
 	}
 
 	/*

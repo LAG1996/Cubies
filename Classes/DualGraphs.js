@@ -10,6 +10,8 @@ function FaceEdgeDualGraph(){
 
 	var Edge2CutPath = {} //An object that maps each edge to a path
 	var Edge2RotationLine = {} //An object that maps each edge to a rotation line
+	var RotationLine2SubGraph = {} //An object that maps each rotation line index to two subgraphs
+
 	var L_CutPaths = []
 	var L_RotationLines = []
 
@@ -26,7 +28,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_1 in Faces))
 		{
-			new_face_1 = {"name": name_1, "face": face_1, "neighbors": [], "visited" : false}
+			new_face_1 = {"name": name_1, "face": face_1, "neighbors": {}, "visited" : false}
 			Faces[name_1] = new_face_1
 		}
 		else
@@ -36,7 +38,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_2 in Faces))
 		{
-			new_face_2 = {"name": name_2, "face": face_2, "neighbors": [], "visited" : false}
+			new_face_2 = {"name": name_2, "face": face_2, "neighbors": {}, "visited" : false}
 			Faces[name_2] = new_face_2
 		}
 		else
@@ -59,7 +61,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_1 in Edges))
 		{
-			new_edge_1 = {"name": name_1, "edge": edge_1, "endPoints" : endPoints_1, "neighbors": [], "cut" : true, "invalid": false, "visited": false}
+			new_edge_1 = {"name": name_1, "edge": edge_1, "endPoints" : endPoints_1, "neighbors": {}, "cut" : true, "invalid": false, "visited": false}
 			Edges[name_1] = new_edge_1
 		}
 		else
@@ -69,7 +71,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_2 in Edges))
 		{
-			new_edge_2 = {"name": name_2, "edge": edge_2, "neighbors": [], "endPoints" : endPoints_2, "cut" : true, "invalid": false, "visited": false}
+			new_edge_2 = {"name": name_2, "edge": edge_2, "neighbors": {}, "endPoints" : endPoints_2, "cut" : true, "invalid": false, "visited": false}
 			Edges[name_2] = new_edge_2
 		}
 		else
@@ -125,7 +127,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_1 in Edges))
 		{
-			new_edge_1 = {"name": name_1, "edge": edge_1, "endPoints" : endPoints_1, "neighbors": [], "cut" : false, "invalid": false, "visited": false}
+			new_edge_1 = {"name": name_1, "edge": edge_1, "endPoints" : endPoints_1, "neighbors": {}, "cut" : false, "invalid": false, "visited": false}
 			Edges[name_1] = new_edge_1
 		}
 		else
@@ -137,7 +139,7 @@ function FaceEdgeDualGraph(){
 
 		if(!(name_2 in Edges))
 		{
-			new_edge_2 = {"name": name_2, "edge": edge_2, "endPoints" : endPoints_2, "neighbors": [], "cut" : false, "invalid": false, "visited": false}
+			new_edge_2 = {"name": name_2, "edge": edge_2, "endPoints" : endPoints_2, "neighbors": {}, "cut" : false, "invalid": false, "visited": false}
 			Edges[name_2] = new_edge_2
 		}
 		else
@@ -172,8 +174,15 @@ function FaceEdgeDualGraph(){
 			return null
 	}
 
+	//Function that handles cutting hinges, and also the undoing of these cuts. 
+	//The keyword here is "hinges". A hinge is two incident edges. If an edge without an incident partner is passed in the parameter, then there is nothing to do
+	//since it is already cut and there is not incident edge to "stick back together" with it.
 	this.HandleCut = function(edge)
 	{
+		//There is nothing to do with this edge, since it is a cut that cannot be undone
+		if(!ObjectExists(edge['incidentEdge']))
+			return
+
 		if(edge['cut'])
 		{
 			var edge_1 = Edges[edge.name]
@@ -198,6 +207,7 @@ function FaceEdgeDualGraph(){
 		{
 			var otherPartsInspected = CutHinge(edge)
 
+			/*
 			//Check if the edge cut causes the graph to be disconnected
 			var disc = CheckIfGloballyDisconnected(otherPartsInspected[1], otherPartsInspected[2])
 			ClearVisitedFaces()
@@ -206,6 +216,7 @@ function FaceEdgeDualGraph(){
 			{
 				UndoCut(edge_1, edge_2, otherPartsInspected[1], otherPartsInspected[2])
 			}
+			*/
 		}
 
 		//Check all neighbors of all cut edges in the polycube. If cutting them disconnects the face dual graph, then mark them as invalid
@@ -247,6 +258,7 @@ function FaceEdgeDualGraph(){
 
 		BuildCutPaths()
 		BuildHingePaths()
+		BuildSubGraphs()
 	}
 
 	this.RemoveFace = function(name){
@@ -412,6 +424,17 @@ function FaceEdgeDualGraph(){
 		return L_RotationLines
 	}
 
+	this.GetSubGraphs = function(edgeName){
+		var rotation_line = -1
+		rotation_line =  Edge2RotationLine[edgeName]
+		var subgraphs = undefined
+		if(rotation_line > -1){
+			subgraphs = RotationLine2SubGraph[rotation_line]
+		}
+
+		return subgraphs
+	}
+
 	function BuildCutPaths(){
 		var start_cut
 		var path_num = 0
@@ -486,7 +509,7 @@ function FaceEdgeDualGraph(){
 	function BuildHingePaths(){
 		Edge2RotationLine = {}
 		L_RotationLines = []
-		var rotation_line_index = 0
+		var rotation_line_index = -1
 		var EdgePartners = {}
 
 		CollinearCuts = []
@@ -524,8 +547,23 @@ function FaceEdgeDualGraph(){
 						EdgePartners[edge_1['name'] + edge_2['name']] = true
 						EdgePartners[edge_2['name'] + edge_1['name']] = true
 
-						EdgePartners[edge_1['incidentEdge']['name'] + edge_2['name']] = true
-						EdgePartners[edge_2['name'] + edge_1['incidentEdge']['name']] = true
+						if(ObjectExists(edge_1['incidentEdge']))
+						{
+							EdgePartners[edge_1['incidentEdge']['name'] + edge_2['name']] = true
+							EdgePartners[edge_2['name'] + edge_1['incidentEdge']['name']] = true
+						}
+				
+						if(ObjectExists(edge_2['incidentEdge']))
+						{
+							EdgePartners[edge_2['incidentEdge']['name'] + edge_1['name']] = true
+							EdgePartners[edge_1['name'] + edge_2['incidentEdge']['name']] = true
+						}
+						
+						if(ObjectExists(edge_1['incidentEdge']) && ObjectExists(edge_2['incidentEdge']))
+						{
+							EdgePartners[edge_2['incidentEdge']['name'] + edge_1['incidentEdge']['name']] = true
+							EdgePartners[edge_1['incidentEdge']['name'] + edge_2['incidentEdge']['name']] = true
+						}
 
 						if(AreCollinear(edge_1, edge_2))
 						{
@@ -702,7 +740,7 @@ function FaceEdgeDualGraph(){
 		function GenerateLine(start, end)
 		{
 			var Line_Queue = []
-			L_RotationLines[rotation_line_index] = []
+			
 
 			while(ObjectExists(start))
 			{
@@ -722,6 +760,13 @@ function FaceEdgeDualGraph(){
 				start = next
 			}
 
+			if(Line_Queue.length > 0)
+			{
+				rotation_line_index+=1
+				L_RotationLines[rotation_line_index] = []
+			}
+			else
+				return
 			var need_switch_lines = false
 			var Switch_Line_Queue = []
 			for(var index = 0; index < Line_Queue.length; index++)
@@ -756,9 +801,6 @@ function FaceEdgeDualGraph(){
 					L_RotationLines[rotation_line_index].push(edge)
 				}
 			}
-
-			if(Line_Queue.length > 0)
-				rotation_line_index+=1
 		}
 
 		function AreCollinear(edge_1, edge_2)
@@ -981,6 +1023,92 @@ function FaceEdgeDualGraph(){
 		}
 	}
 
+	//Build the sub graphs in the face dual graph formed by the rotation lines.
+	//Essentially, finding the sub graphs means temporarily cutting the rotation lines, picking a face on either side of the line (that is, each parent face of any two incident edges),
+	//and then doing a greedy grow search of the part of the adjacency graph containing it. We then put the edges back together.
+	function BuildSubGraphs()
+	{
+		var Edge_Queue = []
+		var sub_graphs = []
+		RotationLine2SubGraph = []
+
+		var jindex
+		ClearVisitedEdges()
+		ClearVisitedEdges()
+		
+		for(var index in L_RotationLines)
+		{
+			var line = L_RotationLines[index]
+
+			jindex = 0
+			sub_graphs[0] = []
+			sub_graphs[1] = []
+
+			for(var kindex in line)
+			{
+				var edge = line[kindex]
+				if(!edge['visited'])
+				{
+					//Set the edge and its incident edge as being visited so that we don't do redundant greedy grows later.
+					//No need to check for the existence of an incident edge since a rotation hinge cannot be a cut, and
+					//partner-less edges are already considered cuts.
+					edge['visited'] = true
+					Visited_Edges.push(edge)
+						
+					edge['incidentEdge']['visited'] = true
+					Visited_Edges.push(edge['incidentEdge'])
+
+					CutHinge(edge)
+					Edge_Queue.push(edge)
+				}
+			}
+
+			GreedyPathGrow(Faces[line[0]['edge'].parent.name])
+			jindex = 1
+			GreedyPathGrow(Faces[line[0]['incidentEdge']['edge'].parent.name])
+
+			RotationLine2SubGraph[index] = [sub_graphs[0], sub_graphs[1]]
+
+			ClearVisitedFaces()
+		}
+
+		for(var index in Edge_Queue)
+		{
+			var edge_1 = Edge_Queue[index]
+			var edge_2 = edge_1['incidentEdge']
+
+			var face_1 = edge_1['edge'].parent
+			var face_2 = edge_2['edge'].parent
+
+			//Clear the visited flags for both edges here to avoid doing a second O(n) operation later
+			edge_1['visited'] = false
+			edge_2['visited'] = false
+
+			UndoCut(edge_1, edge_2, face_1, face_2)
+		}
+
+		Visited_Edges = []
+
+		//Copy-pasted from the build cut path algorithm above. There may be a way to make this function work for faces and edges alike.
+		//Of course reconciling the difference may be overall less performant, since the function above was built with incident edges in mind.
+		//Not really a concern, though.
+		function GreedyPathGrow(face){
+
+			sub_graphs[jindex].push(face)
+			face['visited'] = true
+			Visited_Faces.push(face)
+			for(var N in face['neighbors'])
+			{
+				var neighbor = face['neighbors'][N]
+				
+				if(!neighbor['visited'])
+				{
+					GreedyPathGrow(neighbor)
+				}
+			}
+		}
+	}
+
 	function CheckIfGloballyDisconnected(part_1, part_2){
 		var disc = true
 
@@ -1029,7 +1157,7 @@ function FaceEdgeDualGraph(){
 
 	var UndoCut = function(edge_1, edge_2, face_1, face_2)
 	{
-		that.AddNeighboringFaces(face_1['name'], face_1, face_2['name'], face_2)
+		that.AddNeighboringFaces(face_1.name, face_1, face_2.name, face_2)
 
 		delete Cut_Edges[edge_1.name]
 		delete Cut_Edges[edge_2.name]
@@ -1040,7 +1168,12 @@ function FaceEdgeDualGraph(){
 
 	var CutHinge = function(edge)
 	{
+		//If this is an invalid edge, then don't bother
 		if(!ObjectExists(Edges[edge.name]))
+			return
+
+		//If this edge has no partner, then don't bother since it's already considered a boundary, which is a permanent cut
+		if(!ObjectExists(edge['incidentEdge']))
 			return
 
 		//TODO: Add verification here to make sure that the face dual graph would not be disconnected by the cutting here.
