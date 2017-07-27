@@ -89,3 +89,18 @@ function MakePositiveVector(vector)
 
 	return new_vec.clone()
 }
+
+function VectorToString(vector)
+{
+	return vector.x.toFixed(1)+","+vector.y.toFixed(1)+","+vector.z.toFixed(1)
+}
+
+function IsBasisVector(vector)
+{
+	var vectorString = VectorToString(vector)
+	var up = VectorToString(new THREE.Vector3(0, 1, 0))
+	var right = VectorToString(new THREE.Vector3(1, 0, 0))
+	var front = VectorToString(new THREE.Vector3(0, 0, 1))
+
+	return (vectorString == up || vectorString == right || vectorString == front)
+}

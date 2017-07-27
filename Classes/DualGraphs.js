@@ -9,7 +9,9 @@ function FaceEdgeDualGraph(){
 	var Visited_Edges = []
 
 	var Edge2CutPath = {} //An object that maps each edge to a path
+	var Edge2RotationLine = {} //An object that maps each edge to a rotation line
 	var L_CutPaths = []
+	var L_RotationLines = []
 
 	var PerpendicularCuts = {}//An object that maps each edge to perpendicular edges
 	var ParallelCuts = {} //An object that maps each edge to parallel edges
@@ -406,6 +408,10 @@ function FaceEdgeDualGraph(){
 		return l_1
 	}
 
+	this.GetRotationLines = function(){
+		return L_RotationLines
+	}
+
 	function BuildCutPaths(){
 		var start_cut
 		var path_num = 0
@@ -478,16 +484,30 @@ function FaceEdgeDualGraph(){
 	}
 
 	function BuildHingePaths(){
+		Edge2RotationLine = {}
+		L_RotationLines = []
+		var rotation_line_index = 0
+		var EdgePartners = {}
 
+		CollinearCuts = []
+		ParallelCuts = []
+		PerpendicularCuts = []
+
+		//We search through all cuts in the map and build rotation lines out of them.
 		for(var index in L_CutPaths)
 		{
 			for(var edge in L_CutPaths[index])
 			{
 				var edge_1 = L_CutPaths[index][edge]
 
-				CollinearCuts[edge_1.name] = []
-				ParallelCuts[edge_1.name] = []
-				PerpendicularCuts[edge_1.name] = []
+				if(!ObjectExists(CollinearCuts[edge_1.name]))
+					CollinearCuts[edge_1.name] = []
+
+				if(!ObjectExists(ParallelCuts[edge_1.name]))
+					ParallelCuts[edge_1.name] = []
+
+				if(!ObjectExists(PerpendicularCuts[edge_1.name]))
+					PerpendicularCuts[edge_1.name] = []
 
 				for(var other_edge in L_CutPaths[index])
 				{
@@ -495,26 +515,250 @@ function FaceEdgeDualGraph(){
 
 					if(edge_1['name'] != edge_2['name'])
 					{
-
 						if(ObjectExists(edge_1['incidentEdge']) && edge_1['incidentEdge']['name'] == edge_2['name'])
 							continue
+
+						if(EdgePartners[edge_1['name'] + edge_2['name']] || EdgePartners[edge_2['name'] + edge_1['name']])
+							continue
+
+						EdgePartners[edge_1['name'] + edge_2['name']] = true
+						EdgePartners[edge_2['name'] + edge_1['name']] = true
+
+						EdgePartners[edge_1['incidentEdge']['name'] + edge_2['name']] = true
+						EdgePartners[edge_2['name'] + edge_1['incidentEdge']['name']] = true
 
 						if(AreCollinear(edge_1, edge_2))
 						{
 							CollinearCuts[edge_1['name']].push(edge_2)
+
+							if(ObjectExists(edge_1['incidentEdge']))
+							{
+								if(!ObjectExists(CollinearCuts[edge_1['incidentEdge']['name']]))
+									CollinearCuts[edge_1['incidentEdge']['name']] = []
+
+								CollinearCuts[edge_1['incidentEdge']['name']].push(edge_2)
+							}
+
+							if(!ObjectExists(CollinearCuts[edge_2['name']]))
+								CollinearCuts[edge_2['name']] = []
+							
+							CollinearCuts[edge_2['name']].push(edge_1)
+
+							if(ObjectExists(edge_1['incidentEdge']))
+								CollinearCuts[edge_2['name']].push(edge_1['incidentEdge'])
+
+							var start_of_line = GetCloserCollinearNeighbor(edge_1, edge_2)
+
+							if(!ObjectExists(start_of_line))
+								start_of_line = GetCloserCollinearNeighbor(edge_1['incidentEdge'], edge_2)
+
+							if(ObjectExists(start_of_line))
+							{
+								GenerateLine(start_of_line, edge_2)
+							}
 						}
 						else if(ArePerpendicular(edge_1, edge_2))
 						{
 							PerpendicularCuts[edge_1['name']].push(edge_2)
+
+							if(ObjectExists(edge_1['incidentEdge']))
+							{
+								if(!ObjectExists(PerpendicularCuts[edge_1['incidentEdge']['name']]))
+									PerpendicularCuts[edge_1['incidentEdge']['name']] = []
+
+								PerpendicularCuts[edge_1['incidentEdge']['name']].push(edge_2)
+							}
+
+							if(!ObjectExists(PerpendicularCuts[edge_2['name']]))
+								PerpendicularCuts[edge_2['name']] = []
+							
+							PerpendicularCuts[edge_2['name']].push(edge_1)
+
+							if(ObjectExists(edge_1['incidentEdge']))
+								PerpendicularCuts[edge_2['name']].push(edge_1['incidentEdge'])
 						}
-						else if(AreParallel(edge_1, edge_2))
+						else
 						{
-							ParallelCuts[edge_1['name']].push(edge_2)
+							var data = AreParallel(edge_1, edge_2)
+							if(data['para'])
+							{
+								ParallelCuts[edge_1['name']].push(edge_2)
+
+								if(ObjectExists(edge_1['incidentEdge']))
+								{
+									if(!ObjectExists(ParallelCuts[edge_1['incidentEdge']['name']]))
+										ParallelCuts[edge_1['incidentEdge']['name']] = []
+	
+									ParallelCuts[edge_1['incidentEdge']['name']].push(edge_2)
+								}
+	
+								if(!ObjectExists(ParallelCuts[edge_2['name']]))
+									ParallelCuts[edge_2['name']] = []
+								
+								ParallelCuts[edge_2['name']].push(edge_1)
+	
+								if(ObjectExists(edge_1['incidentEdge']))
+									ParallelCuts[edge_2['name']].push(edge_1['incidentEdge'])
+								/*
+								var neighbors = GetCloserPerpendicularNeighbors(edge_1, edge_2, data)
+
+								if(neighbors.length > 0)
+								{
+									GenerateLine(neighbors[0], edge_2)
+									GenerateLine(neighbors[1], edge_2)
+								}
+								*/
+							}
 						}
 					}
-
 				}
 			}
+		}
+
+		function GetCloserPerpendicularNeighbors(from, to, data)
+		{
+			var neighbors = []
+			var got_neighbor_1 = false
+			var got_neighbor_2 = false
+			if(ObjectExists(from['neighbors'][to['name']]))
+				return undefined
+
+			for(var N in from['neighbors'])
+			{
+				var neighbor = from['neighbors'][N]
+				if(!ArePerpendicular(from, neighbor))
+					continue
+
+				if(got_neighbor_1 && got_neighbor_2)
+					break
+
+				if(!got_neighbor_1 && neighbor['endPoints'][0].equals(from['endPoints'][0]) || neighbor['endPoints'][1].equals(from['endPoints'][0]))
+				{
+					var neighbor_endpoint = (!neighbor['endPoints'][0].equals(from['endPoints'][0])) ? neighbor['endPoints'][0] : neighbor['endPoints'][1]
+
+					var target_endpoint = data['corresponding_endpoint_data'][0]['other_endpoint']
+
+					if(neighbor_endpoint.distanceTo(target_endpoint) < from['endPoints'][0].distanceTo(target_endpoint))
+					{
+						got_neighbor_1 = true
+						neighbors.push(neighbor)
+					}
+				}
+				else if(!got_neighbor_2 && neighbor['endPoints'][0].equals(from['endPoints'][1]) || neighbor['endPoints'][1].equals(from['endPoints'][1]))
+				{
+					var neighbor_endpoint = (!neighbor['endPoints'][0].equals(from['endPoints'][1])) ? neighbor['endPoints'][0] : neighbor['endPoints'][1]
+
+					var target_endpoint = data['corresponding_endpoint_data'][1]['other_endpoint']
+
+					if(neighbor_endpoint.distanceTo(target_endpoint) < from['endPoints'][1].distanceTo(target_endpoint))
+					{
+						got_neighbor_2 = true
+						neighbors.push(neighbor)
+					}
+				}
+			}
+
+			return neighbors
+		}
+
+
+		function GetCloserCollinearNeighbor(from, to)
+		{
+			if(ObjectExists(from['neighbors'][to['name']]))
+				return undefined
+
+			var closest_neighbor = undefined
+			var closest_endpoint = undefined
+
+			var distance_1 = from['endPoints'][0].distanceTo(to['endPoints'][0])
+
+			for(var N in from['neighbors'])
+			{
+				var neighbor = from['neighbors'][N]
+				if(AreCollinear(from, neighbor))
+				{
+					var neighbor_endpoint = (!neighbor['endPoints'][0].equals(from['endPoints'][0]) && !neighbor['endPoints'][0].equals(from['endPoints'][1])) ? neighbor['endPoints'][0] : neighbor['endPoints'][1]
+					var distance_2 = neighbor_endpoint.distanceTo(to['endPoints'][0])
+
+					if(!ObjectExists(closest_neighbor))
+					{
+						if(distance_2 < distance_1)
+						{
+							closest_neighbor = neighbor
+							closest_endpoint = neighbor_endpoint.clone()
+						}
+					}
+					else if(distance_2 < closest_endpoint.distanceTo(to['endPoints'][0]))
+					{
+						closest_neighbor = neighbor
+						closest_endpoint = neighbor_endpoint.clone()
+					}
+				}
+			}
+
+			return closest_neighbor
+		}
+
+		function GenerateLine(start, end)
+		{
+			var Line_Queue = []
+			L_RotationLines[rotation_line_index] = []
+
+			while(ObjectExists(start))
+			{
+				if(!start['cut'])
+				{
+					Line_Queue.push(start)
+
+					if(ObjectExists(start['incidentEdge']))
+						Line_Queue.push(start['incidentEdge'])
+				}
+				
+				var next = GetCloserCollinearNeighbor(start, end)
+
+				if(!ObjectExists(next))
+					next = GetCloserCollinearNeighbor(start['incidentEdge'], end)
+
+				start = next
+			}
+
+			var need_switch_lines = false
+			var Switch_Line_Queue = []
+			for(var index = 0; index < Line_Queue.length; index++)
+			{
+				var edge = Line_Queue[index]
+
+				if(ObjectExists(Edge2RotationLine[edge['name']]))
+				{
+					var line_index = Edge2RotationLine[edge['name']]
+					if(Line_Queue.length < L_RotationLines[line_index].length)
+					{
+						need_switch_lines = true
+						Switch_Line_Queue.push(edge)
+					}
+				}
+				else
+				{
+					Edge2RotationLine[edge['name']] = rotation_line_index
+					L_RotationLines[rotation_line_index].push(edge)
+				}
+			}
+
+			if(need_switch_lines)
+			{
+				for(var index = 0; index < Switch_Line_Queue.length; index++)
+				{
+					var line_index = Edge2RotationLine[Switch_Line_Queue[index]['name']]
+					var index_of_edge = L_RotationLines[line_index].indexOf(Switch_Line_Queue[index])
+
+					Edge2RotationLine[edge['name']] = rotation_line_index
+					L_RotationLines[line_index][index_of_edge] = undefined
+					L_RotationLines[rotation_line_index].push(edge)
+				}
+			}
+
+			if(Line_Queue.length > 0)
+				rotation_line_index+=1
 		}
 
 		function AreCollinear(edge_1, edge_2)
@@ -653,8 +897,15 @@ function FaceEdgeDualGraph(){
 			return false
 		}
 
+		//Compare the endpoints of these edges and return data pertaining to whether the two edges are parallel and what endpoints line up
 		function AreParallel(edge_1, edge_2)
 		{
+			var data = {'para' : false, 'corresponding_endpoint_data': 
+				{
+					0 : {'other_endpoint' : null},
+					1 : {'other_endpoint': null}
+				}
+			}
 			//Get the direction between the edge_1's endpoints, normalize it, and then make it point to a positive direction
 			var dir_1 = new THREE.Vector3().copy(edge_1['endPoints'][0])
 			dir_1.sub(edge_1['endPoints'][1])
@@ -694,7 +945,7 @@ function FaceEdgeDualGraph(){
 				{
 					var dir_5
 
-					if(dir_3.equals(new THREE.Vector3(1, 0, 0)) || dir_3.equals(new THREE.Vector3(0, 1, 0)) || dir_3.equals(new THREE.Vector3(0, 0, 1)))
+					if(IsBasisVector(dir_3))
 					{	
 						dir_5 = new THREE.Vector3().copy(edge_1['endPoints'][1])
 						dir_5.sub(edge_2['endPoints'][1])
@@ -702,9 +953,14 @@ function FaceEdgeDualGraph(){
 						dir_5.normalize()
 
 						if(dir_5.equals(dir_3))
-							return true
+						{
+							data['para'] = true
+
+							data['corresponding_endpoint_data'][0]['other_endpoint'] = edge_2['endPoints'][0]
+							data['corresponding_endpoint_data'][1]['other_endpoint'] = edge_2['endPoints'][1]
+						}
 					}
-					else if(dir_4.equals(new THREE.Vector3(1, 0, 0)) || dir_4.equals(new THREE.Vector3(0, 1, 0)) || dir_4.equals(new THREE.Vector3(0, 0, 1)))
+					else if(IsBasisVector(dir_4))
 					{
 						dir_5 = new THREE.Vector3().copy(edge_1['endPoints'][1])
 						dir_5.sub(edge_2['endPoints'][0])
@@ -712,12 +968,16 @@ function FaceEdgeDualGraph(){
 						dir_5.normalize()
 
 						if(dir_5.equals(dir_4))
-							return true
+						{
+							data['para'] = true
+							data['corresponding_endpoint_data'][0]['other_endpoint'] = edge_2['endPoints'][1]
+							data['corresponding_endpoint_data'][1]['other_endpoint'] = edge_2['endPoints'][0]
+						}
 					}
 				}
 			}
 
-			return false
+			return data
 		}
 	}
 

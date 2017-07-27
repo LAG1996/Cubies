@@ -341,6 +341,11 @@ function PolyCube(position, name = ""){
 		return {'parent': [edge, edge['incidentEdge']], 'children' : list}
 	}
 
+	this.GetRotationLines = function()
+	{
+		return AdjacencyGraph.GetRotationLines()
+	}
+
 	//Let cube1 be the cube we are adding to the polycube, and cube2 be a cube adjacent to cube1. Then dir is the Vector3 representing the direction from
 	//cube1 to cube2. For each face that is not facing the same or opposite direction to dir, check if each cube has the corresponding face.
 	//If so, then the respective faces of each cube are adjacent.

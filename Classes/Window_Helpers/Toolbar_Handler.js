@@ -20,6 +20,12 @@ function Toolbar_Handler(){
 			{"text" : "Perpendicular", "click": (function(){pick_mode = 'perp'; right_sidebar_contexts['hinge'][0]["mode"] = "perp"; ClearJunk()})}]
 	}
 
+	/*
+	{"text" : "Collinear", "click": (function(){pick_mode = 'col'; right_sidebar_contexts['hinge'][0]["mode"] = "col"; ClearJunk()})},
+	{"text" : "Parallel", "click": (function(){pick_mode = 'para'; right_sidebar_contexts['hinge'][0]["mode"] = "para"; ClearJunk()})},
+	{"text" : "Perpendicular", "click": (function(){pick_mode = 'perp'; right_sidebar_contexts['hinge'][0]["mode"] = "perp"; ClearJunk()})}
+	*/
+
 	var amt_buttons_for_context = {"camera-control" : 2, "world-context" : 1, "poly-context" : 5 }
 
 	var that = this

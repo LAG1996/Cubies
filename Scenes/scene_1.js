@@ -8,6 +8,7 @@ var parentHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xDD0000})
 var childrenHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0x001AAA})
 var cutEdgeHighlightMaterial = new THREE.MeshBasicMaterial({'color':0xFFFF00})
 var invalidEdgeHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xAAAAAA})
+var rotationEdgeHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xDD00FF})
 
 var highlights_are_on = false
 var pick_mode = 'nada'
@@ -15,17 +16,28 @@ var junk = []
 var edge_junk = []
 var cut_edges = {}
 var invalid_cut_edges = {}
+var rotation_edges = {}
+var grid
 
 $(document).ready(function(){
 	Initialize() //Load the cube part models and then initialize the cube class with said models
 	scene_handler = new SceneHandler() //Initialize the scene
 
 	//Add a grid to the scene so we can orient ourselves
-	var gridHelper = new THREE.GridHelper(1000, 500, 0x0000FF, 0x020202)
-	gridHelper.position.y = -1
-	gridHelper.position.x = -1
-	gridHelper.position.z = -1
-	scene_handler.RequestAddToScene(gridHelper)
+	grid = GenerateGrid(100, 2, 0x000000)
+	grid.position.x = -1
+	grid.position.y = -1
+	grid.position.z = -1
+
+	var grid_axis = new THREE.AxisHelper(50)
+	grid_axis.position.copy(grid.position)
+
+	var grid_axis_2 = grid_axis.clone()
+
+	scene_handler.RequestAddToScene(grid)
+	scene_handler.RequestAddToScene(grid_axis)
+	scene_handler.RequestAddToScene(grid_axis_2)
+
 
 	//Add the toolbars and their functionality
 	toolbar_handler = new Toolbar_Handler()
@@ -35,6 +47,45 @@ $(document).ready(function(){
 	$('#container').on('mousedown', StoreMouseVals)
 	$('#container').on('mouseup', HandlePick)
 })
+
+function GenerateGrid(size, spacing, color)
+{
+	var geometry = new THREE.BufferGeometry();
+
+	var geometries = []
+	
+	var vertices = [], colors = []
+	//We'll say we want a grid of size 10 with a spacing of two units for now
+	var size = size
+	var spacing = spacing
+	var halfway = size/2
+	//We'll also say that we want the color of the central lines to be red, and the other lines would be off-white
+	var line_color = new THREE.Color(color)
+	
+	var color_index = 0
+	//Draw the grid
+	for(var i = -halfway, k = -halfway; i <= halfway; i += spacing, k+=spacing)
+	{
+		vertices.push(i, 0, halfway, i, 0, -halfway)
+		vertices.push(-halfway, 0, k, halfway, 0, k)
+	
+		line_color.toArray(colors, color_index); color_index+=3;
+		line_color.toArray(colors, color_index); color_index+=3;
+		line_color.toArray(colors, color_index); color_index+=3;
+		line_color.toArray(colors, color_index); color_index+=3;
+	}
+	var f32Positions = new Float32Array(vertices)
+	var f32Colors = new Float32Array(colors)
+	
+	geometry.addAttribute('position', new THREE.BufferAttribute(f32Positions, 3))
+	geometry.addAttribute('color', new THREE.BufferAttribute(f32Colors, 3))
+	
+	var material = new THREE.LineDashedMaterial({vertexColors: THREE.VertexColors});
+
+	var lines = new THREE.LineSegments(geometry, material);
+
+	return lines
+}
 
 function StoreMouseVals(event){
 	old_mouse_pos.copy(scene_handler.GetMousePos())
@@ -123,7 +174,7 @@ function HandlePick() {
 
 		if(pick_mode == 'cut' && ObjectExists(PolyCube.Active_Polycube))
 		{
-			var edge_data = {"cuts" : PolyCube.Active_Polycube.GetCutEdges(), "invalids" : PolyCube.Active_Polycube.GetInvalidEdges()}
+			var edge_data = {"cuts" : PolyCube.Active_Polycube.GetCutEdges(), "invalids" : PolyCube.Active_Polycube.GetInvalidEdges(), "rotations" : PolyCube.Active_Polycube.GetRotationLines()}
 			UpdateCutEdgeData(edge_data)
 			ShowCutEdgeData()
 		}
@@ -195,8 +246,14 @@ function UpdateCutEdgeData(data){
 		delete invalid_cut_edges[E]
 	}
 
+	for(var E in rotation_edges)
+	{
+		delete rotation_edges[E]
+	}
+
 	var cut_data = data['cuts']
 	var invalid_cut_data = data['invalids']
+	var rotation_data = data['rotations']
 
 	for(var E in cut_data)
 	{
@@ -206,6 +263,17 @@ function UpdateCutEdgeData(data){
 	for(var E in invalid_cut_data)
 	{
 		invalid_cut_edges[E] = invalid_cut_data[E]['edge']
+	}
+
+	for(var i = 0; i < rotation_data.length; i++)
+	{
+		for(var j = 0; j < rotation_data[i].length; j++)
+		{
+			if(ObjectExists(rotation_data[i][j]))
+			{
+				rotation_edges[rotation_data[i][j]['name']] = rotation_data[i][j]['edge']
+			}
+		}
 	}
 }
 
@@ -221,6 +289,7 @@ function ShowCutEdgeData(){
 		edge_junk.push(cutHighlight)
 	}
 
+	/*
 	for(var E in invalid_cut_edges)
 	{
 		var invalidHighlight = Cube.highlightEdge.clone()
@@ -229,6 +298,17 @@ function ShowCutEdgeData(){
 		invalidHighlight.material = invalidEdgeHighlightMaterial.clone()
 		scene_handler.RequestAddToScene(invalidHighlight)
 		edge_junk.push(invalidHighlight)
+	}
+	*/
+
+	for(var E in rotation_edges)
+	{
+		var rotationHighlight = Cube.highlightEdge.clone()
+		rotationHighlight.position.copy(rotation_edges[E].getWorldPosition())
+		rotationHighlight.rotation.copy(rotation_edges[E].getWorldRotation())
+		rotationHighlight.material = rotationEdgeHighlightMaterial.clone()
+		scene_handler.RequestAddToScene(rotationHighlight)
+		edge_junk.push(rotationHighlight)
 	}
 }
 
