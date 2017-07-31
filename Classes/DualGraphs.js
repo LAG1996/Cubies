@@ -446,11 +446,6 @@ function FaceEdgeDualGraph(){
 		//Get the first edge in the cut list. Start growing greedily, getting all cuts in the path
 		for(var E in Cut_Edges)
 		{
-			if(Object.keys(Edge2CutPath).length == Object.keys(Cut_Edges).length)
-			{
-				break
-			}
-
 			var new_cut_path = []
 			start_cut = Cut_Edges[E]
 			
@@ -458,19 +453,33 @@ function FaceEdgeDualGraph(){
 			{
 				start_cut = Cut_Edges[E]
 				start_cut['visited'] = true
-				start_cut['incidentEdge']['visited'] = true
+				
 
 				Visited_Edges.push(start_cut)
-				Visited_Edges.push(start_cut['incidentEdge'])
-
-				new_cut_path.push(start_cut)
-				new_cut_path.push(start_cut['incidentEdge'])
+						
 
 				Edge2CutPath[start_cut['name']] = path_num
-				Edge2CutPath[start_cut['incidentEdge']['name']] = path_num
+				
 
-				GreedyPathGrow(start_cut)
-				GreedyPathGrow(start_cut['incidentEdge'])
+				if(Object.keys(start_cut['neighbors']).length > 0)
+				{
+					new_cut_path.push(start_cut)
+					GreedyPathGrow(start_cut)
+				}
+
+				if(ObjectExists(start_cut['incidentEdge']))
+				{
+					Edge2CutPath[start_cut['incidentEdge']['name']] = path_num
+					start_cut['incidentEdge']['visited'] = true
+					Visited_Edges.push(start_cut['incidentEdge'])
+
+					if(Object.keys(start_cut['incidentEdge']['neighbors']).length > 0)
+					{
+						new_cut_path.push(start_cut['incidentEdge'])
+						GreedyPathGrow(start_cut['incidentEdge'])
+					}
+				}
+				
 
 				L_CutPaths[path_num] = new_cut_path
 
@@ -488,24 +497,38 @@ function FaceEdgeDualGraph(){
 				if(!neighbor['visited'] && neighbor['cut'])
 				{
 					Edge2CutPath[neighbor['name']] = path_num
-					Edge2CutPath[neighbor['incidentEdge']['name']] = path_num
-
 					neighbor['visited'] = true
-					neighbor['incidentEdge']['visited'] = true
-
 					Visited_Edges.push(neighbor)
-					Visited_Edges.push(neighbor['incidentEdge'])
 
-					new_cut_path.push(neighbor)
-					new_cut_path.push(neighbor['incidentEdge'])
+					if(Object.keys(neighbor['neighbors']).length > 0)
+					{
+						new_cut_path.push(neighbor)
+						GreedyPathGrow(neighbor)
+					}
 
-					GreedyPathGrow(neighbor)
-					GreedyPathGrow(neighbor['incidentEdge'])
+					if(ObjectExists(neighbor['incidentEdge']))
+					{
+						Edge2CutPath[neighbor['incidentEdge']['name']] = path_num
+						neighbor['incidentEdge']['visited'] = true
+						Visited_Edges.push(neighbor['incidentEdge'])
+
+						if(Object.keys(neighbor['incidentEdge']['neighbors']).length > 0)
+						{
+							new_cut_path.push(neighbor['incidentEdge'])
+							GreedyPathGrow(neighbor['incidentEdge'])
+						}
+					}
 				}
 			}
 		}
 	}
 
+	//In this function, we build rotation lines between cuts.
+	//The search is optimized in several ways.
+	//First of all, cut edges check only with cut edges that are on the same path as them.
+	//Second, edges that are checked together are marked as partners. Their incident edges are also marked as partners. Partners that have already been marked are not checked against each other ever again.
+	//Third, only edges that are collinear, parallel, and perpendicular can have lines in between them.
+	//Fourth, if the first edge found on the line is a cut, then we don't bother building a hinge line from the origin. This makes it so we avoid redundancies.
 	function BuildHingePaths(){
 		Edge2RotationLine = {}
 		L_RotationLines = []
@@ -523,6 +546,7 @@ function FaceEdgeDualGraph(){
 			{
 				var edge_1 = L_CutPaths[index][edge]
 
+				//If we haven't found the collinear, perpendicular, and parallel cuts for this edge already, then generate an empty list for them.
 				if(!ObjectExists(CollinearCuts[edge_1.name]))
 					CollinearCuts[edge_1.name] = []
 
@@ -536,14 +560,21 @@ function FaceEdgeDualGraph(){
 				{
 					var edge_2 = L_CutPaths[index][other_edge]
 
+					//If the two edges we are comparing aren't the same edge...
 					if(edge_1['name'] != edge_2['name'])
 					{
+						//...AND the edges are not incident partners
 						if(ObjectExists(edge_1['incidentEdge']) && edge_1['incidentEdge']['name'] == edge_2['name'])
 							continue
 
+						//...AND the edges have not been compared to each other already
 						if(EdgePartners[edge_1['name'] + edge_2['name']] || EdgePartners[edge_2['name'] + edge_1['name']])
 							continue
 
+						//---------------------
+						//	Mark the edges as being compared already.
+						//	This includes marking their incident edges as well, since we might be pooling from their list of neighbors in an attempt to generate a rotation line
+						//---------------------
 						EdgePartners[edge_1['name'] + edge_2['name']] = true
 						EdgePartners[edge_2['name'] + edge_1['name']] = true
 
@@ -564,9 +595,16 @@ function FaceEdgeDualGraph(){
 							EdgePartners[edge_2['incidentEdge']['name'] + edge_1['incidentEdge']['name']] = true
 							EdgePartners[edge_1['incidentEdge']['name'] + edge_2['incidentEdge']['name']] = true
 						}
+						//------------------
+						//	End marking the edges
+						//------------------
 
+						//If the edges are collinear...
 						if(AreCollinear(edge_1, edge_2))
 						{
+							//----------------
+							//Record that relation in their respective Collinear Cut lists
+							//----------------
 							CollinearCuts[edge_1['name']].push(edge_2)
 
 							if(ObjectExists(edge_1['incidentEdge']))
@@ -584,19 +622,31 @@ function FaceEdgeDualGraph(){
 
 							if(ObjectExists(edge_1['incidentEdge']))
 								CollinearCuts[edge_2['name']].push(edge_1['incidentEdge'])
+							//-----------
+							//	End of marking collinearity
+							//-----------
 
+							//Now find a closer collinear neighbor between them
 							var start_of_line = GetCloserCollinearNeighbor(edge_1, edge_2)
 
 							if(!ObjectExists(start_of_line))
+							{	
+								//Make a second check with the incident edge in case the first check was not working
 								start_of_line = GetCloserCollinearNeighbor(edge_1['incidentEdge'], edge_2)
+							}
 
+							//If we found a closer neighbor...
 							if(ObjectExists(start_of_line))
 							{
 								GenerateLine(start_of_line, edge_2)
 							}
+								
 						}
 						else if(ArePerpendicular(edge_1, edge_2))
 						{
+							//----------------
+							//Record that relation in their respective Collinear Cut lists
+							//----------------
 							PerpendicularCuts[edge_1['name']].push(edge_2)
 
 							if(ObjectExists(edge_1['incidentEdge']))
@@ -614,6 +664,22 @@ function FaceEdgeDualGraph(){
 
 							if(ObjectExists(edge_1['incidentEdge']))
 								PerpendicularCuts[edge_2['name']].push(edge_1['incidentEdge'])
+
+							//----------------
+							// End of marking perpendicularity
+							//---------------
+
+							//Find a closer perpendicular neighbor between the two edges.
+							//The way we find this is explained in the actual function
+							var data = GetCloserPerpendicularNeighbor(edge_1, edge_2)
+
+							if(!ObjectExists(data['closer']))
+							{
+								data = GetCloserPerpendicularNeighbor(edge_1['incidentEdge'], edge_2)
+							}
+
+							if(ObjectExists(data['closer']))
+								GenerateLine(data['closer'], data['to'])
 						}
 						else
 						{
@@ -637,15 +703,19 @@ function FaceEdgeDualGraph(){
 	
 								if(ObjectExists(edge_1['incidentEdge']))
 									ParallelCuts[edge_2['name']].push(edge_1['incidentEdge'])
-								/*
-								var neighbors = GetCloserPerpendicularNeighbors(edge_1, edge_2, data)
 
-								if(neighbors.length > 0)
+								var data = GetCloserParallelNeighbor(edge_1, edge_2)
+
+								if(!ObjectExists(data['closer_1']))
 								{
-									GenerateLine(neighbors[0], edge_2)
-									GenerateLine(neighbors[1], edge_2)
+									data = GetCloserParallelNeighbor(edge_1['incidentEdge'], edge_2)
 								}
-								*/
+
+								if(ObjectExists(data['closer_1']))
+								{
+									GenerateLine(data['closer_1'], data['to_1'])
+									GenerateLine(data['closer_2'], data['to_2'])
+								}
 							}
 						}
 					}
@@ -653,58 +723,166 @@ function FaceEdgeDualGraph(){
 			}
 		}
 
-		function GetCloserPerpendicularNeighbors(from, to, data)
+		//We find the closer neighbor between the edge marked as from and to (assuming from and to are parallel)
+		function GetCloserParallelNeighbor(from, to)
 		{
-			var neighbors = []
-			var got_neighbor_1 = false
-			var got_neighbor_2 = false
-			if(ObjectExists(from['neighbors'][to['name']]))
-				return undefined
+			//Unlike the other two checks for neighbors, the parallel check will have two parallel, closer edges.
+			var closer_neighbor_1 = undefined
+			var closer_neighbor_2 = undefined
+
+			var closer_end_1 = undefined
+			var closer_end_2 = undefined
+
+			var distance_1 = from['endPoints'][0].distanceTo(to['endPoints'][0])
+			var distance_2 = from['endPoints'][1].distanceTo(to['endPoints'][0])
 
 			for(var N in from['neighbors'])
 			{
 				var neighbor = from['neighbors'][N]
-				if(!ArePerpendicular(from, neighbor))
-					continue
 
-				if(got_neighbor_1 && got_neighbor_2)
-					break
-
-				if(!got_neighbor_1 && neighbor['endPoints'][0].equals(from['endPoints'][0]) || neighbor['endPoints'][1].equals(from['endPoints'][0]))
+				//Only check the perpendicular neighbors of from
+				if(ArePerpendicular(neighbor, from))
 				{
-					var neighbor_endpoint = (!neighbor['endPoints'][0].equals(from['endPoints'][0])) ? neighbor['endPoints'][0] : neighbor['endPoints'][1]
-
-					var target_endpoint = data['corresponding_endpoint_data'][0]['other_endpoint']
-
-					if(neighbor_endpoint.distanceTo(target_endpoint) < from['endPoints'][0].distanceTo(target_endpoint))
+					//If this neighbor is attached to the first endpoint of from...
+					if(neighbor['endPoints'][0].equals(from['endPoints'][0]) || neighbor['endPoints'][1].equals(from['endPoints'][0]))
 					{
-						got_neighbor_1 = true
-						neighbors.push(neighbor)
+						//...if we have a closer neighbor, don't bother.
+						if(ObjectExists(closer_neighbor_1))
+							continue
+
+						//...check if this neighbor's other endpoint is closer to "to" than the first endpoint of from
+						var neighbor_endpoint = (!neighbor['endPoints'][0].equals(from['endPoints'][0])) ? neighbor['endPoints'][0] : neighbor['endPoints'][1]
+						var distance_3 = neighbor_endpoint.distanceTo(to['endPoints'][0])
+
+						if(distance_3 < distance_1)
+						{
+							//If the check succeeds, then find the closest point from "to" to this neighbor
+							var data = GetCloserPerpendicularNeighbor(to, neighbor)
+							if(!ObjectExists(data['closer']))
+							{
+								data = GetCloserPerpendicularNeighbor(to['incidentEdge'], neighbor)
+							}
+
+							if(ObjectExists(data['closer']))
+							{
+								closer_neighbor_1 = neighbor
+								closer_end_1 = data['closer']
+							}
+						}
 					}
-				}
-				else if(!got_neighbor_2 && neighbor['endPoints'][0].equals(from['endPoints'][1]) || neighbor['endPoints'][1].equals(from['endPoints'][1]))
-				{
-					var neighbor_endpoint = (!neighbor['endPoints'][0].equals(from['endPoints'][1])) ? neighbor['endPoints'][0] : neighbor['endPoints'][1]
-
-					var target_endpoint = data['corresponding_endpoint_data'][1]['other_endpoint']
-
-					if(neighbor_endpoint.distanceTo(target_endpoint) < from['endPoints'][1].distanceTo(target_endpoint))
+					else
 					{
-						got_neighbor_2 = true
-						neighbors.push(neighbor)
+						//If not, then it's the other endpoint that we're checking against
+						//...if we have a closer neighbor, don't bother.
+						if(ObjectExists(closer_neighbor_2))
+							continue
+
+						//...check if this neighbor's other endpoint is closer to "to" than the second endpoint of from
+						var neighbor_endpoint = (!neighbor['endPoints'][0].equals(from['endPoints'][1])) ? neighbor['endPoints'][0] : neighbor['endPoints'][1]
+						var distance_3 = neighbor_endpoint.distanceTo(to['endPoints'][0])
+
+						if(distance_3 < distance_2)
+						{
+							//If the check succeeds, then find the closest point from "to" to this neighbor
+							var data = GetCloserPerpendicularNeighbor(to, neighbor)
+
+							if(!ObjectExists(data['closer']))
+							{
+								data = GetCloserPerpendicularNeighbor(to['incidentEdge'], neighbor)
+							}
+
+							if(ObjectExists(data['closer']))
+							{
+								closer_neighbor_2 = neighbor
+								closer_end_2 = data['closer']
+							}
+						}
 					}
 				}
 			}
 
-			return neighbors
+			return {'closer_1' : closer_neighbor_1, 'closer_2' : closer_neighbor_2, 'to_1' : closer_end_1, 'to_2' : closer_end_2}
 		}
 
+		//We find the closer neighbor between the edge marked as from and to (assuming from and to are perpendicular)
+		function GetCloserPerpendicularNeighbor(from, to)
+		{
+			var closest_neighbor = undefined
+			var closest_endpoint = undefined
 
+			var distance_1 = from['endPoints'][0].distanceTo(to['endPoints'][0])
+
+			//Check all neighbors of "from"
+			for(var N in from['neighbors'])
+			{
+				var neighbor = from['neighbors'][N]
+
+				//If the neighbor of "from" and "to" are collinear, then see if it is closer to "to"
+				if(AreCollinear(neighbor, to))
+				{
+					var neighbor_endpoint = (!neighbor['endPoints'][0].equals(from['endPoints'][0]) && !neighbor['endPoints'][0].equals(from['endPoints'][1])) ? neighbor['endPoints'][0] : neighbor['endPoints'][1]
+					var distance_2 = neighbor_endpoint.distanceTo(to['endPoints'][0])
+
+					if(!ObjectExists(closest_neighbor))
+					{
+						if(distance_2 < distance_1)
+						{
+							closest_neighbor = neighbor
+							closest_endpoint = neighbor_endpoint.clone()
+						}
+					}
+					else if(distance_2 < closest_endpoint.distanceTo(to['endPoints'][0]))
+					{
+						closest_neighbor = neighbor
+						closest_endpoint = neighbor_endpoint.clone()
+					}
+				}
+			}
+
+			//If we found a closer neighbor, then send a data packet that contains the following information:
+			//-the closer neighbor that we use to start the line
+			//-the endpoint that we want to reach.
+			//This seems pointless here, but it'll make sense in the next step, should this check fail
+			if(ObjectExists(closest_neighbor))
+				return {'closer' : closest_neighbor, 'to' : to}
+
+			//Check all neighbors of "to"
+			for(var N in to['neighbors'])
+			{
+				var neighbor = to['neighbors'][N]
+
+				//If the neighbor of "from" and "to" are collinear, then see if it is closer to "to"
+				if(AreCollinear(neighbor, from))
+				{
+					var neighbor_endpoint = (!neighbor['endPoints'][0].equals(to['endPoints'][0]) && !neighbor['endPoints'][0].equals(to['endPoints'][1])) ? neighbor['endPoints'][0] : neighbor['endPoints'][1]
+					var distance_2 = neighbor_endpoint.distanceTo(from['endPoints'][0])
+
+					if(!ObjectExists(closest_neighbor))
+					{
+						if(distance_2 < distance_1)
+						{
+							closest_neighbor = neighbor
+							closest_endpoint = neighbor_endpoint.clone()
+						}
+					}
+					else if(distance_2 < closest_endpoint.distanceTo(from['endPoints'][0]))
+					{
+						closest_neighbor = neighbor
+						closest_endpoint = neighbor_endpoint.clone()
+					}
+				}
+			}
+
+			//Start the line at the neighbor to 'to', and set the endpoint as 'from'. This reverses the direction our rotation line will be drawn
+			if(ObjectExists(closest_neighbor))
+				return {'closer' : closest_neighbor, 'to' : from}
+
+			return {'closer' : null} //Return this if we haven't found a closer neighbor
+		}
+
+		//We find the closer collinear neighbor between the edge marked as from and to (assuming from and to are also collinear)
 		function GetCloserCollinearNeighbor(from, to)
 		{
-			if(ObjectExists(from['neighbors'][to['name']]))
-				return undefined
-
 			var closest_neighbor = undefined
 			var closest_endpoint = undefined
 
@@ -713,6 +891,8 @@ function FaceEdgeDualGraph(){
 			for(var N in from['neighbors'])
 			{
 				var neighbor = from['neighbors'][N]
+
+				//If the neighbor and from are collinear, then there is a chance that this neighbor is closer to "to"
 				if(AreCollinear(from, neighbor))
 				{
 					var neighbor_endpoint = (!neighbor['endPoints'][0].equals(from['endPoints'][0]) && !neighbor['endPoints'][0].equals(from['endPoints'][1])) ? neighbor['endPoints'][0] : neighbor['endPoints'][1]
@@ -739,66 +919,84 @@ function FaceEdgeDualGraph(){
 
 		function GenerateLine(start, end)
 		{
-			var Line_Queue = []
-			
-
+			var Line_Queue = [] //A queue that stores the edges that we found
 			while(ObjectExists(start))
 			{
+				//if start is not a cut, then add it to the queue
 				if(!start['cut'])
 				{
 					Line_Queue.push(start)
-
-					if(ObjectExists(start['incidentEdge']))
-						Line_Queue.push(start['incidentEdge'])
 				}
-				
-				var next = GetCloserCollinearNeighbor(start, end)
 
-				if(!ObjectExists(next))
-					next = GetCloserCollinearNeighbor(start['incidentEdge'], end)
+				//if start and end are the same edge, then stop.
+				if(start['name'] == end['name'])
+					break
 
-				start = next
+				//If start and end are neighbors, then we're at the end of our line. Set start as end, and then skip to the next iteration. This is done
+				//to account for a line drawn between parallel neighbors, where end is not necessarily a cut.
+				if(ObjectExists(start['neighbors'][end['name']]))
+				{
+					start = end
+					continue
+				}
+				else if(ObjectExists(start['incidentEdge']) && ObjectExists(start['incidentEdge']['neighbors'][end['name']]))
+				{
+					start = end
+					continue
+				}
+
+				//Now find a closer neighbor between them.
+				var next_edge = GetCloserCollinearNeighbor(start, end)
+
+				if(!ObjectExists(next_edge))
+					next_edge = GetCloserCollinearNeighbor(start['incidentEdge'], end)
+
+				start = next_edge
 			}
 
+			//If the line queue has edges in it, then...
 			if(Line_Queue.length > 0)
 			{
+				//...set the next rotation line. A rotation line is simply a list of connected edges that form a line between two cut edges in the edge dual graph.
 				rotation_line_index+=1
 				L_RotationLines[rotation_line_index] = []
-			}
-			else
-				return
-			var need_switch_lines = false
-			var Switch_Line_Queue = []
-			for(var index = 0; index < Line_Queue.length; index++)
-			{
-				var edge = Line_Queue[index]
 
-				if(ObjectExists(Edge2RotationLine[edge['name']]))
+				for(var windex in Line_Queue)
 				{
-					var line_index = Edge2RotationLine[edge['name']]
-					if(Line_Queue.length < L_RotationLines[line_index].length)
+					var edge = Line_Queue[windex]
+
+					//If the edge is already part of a line, check if the edge is part of a shorter line.
+					if(ObjectExists(Edge2RotationLine[edge['name']]))
 					{
-						need_switch_lines = true
-						Switch_Line_Queue.push(edge)
+						var line = L_RotationLines[Edge2RotationLine[edge['name']]]
+
+						//if it turns out that the line the edge was already a part of is larger than the current queue, we'll have to destroy the old line.
+						//If it turns out the older line is shorter, do nothing. In fact, just skip to the next iteration of the loop
+						if(line.length > Line_Queue)
+						{
+							delete L_RotationLines[Edge2RotationLine[edge['name']]]
+							delete Edge2RotationLine[edge['name']]
+						}
+						else
+							continue
 					}
-				}
-				else
-				{
+
+					//Add the edge to this rotation line.
 					Edge2RotationLine[edge['name']] = rotation_line_index
+					Edge2RotationLine[edge['incidentEdge']['name']] = rotation_line_index
 					L_RotationLines[rotation_line_index].push(edge)
 				}
-			}
 
-			if(need_switch_lines)
-			{
-				for(var index = 0; index < Switch_Line_Queue.length; index++)
+				if(L_RotationLines[rotation_line_index].length == 0)
 				{
-					var line_index = Edge2RotationLine[Switch_Line_Queue[index]['name']]
-					var index_of_edge = L_RotationLines[line_index].indexOf(Switch_Line_Queue[index])
+					var new_array = []
+					for(var windex = 0; windex < rotation_line_index; windex++)
+					{
+						new_array[windex] = L_RotationLines[windex]
+					}
 
-					Edge2RotationLine[edge['name']] = rotation_line_index
-					L_RotationLines[line_index][index_of_edge] = undefined
-					L_RotationLines[rotation_line_index].push(edge)
+					rotation_line_index -= 1
+					L_RotationLines = new_array
 				}
 			}
 		}
@@ -1034,7 +1232,7 @@ function FaceEdgeDualGraph(){
 
 		var jindex
 		ClearVisitedEdges()
-		ClearVisitedEdges()
+		ClearVisitedFaces()
 		
 		for(var index in L_RotationLines)
 		{
@@ -1069,22 +1267,22 @@ function FaceEdgeDualGraph(){
 
 			RotationLine2SubGraph[index] = [sub_graphs[0], sub_graphs[1]]
 
+			for(var index in Edge_Queue)
+			{
+				var edge_1 = Edge_Queue[index]
+				var edge_2 = edge_1['incidentEdge']
+	
+				var face_1 = edge_1['edge'].parent
+				var face_2 = edge_2['edge'].parent
+	
+				//Clear the visited flags for both edges here to avoid doing a second O(n) operation later
+				edge_1['visited'] = false
+				edge_2['visited'] = false
+	
+				UndoCut(edge_1, edge_2, face_1, face_2)
+			}
+
 			ClearVisitedFaces()
-		}
-
-		for(var index in Edge_Queue)
-		{
-			var edge_1 = Edge_Queue[index]
-			var edge_2 = edge_1['incidentEdge']
-
-			var face_1 = edge_1['edge'].parent
-			var face_2 = edge_2['edge'].parent
-
-			//Clear the visited flags for both edges here to avoid doing a second O(n) operation later
-			edge_1['visited'] = false
-			edge_2['visited'] = false
-
-			UndoCut(edge_1, edge_2, face_1, face_2)
 		}
 
 		Visited_Edges = []

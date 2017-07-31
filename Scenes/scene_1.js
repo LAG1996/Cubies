@@ -179,7 +179,7 @@ function HandlePick() {
 
 		if(pick_mode == 'cut' && ObjectExists(PolyCube.Active_Polycube))
 		{
-			var edge_data = {"cuts" : PolyCube.Active_Polycube.GetCutEdges(), "invalids" : PolyCube.Active_Polycube.GetInvalidEdges(), "rotations" : PolyCube.Active_Polycube.GetRotationLines()}
+			var edge_data = {"cuts" : PolyCube.Active_Polycube.GetCutEdges(), "rotations" : PolyCube.Active_Polycube.GetRotationLines()}
 			UpdateCutEdgeData(edge_data)
 			ShowCutEdgeData()
 		}
@@ -246,28 +246,17 @@ function UpdateCutEdgeData(data){
 		delete cut_edges[E]
 	}
 
-	for(var E in invalid_cut_edges)
-	{
-		delete invalid_cut_edges[E]
-	}
-
 	for(var E in rotation_edges)
 	{
 		delete rotation_edges[E]
 	}
 
 	var cut_data = data['cuts']
-	var invalid_cut_data = data['invalids']
 	var rotation_data = data['rotations']
 
 	for(var E in cut_data)
 	{
 		cut_edges[E] = cut_data[E]['edge']
-	}
-
-	for(var E in invalid_cut_data)
-	{
-		invalid_cut_edges[E] = invalid_cut_data[E]['edge']
 	}
 
 	for(var i = 0; i < rotation_data.length; i++)
@@ -277,6 +266,7 @@ function UpdateCutEdgeData(data){
 			if(ObjectExists(rotation_data[i][j]))
 			{
 				rotation_edges[rotation_data[i][j]['name']] = rotation_data[i][j]['edge']
+				rotation_edges[rotation_data[i][j]['incidentEdge']['name']] = rotation_data[i][j]['incidentEdge']['edge']
 			}
 		}
 	}
@@ -293,18 +283,6 @@ function ShowCutEdgeData(){
 		scene_handler.RequestAddToScene(cutHighlight)
 		edge_junk.push(cutHighlight)
 	}
-
-	/*
-	for(var E in invalid_cut_edges)
-	{
-		var invalidHighlight = Cube.highlightEdge.clone()
-		invalidHighlight.position.copy(invalid_cut_edges[E].getWorldPosition())
-		invalidHighlight.rotation.copy(invalid_cut_edges[E].getWorldRotation())
-		invalidHighlight.material = invalidEdgeHighlightMaterial.clone()
-		scene_handler.RequestAddToScene(invalidHighlight)
-		edge_junk.push(invalidHighlight)
-	}
-	*/
 
 	for(var E in rotation_edges)
 	{
