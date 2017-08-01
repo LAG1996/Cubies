@@ -11,6 +11,8 @@ var invalidEdgeHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xAAAAA
 var rotationEdgeHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xDD00FF})
 
 var highlights_are_on = false
+var active_hinge_line = null
+var active_face_graphs = []
 var pick_mode = 'nada'
 var junk = []
 var edge_junk = []
@@ -18,6 +20,8 @@ var cut_edges = {}
 var invalid_cut_edges = {}
 var rotation_edges = {}
 var grid
+
+var face_graph_scene = new THREE.Scene()
 
 $(document).ready(function(){
 	Initialize() //Load the cube part models and then initialize the cube class with said models
@@ -130,6 +134,28 @@ function HandlePick() {
 						{
 							p_cube.RemoveFace(data["parent"]["face"])
 						}
+						else if(pick_mode == 'rotate')
+						{
+							scene_handler.RequestSwitchToPickingScene(face_graph_scene)
+							var id = scene_handler.Pick()
+							scene_handler.SwitchToDefaultPickingScene()
+
+							console.log(id)
+							var facegraph
+							if(id == 0xDD0000)
+								facegraph = p_cube.HandleRotate(active_face_graphs[0], active_hinge_line)
+							else if(id == 0x001AAA)
+								facegraph = p_cube.HandleRotate(active_face_graphs[1], active_hinge_line)
+
+							scene_handler.RequestAddToScene(facegraph)
+
+							//ShowFaceGraphs(active_face_graphs)
+							active_hinge_line = null
+							active_face_graphs = null
+							pick_mode = 'hinge'
+							PolyCube.Active_Polycube.SwitchToContext('hinge')
+							
+						}
 					}
 					else if(p_cube.context_name == 'hinge')
 					{
@@ -159,7 +185,16 @@ function HandlePick() {
 						else if(pick_mode == 'hinge')
 						{
 							data = p_cube.GetSubGraphs(data['parent'][0])
-							ShowFaceGraphs(data)
+
+							if(ObjectExists(data) && ObjectExists(data['subgraphs']) && data['subgraphs'].length > 0)
+							{
+								ShowFaceGraphs(data['subgraphs'])
+	
+								active_face_graphs = data['subgraphs']
+								active_hinge_line = data['rotation_line_index']
+								pick_mode = 'rotate'
+								p_cube.SwitchToContext('face')
+							}
 						}
 					}
 
@@ -175,6 +210,14 @@ function HandlePick() {
 		else
 		{
 			highlights_are_on = false
+
+			if(pick_mode = 'rotate')
+			{
+				active_hinge_line = null
+				active_face_graphs = null
+				pick_mode = 'hinge'
+				PolyCube.Active_Polycube.SwitchToContext('hinge')
+			}
 		}
 
 		if(pick_mode == 'cut' && ObjectExists(PolyCube.Active_Polycube))
@@ -296,6 +339,7 @@ function ShowCutEdgeData(){
 }
 
 function ShowFaceGraphs(data){
+	ClearFaceGraphScene()
 	for(var index in data)
 	{
 		for(var kindex in data[index])
@@ -306,6 +350,9 @@ function ShowFaceGraphs(data){
 			faceHighlight.rotation.copy(face.getWorldRotation())
 			faceHighlight.material = index == 0 ? parentHighlightMaterial.clone() : childrenHighlightMaterial.clone()
 			scene_handler.RequestAddToScene(faceHighlight)
+
+			
+			face_graph_scene.add(faceHighlight.clone())
 			junk.push(faceHighlight)
 		}
 	}
@@ -317,7 +364,16 @@ function ClearJunk(){
 		scene_handler.RequestRemoveFromScene(junk[i])
 		delete junk[i]
 	}
+
 	junk = []
+}
+
+function ClearFaceGraphScene(){
+	for(var i = face_graph_scene.children.length - 1; i > -1; i--)
+	{
+		face_graph_scene.remove(face_graph_scene.children[i])
+		delete face_graph_scene.children[i]
+	}
 }
 
 function ClearEdgeJunk(){
@@ -326,5 +382,6 @@ function ClearEdgeJunk(){
 		scene_handler.RequestRemoveFromScene(edge_junk[i])
 		delete edge_junk[i]
 	}
+
 	edge_junk = []
 }

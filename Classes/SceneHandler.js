@@ -72,6 +72,11 @@ function SceneHandler(){
 		return false
 	}
 
+	this.MakeDefaultSceneToPickingScene = function()
+	{
+		this.RequestSwitchToPickingScene(active_scene)
+	}
+
 	this.SwitchToDefaultScene = function()
 	{
 		active_scene = defaultScene

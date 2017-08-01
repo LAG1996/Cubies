@@ -11,6 +11,7 @@ function FaceEdgeDualGraph(){
 	var Edge2CutPath = {} //An object that maps each edge to a path
 	var Edge2RotationLine = {} //An object that maps each edge to a rotation line
 	var RotationLine2SubGraph = {} //An object that maps each rotation line index to two subgraphs
+	var RotationLine2ParentEdge = {} //An object that maps each rotation line index to a pair of parent edges
 
 	var L_CutPaths = []
 	var L_RotationLines = []
@@ -424,6 +425,15 @@ function FaceEdgeDualGraph(){
 		return L_RotationLines
 	}
 
+	this.GetRotationLineFromIndex = function(index){
+		return L_RotationLines[index]
+	}
+
+	this.GetRotationLineIndex = function(edgeName){
+		return Edge2RotationLine[edgeName]
+	}
+
+	//Returns a data packet containing the subgraphs and the hinge line dividing them
 	this.GetSubGraphs = function(edgeName){
 		var rotation_line = -1
 		rotation_line =  Edge2RotationLine[edgeName]
@@ -432,7 +442,7 @@ function FaceEdgeDualGraph(){
 			subgraphs = RotationLine2SubGraph[rotation_line]
 		}
 
-		return subgraphs
+		return {'subgraphs' : subgraphs, 'rotation_line_index' : rotation_line} 
 	}
 
 	function BuildCutPaths(){
@@ -1018,7 +1028,6 @@ function FaceEdgeDualGraph(){
 			dir_2 = MakePositiveVector(dir_2)
 			dir_2.normalize()
 
-
 			//Check if the two directions point to the same direction
 			if(dir_1.equals(dir_2))
 			{
@@ -1228,7 +1237,7 @@ function FaceEdgeDualGraph(){
 	{
 		var Edge_Queue = []
 		var sub_graphs = []
-		RotationLine2SubGraph = []
+		var sub_graph_index = []
 
 		var jindex
 		ClearVisitedEdges()

@@ -429,6 +429,4 @@ Cube.CubeDataCalculator = function(){
 
 		return edge
 	}
-
-	
 }

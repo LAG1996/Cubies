@@ -381,7 +381,11 @@ function Toolbar_Handler(){
 					$("#right_sidebar").append($(new_button))
 				}
 
-				pick_mode = context[0]["mode"]
+				if(pick_mode != 'rotate')
+					pick_mode = context[0]["mode"]
+				else
+					context[0]['mode'] = pick_mode
+				
 				$("#right_sidebar").show()
 			}
 		}

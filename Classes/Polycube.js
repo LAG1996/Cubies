@@ -28,6 +28,9 @@ function PolyCube(position, name = ""){
 	var L_Cubes = []
 	var L_CubeNames = []
 	var L_Hinges = []
+	var ParentFaceGraphs = {}
+
+	var ActiveHingeLine = {}
 
 	var Color2Face_Map = []
 	var Color2Edge_Map = []
@@ -262,6 +265,16 @@ function PolyCube(position, name = ""){
 
 	this.CutEdge = function(edge){
 		AdjacencyGraph.HandleCut(edge)
+	}
+
+	//Rotate face graph around a hinge
+	this.HandleRotate = function(facegraph, hinge_index){
+		if(ActiveHingeLine[hinge_index])
+		{
+			console.log("This hinge line rotated. Undo rotation")
+			delete ActiveHingeLine[hinge_index]
+			return null
+		}
 	}
 
 	this.toJSON = function(){
