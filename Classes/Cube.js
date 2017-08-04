@@ -1,3 +1,7 @@
+$(document).ready(function(){
+	Initialize() //Load the cube part models and then initialize the cube class with said models
+})
+
 function Cube(latt_pos, polycube, custom_id = -1){
 		this.ID = (custom_id == -1) ? Object.keys(polycube.Get_Cubes()).length : this.ID = custom_id
 		this.Polycube = polycube
