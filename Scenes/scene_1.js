@@ -24,7 +24,6 @@ var grid
 var face_graph_scene = new THREE.Scene()
 
 $(document).ready(function(){
-	Initialize() //Load the cube part models and then initialize the cube class with said models
 	scene_handler = new SceneHandler() //Initialize the scene
 
 	//Add a grid to the scene so we can orient ourselves
@@ -51,45 +50,6 @@ $(document).ready(function(){
 	$('#container').on('mousedown', StoreMouseVals)
 	$('#container').on('mouseup', HandlePick)
 })
-
-function GenerateGrid(size, spacing, color)
-{
-	var geometry = new THREE.BufferGeometry();
-
-	var geometries = []
-	
-	var vertices = [], colors = []
-	//We'll say we want a grid of size 10 with a spacing of two units for now
-	var size = size
-	var spacing = spacing
-	var halfway = size/2
-	//We'll also say that we want the color of the central lines to be red, and the other lines would be off-white
-	var line_color = new THREE.Color(color)
-	
-	var color_index = 0
-	//Draw the grid
-	for(var i = -halfway, k = -halfway; i <= halfway; i += spacing, k+=spacing)
-	{
-		vertices.push(i, 0, halfway, i, 0, -halfway)
-		vertices.push(-halfway, 0, k, halfway, 0, k)
-	
-		line_color.toArray(colors, color_index); color_index+=3;
-		line_color.toArray(colors, color_index); color_index+=3;
-		line_color.toArray(colors, color_index); color_index+=3;
-		line_color.toArray(colors, color_index); color_index+=3;
-	}
-	var f32Positions = new Float32Array(vertices)
-	var f32Colors = new Float32Array(colors)
-	
-	geometry.addAttribute('position', new THREE.BufferAttribute(f32Positions, 3))
-	geometry.addAttribute('color', new THREE.BufferAttribute(f32Colors, 3))
-	
-	var material = new THREE.LineDashedMaterial({vertexColors: THREE.VertexColors});
-
-	var lines = new THREE.LineSegments(geometry, material);
-
-	return lines
-}
 
 function StoreMouseVals(event){
 	old_mouse_pos.copy(scene_handler.GetMousePos())
