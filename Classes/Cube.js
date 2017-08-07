@@ -433,4 +433,86 @@ Cube.CubeDataCalculator = function(){
 
 		return edge
 	}
+
+	this.GetRotationAxis = function(dir_word)
+	{
+		switch(dir_word)
+		{
+			case "front_up":
+				return ['x', DEG2RAD(90)]
+				break;
+			case "front_right":
+				return ['y', DEG2RAD(90)]
+				break;
+			case "front_left":
+				return ['y', DEG2RAD(-90)]
+				break;
+			case "front_down":
+				return ['x', DEG2RAD(-90)]
+			break;
+			case "up_up":
+				return ['x', DEG2RAD(90)]
+				break;
+			case "up_right":
+				return ['z', DEG2RAD(-90)]
+			break;
+			case "up_left":
+				return ['z', DEG2RAD(90)]
+			break;
+			case "up_down":
+				return ['x', DEG2RAD(-90)]
+			break;
+			case "back_up":
+				return ['x', DEG2RAD(90)]
+			break;
+			case "back_right":
+				return ['y', DEG2RAD(-90)]
+			break;
+			case "back_left":
+				return ['y', DEG2RAD(90)]
+			break;
+			case "back_down":
+				return ['x', DEG2RAD(-90)]
+			break;
+			case "down_up":
+				return ['x', DEG2RAD(90)]
+			break;
+			case "down_right":
+				return ['z', DEG2RAD(-90)]
+			break;
+			case "down_left":
+				return ['z', DEG2RAD(90)]
+			break;
+			case "down_down":
+				return ['x', DEG2RAD(-90)]
+			break;
+			case "left_up":
+				return ['z', DEG2RAD(-90)]
+			break;
+			case "left_right":
+				return ['y', DEG2RAD(90)]
+			break;
+			case "left_left":
+				return ['y', DEG2RAD(-90)]
+			break;
+			case "left_down":
+				return ['z', DEG2RAD(-90)]
+			break;
+			case "right_up":
+				return ['z', DEG2RAD(90)]
+			break;
+			case "right_right":
+				return ['y', DEG2RAD(90)]
+			break;
+			case "right_left":
+				return ['y', DEG2RAD(-90)]
+			break;
+			case "right_down":
+				return ['z', DEG2RAD(-90)]
+			break;
+			default: console.log("This shouldn't be happening")
+		}
+
+		return edge
+	}
 }

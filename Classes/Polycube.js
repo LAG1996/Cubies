@@ -6,6 +6,9 @@ function PolyCube(position, name = ""){
 	this.trans_helper = new THREE.AxisHelper(4)
 	this.pick_context = null
 	this.context_name = ''
+	var rotation_polycube = new THREE.Group()
+
+	PolyCube.Rotation_Scene.add(rotation_polycube)
 
 	this.Obj.position.copy(LatticeToReal(position))
 	this.Obj.add(this.trans_helper)
@@ -29,8 +32,6 @@ function PolyCube(position, name = ""){
 	var L_CubeNames = []
 	var L_Hinges = []
 	var ParentFaceGraphs = {}
-
-	var ActiveHingeLine = {}
 
 	var Color2Face_Map = []
 	var Color2Edge_Map = []
@@ -173,8 +174,13 @@ function PolyCube(position, name = ""){
 			FINISH MAPPING EACH FACE TO A COLOR 
 			*//////////////////////
 			this.Obj.add(cube.Obj)
-			this.picking_polycube.add(cube.polycube_picking_cube)
 
+			PolyCube.Rotation_Scene.remove(rotation_polycube)
+			rotation_polycube = new THREE.Group()
+			rotation_polycube.copy(this.Obj.clone())
+			PolyCube.Rotation_Scene.add(rotation_polycube)
+
+			this.picking_polycube.add(cube.polycube_picking_cube)
 			return cube
 		}
 		else
@@ -265,16 +271,58 @@ function PolyCube(position, name = ""){
 
 	this.CutEdge = function(edge){
 		AdjacencyGraph.HandleCut(edge)
+
+		PolyCube.Rotation_Scene.remove(rotation_polycube)
+		rotation_polycube = new THREE.Group()
+		rotation_polycube.copy(this.Obj.clone())
+		PolyCube.Rotation_Scene.add(rotation_polycube)
 	}
 
-	//Rotate face graph around a hinge
-	this.HandleRotate = function(facegraph, hinge_index){
-		if(ActiveHingeLine[hinge_index])
+	//Queue up this facegraph as a flap that will rotate around the hinge of the given index
+	this.QueueRotation = function(facegraph, hinge_index){		
+
+		var object = new THREE.Group()
+		var first_edge = AdjacencyGraph.GetRotationLineFromIndex(hinge_index)[0]
+
+		rotation_polycube.add(object)
+
+		object.position.copy(first_edge['edge'].getWorldPosition())
+		
+		var original_faces = []
+		for(var index in facegraph)
 		{
-			console.log("This hinge line rotated. Undo rotation")
-			delete ActiveHingeLine[hinge_index]
-			return null
+			var face_orig = rotation_polycube.getObjectByName(facegraph[index]['name'])
+			var face_cl = face_orig.clone()
+
+			original_faces.push(face_orig)
+
+			face_cl.position.copy(face_orig.getWorldPosition())
+			face_cl.position.sub(object.getWorldPosition())
+
+			face_orig.visible = false
+
+			object.add(face_cl)
 		}
+
+		//console.log(original_faces[0].name + ' | ' + first_edge['name'] + ' | ' + first_edge['incidentEdge']['name'])
+		var re = new RegExp('\\d')
+
+		var rotation_axis
+		var max_angle
+
+		var edge_rotation_data
+
+		if(ObjectExists(original_faces[0].getObjectByName(first_edge)))
+		{
+			edge_rotation_data = PolyCube.EdgeCalculator.GetRotationAxis(first_edge['name'].split(re)[1])
+		}
+		else
+		{
+			edge_rotation_data = PolyCube.EdgeCalculator.GetRotationAxis(first_edge['incidentEdge']['name'].split(re)[1])
+		}
+
+		object.visible = true
+		PolyCube.Rotated_Flap_Queue[hinge_index] = {'flap' : object, 'rotation_axis' : edge_rotation_data[0], 'max_angle' : edge_rotation_data[1]}
 	}
 
 	this.toJSON = function(){
@@ -302,6 +350,8 @@ function PolyCube(position, name = ""){
 			cube_picking_polycube.parent.remove(cube_picking_polycube)
 		if(ObjectExists(new_cube_picking_polycube.parent))
 			new_cube_picking_polycube.parent.remove(new_cube_picking_polycube)
+		if(ObjectExists(rotation_polycube.parent))
+			rotation_polycube.parent.remove(rotation_polycube)
 
 		for(var cube in L_Cubes)
 		{
@@ -553,6 +603,15 @@ PolyCube.Active_Polycube = null
 PolyCube.L_Polycubes = []
 PolyCube.ID2Poly = []
 PolyCube.EdgeCalculator = new Cube.CubeDataCalculator()
+PolyCube.Rotated_Flap_Queue = {}
+PolyCube.Rotation_Scene = new THREE.Scene()
+
+grid = GenerateGrid(100, 2, 0x000000)
+grid.position.x = -1
+grid.position.y = -1
+grid.position.z = -1
+
+PolyCube.Rotation_Scene.add(grid)
 
 //The keys that we use to both denote directions from cube to cube and the labeling of each face in the cube
 PolyCube.dir_keys = ["up", "down", "right", "left", "front", "back"]
@@ -638,4 +697,27 @@ PolyCube.DestroyPolyCube = function(polycube)
 	delete PolyCube.L_Polycubes[polycube.name]	
 	polycube.Destroy()
 	PolyCube.SwitchToNewActive(null)
+}
+
+PolyCube.TriggerRotation = function()
+{
+	for(var key in PolyCube.Rotated_Flap_Queue)
+	{
+		var obj = PolyCube.Rotated_Flap_Queue[key]
+
+		var axis = obj['rotation_axis']
+
+		if(axis == 'x')
+		{
+			obj['flap'].rotateX(obj['max_angle'])
+		}
+		else if(axis == 'y')
+		{
+			obj['flap'].rotateY(obj['max_angle'])
+		}
+		else if(axis == 'z')
+		{
+			obj['flap'].rotateZ(obj['max_angle'])
+		}
+	}
 }

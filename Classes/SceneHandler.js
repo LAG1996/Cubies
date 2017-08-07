@@ -58,6 +58,7 @@ function SceneHandler(){
 			active_scene = scene
 			return true
 		}
+
 		return false
 	}
 
@@ -175,10 +176,10 @@ function SceneHandler(){
 	}
 
 	function update() {
+		requestAnimationFrame(update)
+		
 		deltaTime = CLOCK.getDelta();
 		renderer.render(active_scene, CAMERA)
-
-		requestAnimationFrame(update)
 	}
 
 	//Uses a simple color buffer draw trick to decide where the client is clicking

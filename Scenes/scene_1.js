@@ -23,8 +23,12 @@ var grid
 
 var face_graph_scene = new THREE.Scene()
 
+var message_board //Should initialize automatically with its own scene handler and all those variables 
+
 $(document).ready(function(){
 	scene_handler = new SceneHandler() //Initialize the scene
+
+	message_board = new MessageBoard(scene_handler)
 
 	//Add a grid to the scene so we can orient ourselves
 	grid = GenerateGrid(100, 2, 0x000000)
@@ -44,19 +48,16 @@ $(document).ready(function(){
 
 	//Add the toolbars and their functionality
 	toolbar_handler = new Toolbar_Handler()
-	toolbar_handler.Switch_Context_H('world-context')
+	toolbar_handler.Switch_Context_H('edit-context')
 
 	//Add a couple of events that'll help in mouse picking
-	$('#container').on('mousedown', StoreMouseVals)
-	$('#container').on('mouseup', HandlePick)
 })
 
 function StoreMouseVals(event){
 	old_mouse_pos.copy(scene_handler.GetMousePos())
 }
 
-function HandlePick() {
-
+function HandlePick(){
 	if(old_mouse_pos.distanceTo(scene_handler.GetMousePos()) == 0)
 	{
 		ClearJunk()
@@ -100,21 +101,17 @@ function HandlePick() {
 							var id = scene_handler.Pick()
 							scene_handler.SwitchToDefaultPickingScene()
 
-							console.log(id)
 							var facegraph
 							if(id == 0xDD0000)
-								facegraph = p_cube.HandleRotate(active_face_graphs[0], active_hinge_line)
+								p_cube.QueueRotation(active_face_graphs[0], active_hinge_line)
 							else if(id == 0x001AAA)
-								facegraph = p_cube.HandleRotate(active_face_graphs[1], active_hinge_line)
-
-							scene_handler.RequestAddToScene(facegraph)
+								p_cube.QueueRotation(active_face_graphs[1], active_hinge_line)
 
 							//ShowFaceGraphs(active_face_graphs)
 							active_hinge_line = null
 							active_face_graphs = null
 							pick_mode = 'hinge'
 							PolyCube.Active_Polycube.SwitchToContext('hinge')
-							
 						}
 					}
 					else if(p_cube.context_name == 'hinge')
@@ -165,7 +162,7 @@ function HandlePick() {
 		else if(!highlights_are_on)
 		{
 				PolyCube.SwitchToNewActive(null)
-				toolbar_handler.Switch_Context_H('world-context')	
+				toolbar_handler.Switch_Context_H('edit-context')	
 		}
 		else
 		{

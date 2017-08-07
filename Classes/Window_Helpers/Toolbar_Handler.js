@@ -27,7 +27,7 @@ function Toolbar_Handler(){
 	{"text" : "Perpendicular", "click": (function(){pick_mode = 'perp'; right_sidebar_contexts['hinge'][0]["mode"] = "perp"; ClearJunk()})}
 	*/
 
-	var amt_buttons_for_context = {"camera-control" : 2, "world-context" : 1, "poly-context" : 5 }
+	var amt_buttons_for_context = {"camera-control" : 2, "edit-context" : 1, "poly-context" : 5, "rotate-context" : 2}
 
 	var that = this
 
@@ -63,22 +63,24 @@ function Toolbar_Handler(){
 		}
 		else 
 		{
-			that.mode_h = mode
+			this.mode_h = mode
 			buttons = []
 
 			$(".toolbar_btn").remove()
 
 			if(mode == 'camera-control')
 				_Switch_To_Camera_Mode(amt_buttons_for_context[mode])
-			else if(mode == 'world-context')
-				_Switch_To_World_Context(amt_buttons_for_context[mode])
+			else if(mode == 'edit-context')
+				_Switch_To_Edit_Context(amt_buttons_for_context[mode])
 			else if(mode == 'poly-context')
 			{
 				if(ObjectExists(polycube))
 					_Switch_To_Polycube_Context(amt_buttons_for_context[mode], polycube)
 				else
-					_Switch_To_World_Context(amt_buttons_for_context['world-context'])
+					_Switch_To_Edit_Context(amt_buttons_for_context['edit-context'])
 			}
+			else if(mode == 'rotate-context')
+				_Switch_To_Rotate_Context(amt_buttons_for_context['rotate-context'])
 
 			for(i = 0; i < buttons.length; i++)
 			{	
@@ -143,7 +145,7 @@ function Toolbar_Handler(){
 		mode_text = "Camera Control"
 	}
 
-	function _Switch_To_World_Context(amt_btns){
+	function _Switch_To_Edit_Context(amt_btns){
 		for(i = 0; i < amt_btns; i++)
 		{
 			buttons[i] = document.createElement("button")
@@ -154,6 +156,15 @@ function Toolbar_Handler(){
 		$(buttons[0]).click(function(){
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 			$("#add_poly_modal").show()})
+
+		scene_handler.SwitchToDefaultScene()
+
+		//Unbind the previous event handlers from the container
+		$("#container").unbind('mousedown')
+		$("#container").unbind('mouseup')
+		//Add these event handlers to the container
+		$('#container').on('mousedown', StoreMouseVals)
+		$('#container').on('mouseup', HandlePick)
 
 		mode_text = "World View"
 	}
@@ -215,6 +226,28 @@ function Toolbar_Handler(){
 		mode_text = "Edit " + polycube.name
 	}
 
+	function _Switch_To_Rotate_Context(amt_btns)
+	{
+		for(i = 0; i < amt_btns; i++)
+		{
+			buttons[i] = document.createElement("button")
+		}
+
+		$(buttons[0]).text("Rotate!")
+		$(buttons[0]).on('click', function(){
+			PolyCube.TriggerRotation()
+		})
+		$(buttons[1]).text("Undo Rotations")
+
+		scene_handler.RequestSwitchToScene(PolyCube.Rotation_Scene)
+
+		//Unbind the previous event handlers from the container
+		$("#container").unbind('mousedown')
+		$("#container").unbind('mouseup')
+
+		mode_text = 'Rotate View'
+	}
+
 	function Init_Sidebars()
 	{
 		//Position the right sidebar to be under the toolbar
@@ -226,8 +259,9 @@ function Toolbar_Handler(){
 			_Toggle_Object_L()
 		})
 		//Set the function for the left sidebar buttons
-		$("#s_worldview").click(function(){that.Switch_Context_H("world-context")})
-		$("#s_camera_control").click(function(){that.Switch_Context_H("camera-control")})
+		$("#s_editview").click(function(){that.Switch_Context_H("edit-context")})
+		//$("#s_camera_control").click(function(){that.Switch_Context_H("camera-control")})
+		$("#s_rotateview").click(function(){that.Switch_Context_H('rotate-context')})
 
 		//Set the functions for the object list sidebar buttons
 		$("#dropdown_add_polycube").click(function(){
@@ -344,8 +378,11 @@ function Toolbar_Handler(){
 	}
 
 	function Update_Toolbar(){
-		if(ObjectExists(PolyCube.Active_Polycube))
+		if(ObjectExists(PolyCube.Active_Polycube) && that.mode_h != 'rotate-context')
 		{
+			if(that.mode_h == 'edit-context')
+				that.Switch_Context_H('poly-context', PolyCube.Active_Polycube)
+
 			if(!$("#context_text").attr(":visible"))
 			{
 				$("#context_text").show()
@@ -362,7 +399,7 @@ function Toolbar_Handler(){
 
 	function Update_Right_Sidebar(){
 
-		if(ObjectExists(PolyCube.Active_Polycube))
+		if(ObjectExists(PolyCube.Active_Polycube) && that.mode_h != 'rotate-context')
 		{	
 			if(right_sidebar.context != PolyCube.Active_Polycube.context_name)
 			{

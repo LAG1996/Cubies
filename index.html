@@ -19,8 +19,11 @@
 				<button class = "w3-button w3-black w3-hover-white" id = "sidebar_trigger">☰</button>
 				<div class = "w3-dropdown-content w3-bar-block w3-sand" id = "sidebar">
 					<div class = "w3-sidebar w3-bar-block w3-sand" style = "width:25%">
+						<!-- Do we really need camera controls?
 						<button class = "w3-bar-item w3-button w3-hover-red" id = "s_camera_control">Camera Control</button>
-						<button class = "w3-bar-item w3-button w3-hover-red" id = "s_worldview">World View</button>
+						-->
+						<button class = "w3-bar-item w3-button w3-hover-black" id = "s_editview">Edit View</button>
+						<button class = "w3-bar-item w3-button w3-hover-black" id = "s_rotateview">Rotate View</button>
 					</div>
 				</div>
 			</div>
@@ -50,6 +53,11 @@
 	
 		<div id = "right_sidebar" class = "w3-bar-block w3-right" style = "width:10%">
 			<div id = "right_sidebar_btn_template" class = "w3-bar-item w3-button w3-black w3-hover-white" style = "display:none">Test</div>
+		</div>
+
+		<div class = "w3-bar" id = 'request_rotation' style = "display:none">
+			<div class = 'w3-bar-item w3-button' id = 'queue_rotation'>Queue Rotation</div>
+			<div class = 'w3-bar-item w3-button' id = 'immediate_rotation'>Rotate Now</div>
 		</div>
 	</div>
 	
@@ -115,6 +123,7 @@
 <script src = "Classes/SceneHandler.js"></script>
 <script src = "Classes/Utils.js"></script>
 <script src = "Classes/Init.js"></script>
+<script src = "Classes/MessageBoard.js"></script>
 
 <!--
 	The real meat of the program
