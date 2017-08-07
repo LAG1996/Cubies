@@ -637,11 +637,23 @@ function FaceEdgeDualGraph(){
 					{
 						continue
 					}
+					else if(ObjectExists(n_neighbor['incidentEdge']) && ObjectExists(origin['neighbors'][n_neighbor['incidentEdge']['name']]))
+					{
+						continue
+					}
 					else if(Edge2CutPath[n_neighbor['name']] != Edge2CutPath[origin['name']])
 					{
 						continue
 					}
+					else if(ObjectExists(n_neighbor['incidentEdge']) && Edge2CutPath[n_neighbor['incidentEdge']['name']] != Edge2CutPath[origin['name']])
+					{
+						continue
+					}
 					else if(ObjectExists(origin['incidentEdge']) && (ObjectExists(origin['incidentEdge']['neighbors'][n_neighbor['name']]) || origin['incidentEdge']['name'] == n_neighbor['name']))
+					{
+						continue
+					}
+					else if(ObjectExists(n_neighbor['incidentEdge']) && ObjectExists(origin['incidentEdge']) && (ObjectExists(origin['incidentEdge']['neighbors'][n_neighbor['incidentEdge']['name']]) || origin['incidentEdge']['name'] == n_neighbor['incidentEdge']['name']))
 					{
 						continue
 					}
@@ -666,6 +678,9 @@ function FaceEdgeDualGraph(){
 				if(!n_neighbor['visited'] && !AlreadyDrawnFrom[n_neighbor['name']] && AreCollinear(edge, n_neighbor))
 				{
 					GenerateLineFrom(n_neighbor)
+
+					if(!cut_found)
+						Line_Queue = []
 				}
 			}
 		}
