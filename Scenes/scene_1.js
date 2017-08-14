@@ -23,12 +23,8 @@ var grid
 
 var face_graph_scene = new THREE.Scene()
 
-var message_board //Should initialize automatically with its own scene handler and all those variables 
-
 $(document).ready(function(){
 	scene_handler = new SceneHandler() //Initialize the scene
-
-	message_board = new MessageBoard(scene_handler)
 
 	//Add a grid to the scene so we can orient ourselves
 	grid = GenerateGrid(100, 2, 0x000000)
@@ -161,8 +157,9 @@ function HandlePick(){
 		}
 		else if(!highlights_are_on)
 		{
-				PolyCube.SwitchToNewActive(null)
-				toolbar_handler.Switch_Context_H('edit-context')	
+			PostMessage(['SWITCH_ACTIVE_POLYCUBE', null])
+			//PolyCube.SwitchToNewActive(null)
+			toolbar_handler.Switch_Context_H('edit-context')	
 		}
 		else
 		{

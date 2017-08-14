@@ -157,7 +157,7 @@ function Toolbar_Handler(){
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 			$("#add_poly_modal").show()})
 
-		scene_handler.SwitchToDefaultScene()
+		PostMessage(['SWITCH_TO_SCENE', scene_handler, null])
 
 		//Unbind the previous event handlers from the container
 		$("#container").unbind('mousedown')
@@ -212,14 +212,7 @@ function Toolbar_Handler(){
 		$(buttons[4]).click(function(){
 			if(PolyCube.Active_Polycube)
 			{
-				$("#" + PolyCube.ToPolyCubeIDString(PolyCube.Active_Polycube) + "_data").remove()
-				PolyCube.DestroyPolyCube(PolyCube.Active_Polycube)
-
-				that.Switch_Context_H('world-context')
-
-				cut_edges = {} 
-				invalid_cut_edges = {}
-				ClearEdgeJunk()
+				PostMessage(['REMOVE_POLYCUBE', PolyCube.Active_Polycube.name, that])
 			}
 		})
 
@@ -239,7 +232,7 @@ function Toolbar_Handler(){
 		})
 		$(buttons[1]).text("Undo Rotations")
 
-		scene_handler.RequestSwitchToScene(PolyCube.Rotation_Scene)
+		PostMessage(['SWITCH_TO_SCENE', scene_handler, PolyCube.Rotation_Scene])
 
 		//Unbind the previous event handlers from the container
 		$("#container").unbind('mousedown')
@@ -336,7 +329,9 @@ function Toolbar_Handler(){
 			//TODO: handle verification
 
 			//Data has been verified. Make a new polycube
-			PolyCube.Active_Polycube.Add_Cube(new THREE.Vector3(parseInt($("#add_cube_to_poly_modal_x").val(), 10), parseInt($("#add_cube_to_poly_modal_y").val(), 10), parseInt($("#add_cube_to_poly_modal_z").val(), 10)))
+			PostMessage(["ADD_CUBE", PolyCube.Active_Polycube, 
+				new THREE.Vector3(parseInt($("#add_cube_to_poly_modal_x").val(), 10), parseInt($("#add_cube_to_poly_modal_y").val(), 10), parseInt($("#add_cube_to_poly_modal_z").val(), 10))])
+			//PolyCube.Active_Polycube.Add_Cube(new THREE.Vector3(parseInt($("#add_cube_to_poly_modal_x").val(), 10), parseInt($("#add_cube_to_poly_modal_y").val(), 10), parseInt($("#add_cube_to_poly_modal_z").val(), 10)))
 		})
 	}
 
@@ -393,6 +388,7 @@ function Toolbar_Handler(){
 		}
 		else
 		{
+			that.Switch_Context_H('edit-context')
 			$("#context_text").hide()
 		}
 	}
@@ -465,7 +461,8 @@ function Toolbar_Handler(){
 					{
 						$(thingy).hide()
 						$(this).attr("class", "w3-button w3-black obj_data_trigger")
-						PolyCube.SwitchToNewActive(null)
+						PostMessage(['SWITCH_ACTIVE_POLYCUBE', null])
+						//PolyCube.SwitchToNewActive(null)
 						that.Switch_Context_H('world-context')
 					}
 					else
@@ -474,7 +471,11 @@ function Toolbar_Handler(){
 						$(".obj_data_trigger").attr("class", "w3-button w3-black obj_data_trigger")
 						$(thingy).show()
 						$(this).attr("class", "w3-button w3-white w3-right obj_data_trigger")
-						PolyCube.SwitchToNewActive(PolyCube.L_Polycubes[$(this).text()])
+
+						PostMessage(['SWITCH_ACTIVE_POLYCUBE', $(this).text()])
+
+						//PolyCube.SwitchToNewActive(PolyCube.L_Polycubes[$(this).text()])
+						
 						that.Switch_Context_H('poly-context', PolyCube.Active_Polycube)
 					}
 				})
@@ -517,8 +518,8 @@ function Toolbar_Handler(){
 				PolyCube.Active_Polycube.Set_PosZ(parseInt($(this).val()))
 			})
 
-			scene_handler.RequestAddToScene(p_cube.Obj)
-			scene_handler.RequestAddToPickingScene(p_cube.picking_polycube)
+			PostMessage(['ADD_TO_SCENE', scene_handler, p_cube.Obj])
+			PostMessage(['ADD_TO_PICK_SCENE', scene_handler, p_cube.picking_polycube])
 			
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 			that.Switch_Context_H('poly-context', p_cube)
