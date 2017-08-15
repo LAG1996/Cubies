@@ -1,8 +1,14 @@
 #container{
 	position:relative;
 }
+
 #everything_else{
 	width:100%;
 	top: 0;
 	position:absolute;
+}
+
+.mouse_tooltip{
+	position: absolute;
+	display: inline-block;
 }

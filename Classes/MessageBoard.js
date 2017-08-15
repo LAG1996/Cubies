@@ -10,7 +10,7 @@ function MessageBoard()
 		'REMOVE_POLYCUBE' : function(packet){_RequestRemovePolycube(packet)},
 		'ROTATE' : function(packet){_RequestPolyCubeRotate(packet)},
 		'SHOW_FACE_GRAPHS' : function(){},
-		'PICK' : function(){},
+		'PICK' : function(packet){_RequestPick(packet)},
 		'ADD_TO_SCENE' : function(packet){_RequestAddToScene(packet)},
 		'ADD_TO_PICK_SCENE' : function(packet){_RequestAddToPickingScene(packet)},
 		'SWITCH_TO_SCENE' : function(packet){_RequestSwitchToScene(packet)}
@@ -23,6 +23,19 @@ function MessageBoard()
 	this.PostMessage = function(message)
 	{
 		packages.push(message)
+	}
+
+	function _RequestPick(packet){
+		
+		try{
+			var scene_handler = packet[1]
+			var id_object = packet[2]
+
+			scene_handler.Pick(id_object)
+		}
+		catch(err){
+			throw "PICK: " + err
+		}
 	}
 
 	function _RequestAddCubeToPolycube(packet){
@@ -39,11 +52,11 @@ function MessageBoard()
 
 	function _RequestSwitchActivePolycube(packet){
 		try{
-			var new_polycube = packet[1] != null ? PolyCubes.L_Polycubes[packet[1]] : null
+			var new_polycube = packet[1] != null ? PolyCube.L_Polycubes[packet[1]] : null
 			PolyCube.SwitchToNewActive(new_polycube)
 		}
 		catch(err){
-			throw 'SWITCH_ACTIVE_POLYCUBE: ' + packet[1] + ' is not a valid polycube name'
+			throw 'SWITCH_ACTIVE_POLYCUBE: ' + packet[1] + err
 		}
 	}
 
@@ -72,12 +85,12 @@ function MessageBoard()
 	
 			toolbar_handler.Switch_Context_H('edit-context')
 	
-			cut_edges = {} 
-			invalid_cut_edges = {}
-			ClearEdgeJunk()
+			//cut_edges = {} 
+			//invalid_cut_edges = {}
+			//ClearEdgeJunk()
 		}
 		catch(err){
-			throw 'REMOVE_POLYCUBE: ' + packet[1] + ' is not a valid polycube name'
+			throw 'REMOVE_POLYCUBE: ' + err
 		}
 	}
 

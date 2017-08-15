@@ -55,15 +55,16 @@
 			<div id = "right_sidebar_btn_template" class = "w3-bar-item w3-button w3-black w3-hover-white" style = "display:none">Test</div>
 		</div>
 
-		<div class = "w3-bar" id = 'request_rotation' style = "display:none">
-			<div class = 'w3-bar-item w3-button' id = 'queue_rotation'>Queue Rotation</div>
-			<div class = 'w3-bar-item w3-button' id = 'immediate_rotation'>Rotate Now</div>
+		<div class = 'mouse_tooltip w3-bar' id = 'poly_cube_name_only'>
+			<span class = 'tooltip_text w3-black w3-padding w3-bar-item'></span>
+			<span class = 'tooltip_text_1 w3-red w3-padding w3-bar-item' id = 'polycube_part' style = "display:none"></span>
+		</div>
+
+		<div class = 'poly_cube_options mouse_tooltip w3-bar-block' id = 'poly_cube_options_hinge' style = "display:none">
+			<button class = "w3-button w3-border-left w3-border-dark-grey w3-black w3-hover-white w3-padding w3-bar-item" id = 'cut_option'>Cut</button>
+			<button class = "w3-button w3-border-left w3-border-dark-grey w3-black w3-hover-white w3-padding w3-bar-item" id = 'hinge_option'>Hinge</button>
 		</div>
 	</div>
-	
-	
-
-
 
 <!--
 	Some modals that will be used for adding content to the scene
@@ -118,6 +119,7 @@
 <!--
 	Some dependencies written by me
 -->
+<script src = "Classes/Scene.js"></script>
 <script src = "Classes/Window_Helpers/Toolbar_Handler.js"></script>
 <script src = "Classes/Window_Helpers/Cube_Add_Handler.js"></script>
 <script src = "Classes/SceneHandler.js"></script>
@@ -139,8 +141,9 @@
 <script src = "Scenes/Practice_Scenes/LineDrawingScene.js"></script>
 <script src = "Scenes/Practice_Scenes/RotationAroundArbitraryPoint.js"></script>
 <script src = "Scenes/scene_1.js"></script>
+<script src = "Scenes/scene_2.js"></script>
 -->
-<script src = "Scenes/scene_1.js"></script>
+<script src = "Scenes/scene_2.js"></script>
 
 
 

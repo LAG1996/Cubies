@@ -1,6 +1,15 @@
-function Toolbar_Handler(){
-	this.mode_h = ''
+function Toolbar_Handler(scene_handle){
+	this.context = ''
+	this.pick_mode = ''
 	this.Obj = $("#toolbar")
+
+	if(!ObjectExists(scene_handle))
+	{
+		console.log("No scene handle for toolbar. Toolbar handler may act abnormally")
+	}
+
+	var scene_handler = scene_handle
+
 	var buttons = []
 	var mode_text = ''
 	var Cube_Add_Handler_List = []
@@ -9,16 +18,16 @@ function Toolbar_Handler(){
 
 	var right_sidebar_contexts = {
 		'face' : [{"mode" : "nada"}, 
-			{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'; right_sidebar_contexts['face'][0]["mode"] = "adj"; ClearJunk()})}, 
-			{"text" : "Remove", "click" : (function(){pick_mode = 'rem'; right_sidebar_contexts['face'][0]["mode"] = "rem"; ClearJunk()})}],
+			{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'; right_sidebar_contexts['face'][0]["mode"] = "adj";})}, //ClearJunk()})}, 
+			{"text" : "Remove", "click" : (function(){pick_mode = 'rem'; right_sidebar_contexts['face'][0]["mode"] = "rem";})}], //ClearJunk()})}],
 
 		'hinge' : [{"mode" : "nada"}, 
-			{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'; right_sidebar_contexts['hinge'][0]["mode"] = "adj"; ClearJunk()})}, 
-			{"text" : "Cut", "click": (function(){pick_mode = 'cut'; right_sidebar_contexts['hinge'][0]["mode"] = "cut"; ShowCutEdgeData()})},
-			{"text" : "Collinear", "click": (function(){pick_mode = 'col'; right_sidebar_contexts['hinge'][0]["mode"] = "col"; ClearJunk()})},
-			{"text" : "Parallel", "click": (function(){pick_mode = 'para'; right_sidebar_contexts['hinge'][0]["mode"] = "para"; ClearJunk()})},
-			{"text" : "Perpendicular", "click": (function(){pick_mode = 'perp'; right_sidebar_contexts['hinge'][0]["mode"] = "perp"; ClearJunk()})},
-			{"text" : "Hinge", "click": (function(){pick_mode = 'hinge'; right_sidebar_contexts['hinge'][0]["mode"] = "hinge"; ClearJunk()})}]
+			{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'; right_sidebar_contexts['hinge'][0]["mode"] = "adj";})}, //ClearJunk()})}, 
+			{"text" : "Cut", "click": (function(){pick_mode = 'cut'; right_sidebar_contexts['hinge'][0]["mode"] = "cut";})}, //ShowCutEdgeData()})},
+			{"text" : "Collinear", "click": (function(){pick_mode = 'col'; right_sidebar_contexts['hinge'][0]["mode"] = "col";})}, //ClearJunk()})},
+			{"text" : "Parallel", "click": (function(){pick_mode = 'para'; right_sidebar_contexts['hinge'][0]["mode"] = "para";})}, //ClearJunk()})},
+			{"text" : "Perpendicular", "click": (function(){pick_mode = 'perp'; right_sidebar_contexts['hinge'][0]["mode"] = "perp";})}, //ClearJunk()})},
+			{"text" : "Hinge", "click": (function(){pick_mode = 'hinge'; right_sidebar_contexts['hinge'][0]["mode"] = "hinge";})}] //ClearJunk()})}]
 	}
 
 	/*
@@ -38,7 +47,7 @@ function Toolbar_Handler(){
 	//Initialize the object with a clicking function
 	this.Obj.on("click", function(){
 		//Clear junk from the scene
-		ClearJunk()
+		//ClearJunk()
 	})
 
 
@@ -51,35 +60,35 @@ function Toolbar_Handler(){
 		Update_Object_Viewer()
 		Update_Cube_Add_Handlers()
 		Update_Toolbar()
-		Update_Right_Sidebar()
+		//Update_Right_Sidebar()
 	}, 10)
 
 	var that = this
 
-	this.Switch_Context_H = function(mode, polycube = null){
-		if(this.mode_h == mode && this.mode_h != 'poly-context')
+	this.Switch_Context_H = function(context, polycube = null){
+		if(this.context == context && this.context != 'poly-context')
 		{
 			return
 		}
 		else 
 		{
-			this.mode_h = mode
+			this.context = context
 			buttons = []
 
 			$(".toolbar_btn").remove()
 
-			if(mode == 'camera-control')
-				_Switch_To_Camera_Mode(amt_buttons_for_context[mode])
-			else if(mode == 'edit-context')
-				_Switch_To_Edit_Context(amt_buttons_for_context[mode])
-			else if(mode == 'poly-context')
+			if(this.context == 'camera-control')
+				_Switch_To_Camera_Mode(amt_buttons_for_context[this.context])
+			else if(this.context == 'edit-context')
+				_Switch_To_Edit_Context(amt_buttons_for_context[this.context])
+			else if(this.context == 'poly-context')
 			{
 				if(ObjectExists(polycube))
-					_Switch_To_Polycube_Context(amt_buttons_for_context[mode], polycube)
+					_Switch_To_Polycube_Context(amt_buttons_for_context[this.context], polycube)
 				else
 					_Switch_To_Edit_Context(amt_buttons_for_context['edit-context'])
 			}
-			else if(mode == 'rotate-context')
+			else if(this.context == 'rotate-context')
 				_Switch_To_Rotate_Context(amt_buttons_for_context['rotate-context'])
 
 			for(i = 0; i < buttons.length; i++)
@@ -160,11 +169,11 @@ function Toolbar_Handler(){
 		PostMessage(['SWITCH_TO_SCENE', scene_handler, null])
 
 		//Unbind the previous event handlers from the container
-		$("#container").unbind('mousedown')
-		$("#container").unbind('mouseup')
+		//$("#container").unbind('mousedown')
+		//$("#container").unbind('mouseup')
 		//Add these event handlers to the container
-		$('#container').on('mousedown', StoreMouseVals)
-		$('#container').on('mouseup', HandlePick)
+		//$('#container').on('mousedown', StoreMouseVals)
+		//$('#container').on('mouseup', HandlePick)
 
 		mode_text = "World View"
 	}
@@ -235,8 +244,8 @@ function Toolbar_Handler(){
 		PostMessage(['SWITCH_TO_SCENE', scene_handler, PolyCube.Rotation_Scene])
 
 		//Unbind the previous event handlers from the container
-		$("#container").unbind('mousedown')
-		$("#container").unbind('mouseup')
+		//$("#container").unbind('mousedown')
+		//$("#container").unbind('mouseup')
 
 		mode_text = 'Rotate View'
 	}
@@ -373,9 +382,9 @@ function Toolbar_Handler(){
 	}
 
 	function Update_Toolbar(){
-		if(ObjectExists(PolyCube.Active_Polycube) && that.mode_h != 'rotate-context')
+		if(ObjectExists(PolyCube.Active_Polycube) && that.context != 'rotate-context')
 		{
-			if(that.mode_h == 'edit-context')
+			if(that.context == 'edit-context')
 				that.Switch_Context_H('poly-context', PolyCube.Active_Polycube)
 
 			if(!$("#context_text").attr(":visible"))
@@ -395,7 +404,7 @@ function Toolbar_Handler(){
 
 	function Update_Right_Sidebar(){
 
-		if(ObjectExists(PolyCube.Active_Polycube) && that.mode_h != 'rotate-context')
+		if(ObjectExists(PolyCube.Active_Polycube) && that.context != 'rotate-context')
 		{	
 			if(right_sidebar.context != PolyCube.Active_Polycube.context_name)
 			{

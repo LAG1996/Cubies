@@ -1,5 +1,7 @@
 function SceneHandler(){
 
+	this.background_color
+
 	var viewportOffset_x = 0
 	var viewportOffset_y = 0
 
@@ -92,9 +94,9 @@ function SceneHandler(){
 		return mouse_pos
 	}
 
-	this.Pick = function(){
+	this.Pick = function(id_object = null){
 		renderer.render(active_picking_scene, CAMERA, picking_texture)
-		return GetPixelColor()
+		return GetPixelColor(id_object)
 	}
 
 
@@ -178,12 +180,14 @@ function SceneHandler(){
 	function update() {
 		requestAnimationFrame(update)
 		
+		that.background_color = renderer.getClearColor()
+		
 		deltaTime = CLOCK.getDelta();
 		renderer.render(active_scene, CAMERA)
 	}
 
 	//Uses a simple color buffer draw trick to decide where the client is clicking
-	function GetPixelColor(){
+	function GetPixelColor(id_object = null){
 		var pixelBuffer = new Uint8Array(4)
 
 		renderer.readRenderTargetPixels(picking_texture, mouse_pos.x + viewportOffset_x, 
@@ -191,6 +195,11 @@ function SceneHandler(){
 
 		var id = (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | (pixelBuffer[2])
 
+		//Change an id variable by reference
+		if(id_object != null)
+			id_object['id'] = id
+
+		//Return the id
 		return id
 	}
 }

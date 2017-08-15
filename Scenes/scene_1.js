@@ -1,7 +1,6 @@
 var scene_handler = null
 var toolbar_handler = null
 var p_cube_pick_context = null
-
 var old_mouse_pos = new THREE.Vector2()
 
 var parentHighlightMaterial = new THREE.MeshBasicMaterial({'color': 0xDD0000})
@@ -41,12 +40,9 @@ $(document).ready(function(){
 	scene_handler.RequestAddToScene(grid_axis)
 	scene_handler.RequestAddToScene(grid_axis_2)
 
-
 	//Add the toolbars and their functionality
-	toolbar_handler = new Toolbar_Handler()
+	toolbar_handler = new Toolbar_Handler(scene_handler)
 	toolbar_handler.Switch_Context_H('edit-context')
-
-	//Add a couple of events that'll help in mouse picking
 })
 
 function StoreMouseVals(event){
