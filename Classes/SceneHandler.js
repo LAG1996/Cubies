@@ -1,6 +1,14 @@
-function SceneHandler(){
+function SceneHandler(bg_color = 0xFFFFE6){
 
-	this.background_color
+	this.background_color = new THREE.Color(bg_color)
+	this.defaultScene
+	this.defaultPickingScene
+	this.active_scene
+	this.active_picking_scene
+
+	var active = true
+
+	var update_functions = {}
 
 	var viewportOffset_x = 0
 	var viewportOffset_y = 0
@@ -8,10 +16,7 @@ function SceneHandler(){
 	var WIDTH, HEIGHT, INIT, CLOCK, CAMERA
 	var container, renderer, picking_texture
 
-	var defaultScene
-	var defaultPickingScene
-	var active_scene
-	var active_picking_scene
+
 	var mouse_pos = new THREE.Vector2()
 
 	var VIEW_ANGLE, ASPECT, NEAR, FAR, CAMERA, cam_cam
@@ -29,9 +34,14 @@ function SceneHandler(){
 	initScene()
 	requestAnimationFrame(update)
 
+	this.AddUpdateFunction = function(func_name, func){
+		update_functions[func_name] = func
+	}
+
 	this.RequestAddToScene = function(object){
+
 		if(ObjectExists(object) && object.isObject3D){
-			defaultScene.add(object)
+			this.active_scene.add(object)
 			return true
 		}
 		return false
@@ -39,7 +49,7 @@ function SceneHandler(){
 
 	this.RequestRemoveFromScene = function(object){
 		if(ObjectExists(object) && object.isObject3D){
-			defaultScene.remove(object)
+			this.active_scene.remove(object)
 			return true
 		}
 		return false
@@ -47,7 +57,7 @@ function SceneHandler(){
 
 	this.RequestAddToPickingScene = function(object){
 		if(ObjectExists(object) && object.isObject3D){
-			defaultPickingScene.add(object)
+			this.active_picking_scene.add(object)
 			return true
 		}
 		return false
@@ -57,7 +67,7 @@ function SceneHandler(){
 	{
 		if(ObjectExists(scene))
 		{
-			active_scene = scene
+			this.active_scene = scene
 			return true
 		}
 
@@ -68,7 +78,7 @@ function SceneHandler(){
 	{
 		if(ObjectExists(scene))
 		{
-			active_picking_scene = scene
+			this.active_picking_scene = scene
 			return true
 		}
 
@@ -77,17 +87,17 @@ function SceneHandler(){
 
 	this.MakeDefaultSceneToPickingScene = function()
 	{
-		this.RequestSwitchToPickingScene(active_scene)
+		this.RequestSwitchToPickingScene(this.active_scene)
 	}
 
 	this.SwitchToDefaultScene = function()
 	{
-		active_scene = defaultScene
+		this.active_scene = this.defaultScene
 	}
 
 	this.SwitchToDefaultPickingScene = function()
 	{
-		active_picking_scene = defaultPickingScene
+		this.active_picking_scene = this.defaultPickingScene
 	}
 
 	this.GetMousePos = function(){
@@ -95,7 +105,7 @@ function SceneHandler(){
 	}
 
 	this.Pick = function(id_object = null){
-		renderer.render(active_picking_scene, CAMERA, picking_texture)
+		renderer.render(this.active_picking_scene, CAMERA, picking_texture)
 		return GetPixelColor(id_object)
 	}
 
@@ -107,6 +117,9 @@ function SceneHandler(){
 		picking_texture.setSize(window.innerWidth, window.innerHeight)
 	}
 
+	this.ToggleActive = function(){
+		active = !active
+	}
 
 	function initScene(){
 		WIDTH = window.innerWidth;
@@ -124,16 +137,16 @@ function SceneHandler(){
 		renderer = new THREE.WebGLRenderer()
 
 		//Create a scene
-		defaultScene = new THREE.Scene()
-		defaultPickingScene = new THREE.Scene()
+		that.defaultScene = new THREE.Scene()
+		that.defaultPickingScene = new THREE.Scene()
 
-		active_scene = defaultScene
-		active_picking_scene = defaultPickingScene
+		that.active_scene = that.defaultScene
+		that.active_picking_scene = that.defaultPickingScene
 
 		//Start up that renderer
 		renderer.setSize(WIDTH, HEIGHT)
 		renderer.domElement.id = 'canvas'
-		renderer.setClearColor(0xFFFFE6, 1)
+		renderer.setClearColor(that.background_color.getHex(), 1)
 		renderer.setPixelRatio(window.devicePixelRatio)
 		renderer.sortObjects = true
 
@@ -142,7 +155,7 @@ function SceneHandler(){
 		//Set up a directional light and add it to the scene
 		DIR_LIGHT = new THREE.DirectionalLight(0xFFFFFF, 0.5)
 
-		defaultScene.add(DIR_LIGHT)
+		that.defaultScene.add(DIR_LIGHT)
 
 		//Create a camera and add it to the scene
 		VIEW_ANGLE = 45 //Viewing angle for the perspective camera
@@ -178,12 +191,30 @@ function SceneHandler(){
 	}
 
 	function update() {
-		requestAnimationFrame(update)
+
+		if(active)
+		{
+			requestAnimationFrame(update)
 		
-		that.background_color = renderer.getClearColor()
-		
-		deltaTime = CLOCK.getDelta();
-		renderer.render(active_scene, CAMERA)
+			DoUpdateFunctions()
+			
+			deltaTime = CLOCK.getDelta();
+			renderer.render(that.active_scene, CAMERA)
+		}
+
+	}
+
+	function DoUpdateFunctions(){
+
+		for(var funcName in update_functions)
+		{
+			try{
+				update_functions[funcName]()
+			}
+			catch(err){
+				throw funcName + ": " + err
+			}
+		}
 	}
 
 	//Uses a simple color buffer draw trick to decide where the client is clicking

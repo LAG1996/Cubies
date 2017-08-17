@@ -1,6 +1,4 @@
 var SCENE
-var highlight_color_1 = new THREE.Color(0xFF0000)
-var highlight_color_2 = new THREE.Color(0x0000FF)
 
 $(document).ready(function(){
 	
@@ -17,25 +15,102 @@ $(document).ready(function(){
 	SCENE.pick_mode = 'poly'
 
 	SCENE.junk = []
-	SCENE.ClearJunk = function(){
+	SCENE.face_graph_junk = []
+	SCENE.cut_junk = []
+	SCENE.hinge_junk = []
 
-		for(var index = 0; index < SCENE.junk.length; index++)
+	SCENE.prime_highlight = new THREE.Color(0xFF0000)
+	SCENE.second_highlight = new THREE.Color(0x0000FF)
+	SCENE.cut_highlight = new THREE.Color(0x22EEDD)
+	SCENE.rot_highlight = new THREE.Color(0xAA380F)
+
+	SCENE.ClearJunk = function(trash_collector, scenes = [null]){
+
+		for(var index = 0; index < trash_collector.length; index++)
 		{
-			SCENE.scene_handler.RequestRemoveFromScene(SCENE.junk[index])
-			delete SCENE.junk[index]
+			if(!Array.isArray(scenes))
+			{
+				scenes = [scenes]
+			}
+
+			for(var bindex in scenes)
+			{
+				PostUrgentMessage(["REMOVE_FROM_SCENE", this.scene_handler, trash_collector[index], scenes[bindex]])
+			}
+
+			delete trash_collector[index]
 		}
 
-		SCENE.junk = []
+		trash_collector = []
 	}
 
-	requestAnimationFrame(MouseHover)
+	//Add some stuff to the scene handler's update function
+	SCENE.scene_handler.AddUpdateFunction('draw_cuts', function(){
+
+		if(SCENE.current_context == 'rot-context')
+			return
+
+		SCENE.ClearJunk(SCENE.cut_junk, [null])
+
+		for(var p_name in PolyCube.L_Polycubes)
+		{
+			var p_cube = PolyCube.L_Polycubes[p_name]
+
+			var cuts = p_cube.GetCutEdges()
+
+			for(var kindex in cuts)
+			{
+				HighlightParts(cuts[kindex], SCENE.cut_highlight, 'hinge', SCENE.cut_junk)
+			}
+		}
+	})
+
+	SCENE.scene_handler.AddUpdateFunction('draw_hinges', function(){
+
+		SCENE.ClearJunk(SCENE.hinge_junk, SCENE.current_context == 'rotate-context' ? [PolyCube.Rotation_Scene] : [null])
+
+		for(var p_name in PolyCube.L_Polycubes)
+		{
+			var p_cube = PolyCube.L_Polycubes[p_name]
+
+			var rot_lines = p_cube.GetRotationLines()
+
+			for(var kindex in rot_lines)
+			{
+				for(var windex in rot_lines[kindex])
+				{
+					HighlightParts(rot_lines[kindex][windex], SCENE.rot_highlight, 'hinge', SCENE.hinge_junk, SCENE.current_context == 'rotate-context' ? [PolyCube.Rotation_Scene] : [null])
+					HighlightParts(rot_lines[kindex][windex]['incidentEdge'], SCENE.rot_highlight, 'hinge', SCENE.hinge_junk, SCENE.current_context == 'rotate-context' ? [PolyCube.Rotation_Scene] : [null])
+				}
+			}
+		}
+	})
+
+	SCENE.scene_handler.AddUpdateFunction('mouse_hover', function(){
+		MouseHover()
+	})
+
+	SCENE.scene_handler.AddUpdateFunction('update_context', function(){
+		SCENE.current_context = SCENE.toolbar_handler.context
+	})
 
 	$('#canvas').on('mousedown', MouseClick)
 	$("#canvas").on('mouseup', MouseUp)
+
+	$('#cut_action').on('click', function(){
+		PostUrgentMessage(['CUT_EDGE', SCENE.selected_object, SCENE.current_poly])
+	})
 })
 
 function MouseHover()
 {
+	if(ObjectExists(SCENE.selected_object) && SCENE.selected_object['cut'])
+	{
+		$("#cut_action").text("Undo Cut")
+	}
+	else
+		$("#cut_action").text("Cut")
+
 	if(ObjectExists(SCENE.current_poly) && $("#poly_cube_options_"+SCENE.current_poly.context_name).is(":visible"))
 	{
 		if(SCENE.scene_handler.GetMousePos().distanceTo(SCENE.toolbar_handler.options_dialogue_pos) > 150)
@@ -45,8 +120,8 @@ function MouseHover()
 	}
 	else
 	{
-		SCENE.ClearJunk()
-	
+		SCENE.ClearJunk(SCENE.junk)
+
 		var id = SCENE.HandlePick()
 	
 		var mouse_pos = SCENE.scene_handler.GetMousePos()
@@ -54,7 +129,7 @@ function MouseHover()
 		$('#poly_cube_name_only').css("top", "" + mouse_pos.y + "px")
 		$('#poly_cube_name_only').css("left", "" + (mouse_pos.x + 10) + "px")
 	
-		if(SCENE.current_context == 'edit-context' && !$('#poly_cube_options').is(":visible"))
+		if((SCENE.current_context == 'edit-context' || SCENE.current_context == 'poly-context') && !$('#poly_cube_options').is(":visible"))
 		{
 			if(id != SCENE.scene_handler.background_color.getHex())
 			{
@@ -77,15 +152,17 @@ function MouseHover()
 							if(Array.isArray(package['parent']))
 							{
 								$(".tooltip_text_1").text(package['parent'][0].name + ' | ' + package['parent'][1].name)
+								SCENE.selected_object = package['parent'][0]
 							}
 							else
 							{
 								$(".tooltip_text_1").text(package['parent'].name)
+								SCENE.selected_object = package['parent']
 							}
 	
 							$("#polycube_part").show()
 	
-							HighlightParts(package['parent'], highlight_color_1, p_cube.context_name)
+							HighlightParts(package['parent'], SCENE.prime_highlight, p_cube.context_name, SCENE.junk)
 						}
 						else
 						{
@@ -105,8 +182,6 @@ function MouseHover()
 			}
 		}
 	}
-
-	requestAnimationFrame(MouseHover)
 }
 
 function MouseClick(event)
@@ -130,8 +205,8 @@ function MouseUp(event)
 
 	if(btn == 0)
 	{
-		if(SCENE.click_mouse_pos.equals(SCENE.scene_handler.GetMousePos()) && !SCENE.just_switch_active && !ObjectExists(SCENE.current_poly))
-			PostMessage(['SWITCH_ACTIVE_POLYCUBE', null])
+		if(SCENE.current_context != "rotate-context" && SCENE.click_mouse_pos.equals(SCENE.scene_handler.GetMousePos()) && !SCENE.just_switch_active && !ObjectExists(SCENE.current_poly))
+			PostMessage(['SWITCH_ACTIVE_POLYCUBE', null, SCENE.toolbar_handler])
 	}
 	else if(btn == 2)
 	{
@@ -152,7 +227,7 @@ function OnLeftMouseClick(){
 
 	SCENE.just_switch_active = false
 
-	if(SCENE.current_context == 'edit-context')
+	if((SCENE.current_context == 'edit-context' || SCENE.current_context == 'poly-context'))
 	{
 		if(ObjectExists(SCENE.current_poly))
 		{
@@ -160,7 +235,7 @@ function OnLeftMouseClick(){
 
 			if(!ObjectExists(PolyCube.Active_Polycube) || PolyCube.Active_Polycube.name != p_cube.name)
 			{
-				PostMessage(['SWITCH_ACTIVE_POLYCUBE', p_cube.name])
+				PostMessage(['SWITCH_ACTIVE_POLYCUBE', p_cube.name, SCENE.toolbar_handler])
 				SCENE.just_switch_active = true
 			}
 			else
@@ -204,7 +279,7 @@ function OnRightMouseClick_3(){
 		return
 }
 
-function HighlightParts(package, color, context)
+function HighlightParts(package, color, context, junk_collector, scenes = [null])
 {
 	var highlight = context == 'hinge' ? Cube.highlightEdge.clone() : Cube.highlightFace.clone()
 
@@ -220,9 +295,19 @@ function HighlightParts(package, color, context)
 			highlight.position.copy(part.getWorldPosition())
 			highlight.rotation.copy(part.getWorldRotation())
 
-			var h = highlight.clone()
-			PostMessage(['ADD_TO_SCENE', SCENE.scene_handler, h])
-			SCENE.junk.push(h)
+			if(!Array.isArray(scenes))
+			{
+				scenes = [scenes]
+			}
+
+			for(var rindex in scenes)
+			{
+				var h = highlight.clone()
+				PostUrgentMessage(['ADD_TO_SCENE', SCENE.scene_handler, h, scenes[rindex]])
+			}
+			
+
+			junk_collector.push(h)
 		}
 	}
 	else
@@ -232,8 +317,17 @@ function HighlightParts(package, color, context)
 		highlight.position.copy(part.getWorldPosition())
 		highlight.rotation.copy(part.getWorldRotation())
 
-		var h = highlight.clone()
-		PostMessage(['ADD_TO_SCENE', SCENE.scene_handler, h])
-		SCENE.junk.push(h)
+		if(!Array.isArray(scenes))
+		{
+			scenes = [scenes]
+		}
+
+		for(var rindex in scenes)
+		{
+			var h = highlight.clone()
+			PostUrgentMessage(['ADD_TO_SCENE', SCENE.scene_handler, h, scenes[rindex]])
+		}
+
+		junk_collector.push(h)
 	}
 }

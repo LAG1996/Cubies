@@ -240,14 +240,21 @@ function PolyCube(position, name = ""){
 		if(this.context_name == 'face')
 		{
 			var face = Color2Face_Map[id]
-			return {'parent' : AdjacencyGraph.GetFace(face.name), 'children' : AdjacencyGraph.GetNeighboringFaces(face.name)}
+
+			if(ObjectExists(face))
+				return {'parent' : AdjacencyGraph.GetFace(face.name), 'children' : AdjacencyGraph.GetNeighboringFaces(face.name)}
+			else
+				return null
 		}
 		else if(this.context_name == 'hinge')
 		{
 			if(id > 0)
 			{
 				var edge = Color2Edge_Map[id]
-				return {'parent' : [AdjacencyGraph.GetEdge(edge.name), AdjacencyGraph.GetIncidentEdge(edge.name)], 'children' : AdjacencyGraph.GetNeighboringEdges(edge.name)}
+				if(ObjectExists(edge))
+					return {'parent' : [AdjacencyGraph.GetEdge(edge.name), AdjacencyGraph.GetIncidentEdge(edge.name)], 'children' : AdjacencyGraph.GetNeighboringEdges(edge.name)}
+				else
+					return null
 			}
 			else
 				return null
@@ -594,7 +601,7 @@ function PolyCube(position, name = ""){
 		return position.x.toFixed(1)+","+position.y.toFixed(1)+","+position.z.toFixed(1)
 	}
 
-	this.SwitchToContext('face')
+	this.SwitchToContext('hinge')
 }
 
 PolyCube.ID = 0
