@@ -14,28 +14,6 @@ function Toolbar_Handler(scene_handle){
 	var mode_text = ''
 	var Cube_Add_Handler_List = []
 
-	var right_sidebar = {'context' : 'nada', 'buttons' : []}
-
-	var right_sidebar_contexts = {
-		'face' : [{"mode" : "nada"}, 
-			{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'; right_sidebar_contexts['face'][0]["mode"] = "adj";})}, //ClearJunk()})}, 
-			{"text" : "Remove", "click" : (function(){pick_mode = 'rem'; right_sidebar_contexts['face'][0]["mode"] = "rem";})}], //ClearJunk()})}],
-
-		'hinge' : [{"mode" : "nada"}, 
-			{"text" : "Adjacency", "click": (function(){pick_mode = 'adj'; right_sidebar_contexts['hinge'][0]["mode"] = "adj";})}, //ClearJunk()})}, 
-			{"text" : "Cut", "click": (function(){pick_mode = 'cut'; right_sidebar_contexts['hinge'][0]["mode"] = "cut";})}, //ShowCutEdgeData()})},
-			{"text" : "Collinear", "click": (function(){pick_mode = 'col'; right_sidebar_contexts['hinge'][0]["mode"] = "col";})}, //ClearJunk()})},
-			{"text" : "Parallel", "click": (function(){pick_mode = 'para'; right_sidebar_contexts['hinge'][0]["mode"] = "para";})}, //ClearJunk()})},
-			{"text" : "Perpendicular", "click": (function(){pick_mode = 'perp'; right_sidebar_contexts['hinge'][0]["mode"] = "perp";})}, //ClearJunk()})},
-			{"text" : "Hinge", "click": (function(){pick_mode = 'hinge'; right_sidebar_contexts['hinge'][0]["mode"] = "hinge";})}] //ClearJunk()})}]
-	}
-
-	/*
-	{"text" : "Collinear", "click": (function(){pick_mode = 'col'; right_sidebar_contexts['hinge'][0]["mode"] = "col"; ClearJunk()})},
-	{"text" : "Parallel", "click": (function(){pick_mode = 'para'; right_sidebar_contexts['hinge'][0]["mode"] = "para"; ClearJunk()})},
-	{"text" : "Perpendicular", "click": (function(){pick_mode = 'perp'; right_sidebar_contexts['hinge'][0]["mode"] = "perp"; ClearJunk()})}
-	*/
-
 	var amt_buttons_for_context = {"camera-control" : 2, "edit-context" : 1, "poly-context" : 5, "rotate-context" : 2}
 
 	var that = this
@@ -59,8 +37,6 @@ function Toolbar_Handler(scene_handle){
 	setInterval(function(){
 		Update_Object_Viewer()
 		Update_Cube_Add_Handlers()
-		Update_Toolbar()
-		//Update_Right_Sidebar()
 	}, 10)
 
 	var that = this
@@ -80,7 +56,9 @@ function Toolbar_Handler(scene_handle){
 			if(this.context == 'camera-control')
 				_Switch_To_Camera_Mode(amt_buttons_for_context[this.context])
 			else if(this.context == 'edit-context')
+			{
 				_Switch_To_Edit_Context(amt_buttons_for_context[this.context])
+			}
 			else if(this.context == 'poly-context')
 			{
 				if(ObjectExists(polycube))
@@ -166,14 +144,10 @@ function Toolbar_Handler(scene_handle){
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 			$("#add_poly_modal").show()})
 
-		PostMessage(['SWITCH_TO_SCENE', scene_handler, null])
+		PostUrgentMessage(['SWITCH_TO_SCENE', scene_handler, null])
+		PostMessage(['SWITCH_ACTIVE_POLYCUBE', PolyCube.Active_Polycube, that])
 
-		//Unbind the previous event handlers from the container
-		//$("#container").unbind('mousedown')
-		//$("#container").unbind('mouseup')
-		//Add these event handlers to the container
-		//$('#container').on('mousedown', StoreMouseVals)
-		//$('#container').on('mouseup', HandlePick)
+		$("#context_text").hide()
 
 		mode_text = "World View"
 	}
@@ -198,6 +172,7 @@ function Toolbar_Handler(scene_handle){
 			if(PolyCube.Active_Polycube != null)
 			{
 				PolyCube.Active_Polycube.SwitchToContext('face')
+				$("#context_text").text("Face")
 			}
 		})
 
@@ -206,6 +181,7 @@ function Toolbar_Handler(scene_handle){
 			if(PolyCube.Active_Polycube != null)
 			{
 				PolyCube.Active_Polycube.SwitchToContext('hinge')
+				$("#context_text").text("Hinge")
 			}
 		})
 
@@ -225,6 +201,9 @@ function Toolbar_Handler(scene_handle){
 			}
 		})
 
+		$("#context_text").text(polycube.context_name == 'hinge' ? "Hinge" : "Face")
+		$("#context_text").show()
+
 		mode_text = "Edit " + polycube.name
 	}
 
@@ -241,12 +220,13 @@ function Toolbar_Handler(scene_handle){
 		})
 		$(buttons[1]).text("Undo Rotations")
 
-		PostMessage(['SWITCH_TO_SCENE', scene_handler, PolyCube.Rotation_Scene])
+		PostUrgentMessage(['SWITCH_TO_SCENE', scene_handler, PolyCube.Rotation_Scene])
 
 		//Unbind the previous event handlers from the container
 		//$("#container").unbind('mousedown')
 		//$("#container").unbind('mouseup')
 
+		$("#context_text").hide()
 		mode_text = 'Rotate View'
 	}
 
@@ -381,63 +361,6 @@ function Toolbar_Handler(scene_handle){
 		}
 	}
 
-	function Update_Toolbar(){
-		if(ObjectExists(PolyCube.Active_Polycube) && that.context != 'rotate-context')
-		{
-			if(that.context == 'edit-context')
-				that.Switch_Context_H('poly-context', PolyCube.Active_Polycube)
-
-			if(!$("#context_text").attr(":visible"))
-			{
-				$("#context_text").show()
-			}
-
-			if($("#context").text() != PolyCube.Active_Polycube.context_name)
-				$("#context_text").text(PolyCube.Active_Polycube.context_name)
-		}
-		else
-		{
-			that.Switch_Context_H('edit-context')
-			$("#context_text").hide()
-		}
-	}
-
-	function Update_Right_Sidebar(){
-
-		if(ObjectExists(PolyCube.Active_Polycube) && that.context != 'rotate-context')
-		{	
-			if(right_sidebar.context != PolyCube.Active_Polycube.context_name)
-			{
-				$(".right_sidebar_btns").remove()
-				right_sidebar.context = PolyCube.Active_Polycube.context_name
-				var context = right_sidebar_contexts[PolyCube.Active_Polycube.context_name]
-
-				for(var index = 1; index < context.length; index++)
-				{
-					var new_button = $("#right_sidebar_btn_template").clone()
-					new_button.text(context[index].text)
-					new_button.attr("id", "right_sidebar_btn_"+index)
-					new_button.addClass("right_sidebar_btns")
-					new_button.on("click", context[index].click)
-					new_button.show()
-					$("#right_sidebar").append($(new_button))
-				}
-
-				if(pick_mode != 'rotate')
-					pick_mode = context[0]["mode"]
-				else
-					context[0]['mode'] = pick_mode
-				
-				$("#right_sidebar").show()
-			}
-		}
-		else
-		{
-			right_sidebar.context = 'nada'
-			$("#right_sidebar").hide()
-		}
-	}
-
 	function AddPolyCube(position, name){
 			var p_cube = PolyCube.GenerateNewPolyCube(position, name)
 
@@ -470,9 +393,9 @@ function Toolbar_Handler(scene_handle){
 					{
 						$(thingy).hide()
 						$(this).attr("class", "w3-button w3-black obj_data_trigger")
-						PostMessage(['SWITCH_ACTIVE_POLYCUBE', null])
+						PostMessage(['SWITCH_ACTIVE_POLYCUBE', null, that])
 						//PolyCube.SwitchToNewActive(null)
-						that.Switch_Context_H('world-context')
+						that.Switch_Context_H('edit-context')
 					}
 					else
 					{
@@ -527,8 +450,8 @@ function Toolbar_Handler(scene_handle){
 				PolyCube.Active_Polycube.Set_PosZ(parseInt($(this).val()))
 			})
 
-			PostMessage(['ADD_TO_SCENE', scene_handler, p_cube.Obj])
-			PostMessage(['ADD_TO_PICK_SCENE', scene_handler, p_cube.picking_polycube])
+			PostUrgentMessage(['ADD_TO_SCENE', scene_handler, p_cube.Obj, null])
+			PostUrgentMessage(['ADD_TO_PICK_SCENE', scene_handler, p_cube.picking_polycube, null])
 			
 			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
 			that.Switch_Context_H('poly-context', p_cube)

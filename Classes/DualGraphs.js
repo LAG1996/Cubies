@@ -557,6 +557,7 @@ function FaceEdgeDualGraph(){
 
 			MarkAsVisited(edge)
 			AlreadyDrawnFrom[edge['name']] = true
+
 			if(ObjectExists(edge['incidentEdge']))
 				AlreadyDrawnFrom[edge['incidentEdge']['name']] = true
 
@@ -571,6 +572,7 @@ function FaceEdgeDualGraph(){
 				Line_Queue = []
 				cut_found = false
 				invalid_line = false
+
 				//Set this neighbor and its incident edge as visited
 				var neighbor = neighbors[N]
 				//If the neighbor is cut, skip it
@@ -578,7 +580,7 @@ function FaceEdgeDualGraph(){
 					continue
 				
 				//Otherwise, draw a line from this neighbor
-				GenerateLineFrom(neighbor)
+				GenerateLineFrom(neighbor, origin)
 
 				if(Line_Queue.length > 0 && cut_found && !invalid_line)
 				{
@@ -598,7 +600,7 @@ function FaceEdgeDualGraph(){
 			ClearVisitedEdges()
 		}
 
-		function GenerateLineFrom(edge)
+		function GenerateLineFrom(edge, parent)
 		{
 			if(cut_found || invalid_line)
 				return
@@ -609,6 +611,7 @@ function FaceEdgeDualGraph(){
 			if(edge['cut'] && Edge2CutPath[origin['name']] == Edge2CutPath[edge['name']])
 			{
 				console.log("uh oh")
+
 				if(!AlreadyDrawnFrom[edge['name']])
 					cut_found = true
 
@@ -622,12 +625,15 @@ function FaceEdgeDualGraph(){
 
 			var n_neighbors = GetCombinedNeighbors(edge)
 
+			//First, search through this edge's neighbors to see if any were cut. 
 			for(var N in n_neighbors)
 			{
 				if(cut_found || invalid_line)
 					return
 
 				var n_neighbor = n_neighbors[N]
+
+				//If the neighbor has been visited before, do not consider it
 				if(n_neighbor['visited'])
 					continue
 
@@ -635,23 +641,23 @@ function FaceEdgeDualGraph(){
 				{
 					if(ObjectExists(origin['neighbors'][n_neighbor['name']]))
 					{
-						continue
+						continue //If this neighbor is neighbors with the origin, do not consider it
 					}
 					else if(ObjectExists(n_neighbor['incidentEdge']) && ObjectExists(origin['neighbors'][n_neighbor['incidentEdge']['name']]))
 					{
-						continue
+						continue //If this neighbor's incident edge is neighbors with the origin, do not consider it
 					}
 					else if(Edge2CutPath[n_neighbor['name']] != Edge2CutPath[origin['name']])
 					{
-						continue
+						continue //If this neighbor is actually the origin, do not consider it
 					}
 					else if(ObjectExists(n_neighbor['incidentEdge']) && Edge2CutPath[n_neighbor['incidentEdge']['name']] != Edge2CutPath[origin['name']])
 					{
-						continue
+						continue //If this neighbor is actually the origin's incident edge, do not consider it
 					}
 					else if(ObjectExists(origin['incidentEdge']) && (ObjectExists(origin['incidentEdge']['neighbors'][n_neighbor['name']]) || origin['incidentEdge']['name'] == n_neighbor['name']))
 					{
-						continue
+						continue //If this neighbor is actually the origin, do not consider it
 					}
 					else if(ObjectExists(n_neighbor['incidentEdge']) && ObjectExists(origin['incidentEdge']) && (ObjectExists(origin['incidentEdge']['neighbors'][n_neighbor['incidentEdge']['name']]) || origin['incidentEdge']['name'] == n_neighbor['incidentEdge']['name']))
 					{
@@ -669,17 +675,20 @@ function FaceEdgeDualGraph(){
 				}
 			}
 
-			if(cut_found || invalid_line)
-				return
-
 			for(var N in n_neighbors)
 			{
 				var n_neighbor = n_neighbors[N]
-				if(!n_neighbor['visited'] && !AlreadyDrawnFrom[n_neighbor['name']] && AreCollinear(edge, n_neighbor))
+				if(!n_neighbor['visited'] && AreCollinear(edge, n_neighbor) && !n_neighbor['cut'])
 				{
-					GenerateLineFrom(n_neighbor)
 
-					if(!cut_found)
+					//If this neighbor is the neighbor of the edge we just came from, we don't want to move backwards in the line. Skip this edge
+					if(ObjectExists(parent['neighbors'][n_neighbor['name']]) || ObjectExists(parent['neighbors'][n_neighbor['incidentEdge']['name']])
+						|| (ObjectExists(parent['incidentEdge']) && (ObjectExists(parent['incidentEdge']['neighbors'][n_neighbor['name']]) || ObjectExists(parent['incidentEdge']['neighbors'][n_neighbor['incidentEdge']['name']]))))
+						continue
+
+					GenerateLineFrom(n_neighbor, edge)
+
+					if(!cut_found || invalid_line)
 						Line_Queue = []
 				}
 			}

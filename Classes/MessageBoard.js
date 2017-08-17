@@ -8,10 +8,10 @@ function MessageBoard()
 		'ADD_CUBE' : function(packet){_RequestAddCubeToPolycube(packet)},
 		'SWITCH_ACTIVE_POLYCUBE' : function(packet){_RequestSwitchActivePolycube(packet)},
 		'REMOVE_POLYCUBE' : function(packet){_RequestRemovePolycube(packet)},
-		'ROTATE' : function(packet){_RequestPolyCubeRotate(packet)},
-		'SHOW_FACE_GRAPHS' : function(){},
+		'CUT_EDGE' : function(packet){_RequestCutEdge(packet)},
 		'PICK' : function(packet){_RequestPick(packet)},
 		'ADD_TO_SCENE' : function(packet){_RequestAddToScene(packet)},
+		'REMOVE_FROM_SCENE' : function(packet){_RequestRemoveFromScene(packet)},
 		'ADD_TO_PICK_SCENE' : function(packet){_RequestAddToPickingScene(packet)},
 		'SWITCH_TO_SCENE' : function(packet){_RequestSwitchToScene(packet)}
 	}
@@ -23,6 +23,52 @@ function MessageBoard()
 	this.PostMessage = function(message)
 	{
 		packages.push(message)
+	}
+
+	this.HandleMessageImmediately = function(packet)
+	{
+		MESSAGES[packet[0]](packet)
+	}
+
+	function _RequestRemoveFromScene(packet){
+		var scene_handler = packet[1]
+		var object = packet[2]
+		var scene = packet[3]
+
+		try{
+			var active_scene = scene_handler.active_scene
+
+			if(ObjectExists(scene))
+			{
+				scene_handler.RequestSwitchToScene(scene)
+				scene_handler.RequestRemoveFromScene(object)
+			}
+			else
+			{
+				scene_handler.SwitchToDefaultScene()
+				scene_handler.RequestRemoveFromScene(object)
+			}
+
+			scene_handler.RequestSwitchToScene(active_scene)
+		}
+		catch(err)
+		{
+
+		}
+	}
+
+	function _RequestCutEdge(packet){
+		try{
+
+			var edge = packet[1]
+			var polycube = packet[2]
+
+			polycube.CutEdge(edge)
+		}
+		catch(err){
+
+			throw "CUT_EDGE: " + err
+		}
 	}
 
 	function _RequestPick(packet){
@@ -53,7 +99,18 @@ function MessageBoard()
 	function _RequestSwitchActivePolycube(packet){
 		try{
 			var new_polycube = packet[1] != null ? PolyCube.L_Polycubes[packet[1]] : null
+			var toolbar_handler = packet[2]
+
 			PolyCube.SwitchToNewActive(new_polycube)
+
+			if(new_polycube == null)
+			{
+				toolbar_handler.Switch_Context_H('edit-context')
+			}
+			else
+			{
+				toolbar_handler.Switch_Context_H('poly-context', new_polycube)
+			}
 		}
 		catch(err){
 			throw 'SWITCH_ACTIVE_POLYCUBE: ' + packet[1] + err
@@ -65,8 +122,24 @@ function MessageBoard()
 		var scene_handler = packet[1]
 		var object = packet[2]
 
+		var scene = packet[3]
+			
 		try{
-			scene_handler.RequestAddToScene(object)
+
+			var active_scene = scene_handler.active_scene
+			
+			if(ObjectExists(scene))
+			{
+				scene_handler.RequestSwitchToScene(scene)
+				scene_handler.RequestAddToScene(object)
+			}
+			else
+			{
+				scene_handler.SwitchToDefaultScene()
+				scene_handler.RequestAddToScene(object)
+			}
+
+			scene_handler.RequestSwitchToScene(active_scene)
 		}
 		catch(err){
 			throw "ADD TO SCENE: Object was not a valid THREE.js object"
@@ -84,10 +157,6 @@ function MessageBoard()
 			PolyCube.DestroyPolyCube(polycube)
 	
 			toolbar_handler.Switch_Context_H('edit-context')
-	
-			//cut_edges = {} 
-			//invalid_cut_edges = {}
-			//ClearEdgeJunk()
 		}
 		catch(err){
 			throw 'REMOVE_POLYCUBE: ' + err
@@ -99,8 +168,24 @@ function MessageBoard()
 		var scene_handler = packet[1]
 		var object = packet[2]
 
+		var scene = ObjectExists(packet[3]) ? packet[3] : null
+
+		
 		try{
-			scene_handler.RequestAddToPickingScene(object)
+			var active_scene = scene_handler.active_picking_scene
+
+			if(ObjectExists(scene))
+			{
+				scene_handler.RequestSwitchToPickingScene(scene)
+				scene_handler.RequestAddToPickingScene(object)
+			}
+			else
+			{
+				scene_handler.SwitchToDefaultPickingScene()
+				scene_handler.RequestAddToPickingScene(object)
+			}
+
+			scene_handler.RequestSwitchToPickingScene(active_scene)
 		}
 		catch(err){
 			throw "ADD TO PICKING SCENE: Object was not a valid THREE.js object"
@@ -140,4 +225,9 @@ MessageBoard.The_Board = new MessageBoard()
 function PostMessage()
 {
 	MessageBoard.The_Board.PostMessage(arguments[0])
+}
+
+function PostUrgentMessage()
+{
+	MessageBoard.The_Board.HandleMessageImmediately(arguments[0])
 }
