@@ -19,6 +19,12 @@ $(document).ready(function(){
 	SCENE.cut_junk = []
 	SCENE.hinge_junk = []
 
+	SCENE.rotation_line_index = null
+	SCENE.sub_graph_1 = {}
+	SCENE.sub_graph_2 = {}
+	SCENE.rotation_hinge = null
+	SCENE.ready_to_rotate = false
+
 	SCENE.prime_highlight = new THREE.Color(0xFF0000)
 	SCENE.second_highlight = new THREE.Color(0x0000FF)
 	SCENE.cut_highlight = new THREE.Color(0x22EEDD)
@@ -100,6 +106,39 @@ $(document).ready(function(){
 	$('#cut_action').on('click', function(){
 		PostUrgentMessage(['CUT_EDGE', SCENE.selected_object, SCENE.current_poly])
 	})
+
+	$("#sub_graph_action").on('click', function(){
+
+		SCENE.ClearJunk(SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+
+		PostUrgentMessage(['SEE_SUB_GRAPHS', SCENE.selected_object, SCENE.current_poly])
+
+		HighlightParts(SCENE.sub_graph_1, SCENE.prime_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+		HighlightParts(SCENE.sub_graph_2, SCENE.second_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+	})
+
+	$("#rotate_action").on('click', function(){
+
+		SCENE.ClearJunk(SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+
+		if(!ObjectExists(SCENE.rotation_line_index))
+		{
+			PostUrgentMessage(['SEE_SUB_GRAPHS', SCENE.selected_object, SCENE.current_poly])
+		}
+		else if(SCENE.rotation_line_index != SCENE.current_poly.GetRotationLineIndex(SCENE.selected_object))
+		{
+			PostUrgentMessage(['SEE_SUB_GRAPHS', SCENE.selected_object, SCENE.current_poly])
+		}
+
+		if(!ObjectExists(SCENE.sub_graph_1) || !ObjectExists(SCENE.sub_graph_2))
+			return
+
+		HighlightParts(SCENE.sub_graph_1[0], SCENE.prime_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+		HighlightParts(SCENE.sub_graph_2[0], SCENE.second_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+
+		SCENE.ready_to_rotate = true
+
+	})
 })
 
 function MouseHover()
@@ -111,7 +150,7 @@ function MouseHover()
 	else
 		$("#cut_action").text("Cut")
 
-	if(ObjectExists(SCENE.current_poly) && $("#poly_cube_options_"+SCENE.current_poly.context_name).is(":visible"))
+	if(ObjectExists(SCENE.current_poly) && $("#poly_cube_options_"+SCENE.current_poly.context_name).is(":visible") || $("#poly_cube_options_rotate").is(":visible"))
 	{
 		if(SCENE.scene_handler.GetMousePos().distanceTo(SCENE.toolbar_handler.options_dialogue_pos) > 150)
 		{
@@ -120,65 +159,96 @@ function MouseHover()
 	}
 	else
 	{
-		SCENE.ClearJunk(SCENE.junk)
+		SCENE.ClearJunk(SCENE.junk, [null, PolyCube.Rotation_Scene])
 
 		var id = SCENE.HandlePick()
 	
 		var mouse_pos = SCENE.scene_handler.GetMousePos()
-	
-		$('#poly_cube_name_only').css("top", "" + mouse_pos.y + "px")
-		$('#poly_cube_name_only').css("left", "" + (mouse_pos.x + 10) + "px")
+
+		var p_cube = PolyCube.ID2Poly[id]
+
+		if(id == SCENE.scene_handler.background_color.getHex())
+		{
+			SCENE.current_poly = null
+			$('#poly_cube_name_only').hide()
+			return
+		}
+
+		if(ObjectExists(PolyCube.ID2Poly[id]))
+		{
+			$('#poly_cube_name_only').css("top", "" + mouse_pos.y + "px")
+			$('#poly_cube_name_only').css("left", "" + (mouse_pos.x + 10) + "px")
+
+			SCENE.current_poly = p_cube
+
+			$('#poly_cube_name_only').show()
+			$('.tooltip_text').text("" + p_cube.name)
+		}
+		else
+		{
+			SCENE.current_poly = null
+			$('#poly_cube_name_only').hide()
+			return
+		}
 	
 		if((SCENE.current_context == 'edit-context' || SCENE.current_context == 'poly-context') && !$('#poly_cube_options').is(":visible"))
 		{
-			if(id != SCENE.scene_handler.background_color.getHex())
+
+			if(ObjectExists(PolyCube.Active_Polycube) && p_cube.name == PolyCube.Active_Polycube.name)
 			{
-				var p_cube = PolyCube.ID2Poly[id]
-	
-				SCENE.current_poly = p_cube
-	
-				if(ObjectExists(PolyCube.ID2Poly[id]))
+				id = SCENE.HandlePick(p_cube.pick_context)
+				var package = p_cube.HandlePick(id)
+
+				if(ObjectExists(package))
 				{
-					$('#poly_cube_name_only').show()
-					$('.tooltip_text').text("" + p_cube.name)
-	
-					if(ObjectExists(PolyCube.Active_Polycube) && p_cube.name == PolyCube.Active_Polycube.name)
+					if(Array.isArray(package['parent']))
 					{
-						id = SCENE.HandlePick(p_cube.pick_context)
-						var package = p_cube.HandlePick(id)
-	
-						if(ObjectExists(package))
-						{
-							if(Array.isArray(package['parent']))
-							{
-								$(".tooltip_text_1").text(package['parent'][0].name + ' | ' + package['parent'][1].name)
-								SCENE.selected_object = package['parent'][0]
-							}
-							else
-							{
-								$(".tooltip_text_1").text(package['parent'].name)
-								SCENE.selected_object = package['parent']
-							}
-	
-							$("#polycube_part").show()
-	
-							HighlightParts(package['parent'], SCENE.prime_highlight, p_cube.context_name, SCENE.junk)
-						}
-						else
-						{
-							$("#polycube_part").hide()
-						}
+						$(".tooltip_text_1").text(package['parent'][0].name + ' | ' + package['parent'][1].name)
+						SCENE.selected_object = package['parent'][0]
 					}
 					else
 					{
-						$("#polycube_part").hide()
+						$(".tooltip_text_1").text(package['parent'].name)
+						SCENE.selected_object = package['parent']
 					}
+					$("#polycube_part").show()
+					HighlightParts(package['parent'], SCENE.prime_highlight, p_cube.context_name, SCENE.junk)
+				}
+				else
+				{
+					$("#polycube_part").hide()
 				}
 			}
 			else
 			{
-				SCENE.current_poly = null
-				$('#poly_cube_name_only').hide()
+				$("#polycube_part").hide()
+			}
+		}
+		else if(SCENE.current_context == 'rotate-context')
+		{
+			var p_cube = PolyCube.ID2Poly[id]
+
+			var c = p_cube.context_name
+
+			p_cube.SwitchToContext('hinge')
+
+			var id = SCENE.HandlePick(p_cube.pick_context)
+			var package = p_cube.HandlePick(id)
+
+			p_cube.SwitchToContext(c)
+
+			if(ObjectExists(package))
+			{
+				$(".tooltip_text_1").text(package['parent'][0].name + ' | ' + package['parent'][1].name)
+				SCENE.selected_object = package['parent'][0]
+
+				$("#polycube_part").show()
+		
+				HighlightParts(package['parent'], SCENE.prime_highlight, p_cube.context_name, SCENE.junk, PolyCube.Rotation_Scene)
+			}
+			else
+			{
+				$("#polycube_part").hide()
 			}
 		}
 	}
@@ -206,7 +276,14 @@ function MouseUp(event)
 	if(btn == 0)
 	{
 		if(SCENE.current_context != "rotate-context" && SCENE.click_mouse_pos.equals(SCENE.scene_handler.GetMousePos()) && !SCENE.just_switch_active && !ObjectExists(SCENE.current_poly))
+		{
 			PostMessage(['SWITCH_ACTIVE_POLYCUBE', null, SCENE.toolbar_handler])
+		}
+		else if(SCENE.current_context == "rotate-context" && SCENE.click_mouse_pos.equals(SCENE.scene_handler.GetMousePos()) && !SCENE.just_switch_active && !ObjectExists(SCENE.current_poly))
+		{
+			SCENE.ClearJunk(SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+			SCENE.ready_to_rotate = false
+		}
 	}
 	else if(btn == 2)
 	{
@@ -251,6 +328,39 @@ function OnLeftMouseClick(){
 			}
 		}
 	}
+	else if(SCENE.current_context == 'rotate-context')
+	{
+		if(ObjectExists(SCENE.current_poly) && SCENE.ready_to_rotate)
+		{
+			var p_cube = SCENE.current_poly
+
+			p_cube.SwitchToContext('face')
+
+			var id = SCENE.HandlePick(p_cube.pick_context)
+
+			face = p_cube.HandlePick(id)['parent']
+
+			try
+			{
+				if(face.name == SCENE.sub_graph_1[0].name)
+				{
+					p_cube.HandleRotation(SCENE.sub_graph_1, SCENE.rotation_hinge['edge'])
+				}
+				else if(face.name == SCENE.sub_graph_2[0].name)
+				{
+					p_cube.HandleRotation(SCENE.sub_graph_2, SCENE.rotation_hinge['incidentEdge']['edge'])
+				}
+
+				p_cube.SwitchToContext('hinge')
+			}
+			catch(err)
+			{
+				throw err
+
+				p_cube.SwitchToContext('hinge')
+			}		
+		}
+	}
 }
 
 function OnRightMouseClick_1(){
@@ -271,7 +381,15 @@ function OnRightMouseClick_2(){
 	$('.poly_cube_options').css("top", "" + SCENE.toolbar_handler.options_dialogue_pos.y + "px")
 	$('.poly_cube_options').css("left", "" + SCENE.toolbar_handler.options_dialogue_pos.x + "px")
 
-	$('#poly_cube_options_' + SCENE.current_poly.context_name).show()
+	if(SCENE.current_context != 'rotate-context')
+	{
+		$('#poly_cube_options_' + SCENE.current_poly.context_name).show()
+	}
+	else
+	{
+		SCENE.rotation_hinge = SCENE.selected_object
+		$("#poly_cube_options_rotate").show()
+	}
 }
 
 function OnRightMouseClick_3(){
@@ -281,6 +399,10 @@ function OnRightMouseClick_3(){
 
 function HighlightParts(package, color, context, junk_collector, scenes = [null])
 {
+
+	if(!ObjectExists(package) || !ObjectExists(color) || !ObjectExists(context) || !ObjectExists(junk_collector))
+		return
+
 	var highlight = context == 'hinge' ? Cube.highlightEdge.clone() : Cube.highlightFace.clone()
 
 	highlight.material = new THREE.MeshBasicMaterial()

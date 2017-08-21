@@ -285,51 +285,30 @@ function PolyCube(position, name = ""){
 		PolyCube.Rotation_Scene.add(rotation_polycube)
 	}
 
-	//Queue up this facegraph as a flap that will rotate around the hinge of the given index
-	this.QueueRotation = function(facegraph, hinge_index){		
+	//Queue up this facegraph as a flap that will rotate around the given hinge
+	this.HandleRotation = function(facegraph, hinge){		
 
+		console.log("rotating")
+		console.log(facegraph.length + " faces")
 		var object = new THREE.Group()
-		var first_edge = AdjacencyGraph.GetRotationLineFromIndex(hinge_index)[0]
+		object.position.copy(hinge.getWorldPosition())
+		object.rotation.copy(hinge.getWorldRotation())
 
-		rotation_polycube.add(object)
+		PolyCube.Rotation_Scene.add(object)
 
-		object.position.copy(first_edge['edge'].getWorldPosition())
-		
-		var original_faces = []
 		for(var index in facegraph)
 		{
-			var face_orig = rotation_polycube.getObjectByName(facegraph[index]['name'])
-			var face_cl = face_orig.clone()
+			var face = PolyCube.Rotation_Scene.getObjectByName(facegraph[index]['name'])
+			
+			var position = face.getWorldPosition()
+			//var rotation = facegraph[index]['face'].getWorldRotation()
 
-			original_faces.push(face_orig)
+			object.add(face)
 
-			face_cl.position.copy(face_orig.getWorldPosition())
-			face_cl.position.sub(object.getWorldPosition())
-
-			face_orig.visible = false
-
-			object.add(face_cl)
+			face.position.copy(position)
+			face.position.sub(object.getWorldPosition())
+			//facegraph[index]['face'].rotation.copy(rotation)
 		}
-
-		//console.log(original_faces[0].name + ' | ' + first_edge['name'] + ' | ' + first_edge['incidentEdge']['name'])
-		var re = new RegExp('\\d')
-
-		var rotation_axis
-		var max_angle
-
-		var edge_rotation_data
-
-		if(ObjectExists(original_faces[0].getObjectByName(first_edge)))
-		{
-			edge_rotation_data = PolyCube.EdgeCalculator.GetRotationAxis(first_edge['name'].split(re)[1])
-		}
-		else
-		{
-			edge_rotation_data = PolyCube.EdgeCalculator.GetRotationAxis(first_edge['incidentEdge']['name'].split(re)[1])
-		}
-
-		object.visible = true
-		PolyCube.Rotated_Flap_Queue[hinge_index] = {'flap' : object, 'rotation_axis' : edge_rotation_data[0], 'max_angle' : edge_rotation_data[1]}
 	}
 
 	this.toJSON = function(){
@@ -414,6 +393,11 @@ function PolyCube(position, name = ""){
 	this.GetRotationLines = function()
 	{
 		return AdjacencyGraph.GetRotationLines()
+	}
+
+	this.GetRotationLineIndex = function(edge)
+	{
+		return AdjacencyGraph.GetRotationLineIndex(edge.name)
 	}
 
 	this.GetSubGraphs = function(edge)

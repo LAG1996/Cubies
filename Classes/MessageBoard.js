@@ -13,7 +13,8 @@ function MessageBoard()
 		'ADD_TO_SCENE' : function(packet){_RequestAddToScene(packet)},
 		'REMOVE_FROM_SCENE' : function(packet){_RequestRemoveFromScene(packet)},
 		'ADD_TO_PICK_SCENE' : function(packet){_RequestAddToPickingScene(packet)},
-		'SWITCH_TO_SCENE' : function(packet){_RequestSwitchToScene(packet)}
+		'SWITCH_TO_SCENE' : function(packet){_RequestSwitchToScene(packet)},
+		'SEE_SUB_GRAPHS' : function(packet){_RequestSeeSubGraphs(packet)}
 	}
 
 	var SendMessage = function(packet){
@@ -28,6 +29,18 @@ function MessageBoard()
 	this.HandleMessageImmediately = function(packet)
 	{
 		MESSAGES[packet[0]](packet)
+	}
+
+	function _RequestSeeSubGraphs(packet){
+
+		var object = packet[1]
+		var p_cube = packet[2]
+
+		var s = p_cube.GetSubGraphs(object)
+
+		SCENE.rotation_line_index = s['rotation_line_index']
+		SCENE.sub_graph_1 = s['subgraphs'][0]
+		SCENE.sub_graph_2 = s['subgraphs'][1]
 	}
 
 	function _RequestRemoveFromScene(packet){
