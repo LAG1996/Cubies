@@ -222,37 +222,48 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	top_hinge.position.y += 1
 	top_hinge.name = "up"
 	top_hinge.material.color.setHex(0x010101)
+	top_hinge.up.set(1, 0, 0)
 
 	var down_hinge = Cube.hinge.clone()
 	down_hinge.rotateZ(ninety_deg)
 	down_hinge.position.y -= 1
 	down_hinge.name = "down"
 	down_hinge.material.color.setHex(0x010101)
+	down_hinge.up.set(-1, 0, 0)
 
 	var right_hinge = Cube.hinge.clone()
 	right_hinge.position.x += 1
 	right_hinge.name = "right"
 	right_hinge.material.color.setHex(0x010101)
+	right_hinge.up.set(0, 1, 0)
 
 	var left_hinge = Cube.hinge.clone()
 	left_hinge.position.x -= 1
 	left_hinge.name = "left"
 	left_hinge.rotateZ(2*ninety_deg)
 	left_hinge.material.color.setHex(0x010101)
+	left_hinge.up.set(0, -1, 0)
 
 	Cube.highlightFace = Cube.face.clone()
 
 	Cube.highlightEdge = Cube.hinge.clone()
-	Cube.highlightEdge.scale.set(1.2, 1.2, 1.2)
+	Cube.highlightEdge.scale.set(1.2, 1.0, 1.2)
 
 	for(i = 0; i < 6; i++)
 	{
 		var new_face = new THREE.Group()
-		new_face.add(body.clone())
-		new_face.add(top_hinge.clone())
-		new_face.add(down_hinge.clone())
-		new_face.add(right_hinge.clone())
-		new_face.add(left_hinge.clone())
+
+		var b = body.clone()
+		var t = top_hinge.clone()
+		var d = down_hinge.clone()
+		var r = right_hinge.clone()
+		var l = left_hinge.clone()
+
+		new_face.add(b)
+		new_face.add(t)
+		new_face.add(d)
+		new_face.add(r)
+		new_face.add(l)
 		new_face.name = face_names[i]
 
 		if(face_names[i] == "front")
@@ -262,29 +273,47 @@ Cube.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 		else if(face_names[i] == "back")
 		{
 			new_face.position.z = -1
+
+			RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(1, 0, 0))
+			RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(1, 0, 0))
+
 			new_face.rotateX(2*ninety_deg)
 			new_face.rotateY(2*ninety_deg)
 		}
 		else if(face_names[i] == "down")
 		{
 			new_face.position.y = -1
+
+			RotateUpAxis(new_face, -ninety_deg, new THREE.Vector3(1, 0, 0))
+			RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(0, 0, 1))
+
 			new_face.rotateX(-ninety_deg)
 			new_face.rotateZ(2*ninety_deg)
 		}
 		else if(face_names[i] == "up")
 		{
 			new_face.position.y = 1
+
+			RotateUpAxis(new_face, -ninety_deg, new THREE.Vector3(1, 0, 0))
+
 			new_face.rotateX(-ninety_deg)
 		}
 		else if(face_names[i] == "left")
 		{
 			new_face.position.x = -1
+
+			RotateUpAxis(new_face, -ninety_deg, new THREE.Vector3(0, 1, 0))
+			RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(1, 0, 0))
+
 			new_face.rotateY(-ninety_deg)
 			new_face.rotateX(ninety_deg*2)
 		}
 		else if(face_names[i] == "right")
 		{
 			new_face.position.x = 1
+
+			RotateUpAxis(new_face, ninety_deg, new THREE.Vector3(0, 1, 0))
+
 			new_face.rotateY(ninety_deg)
 		}
 
@@ -436,82 +465,7 @@ Cube.CubeDataCalculator = function(){
 
 	this.GetRotationAxis = function(dir_word)
 	{
-		switch(dir_word)
-		{
-			case "front_up":
-				return ['x', DEG2RAD(90)]
-				break;
-			case "front_right":
-				return ['y', DEG2RAD(90)]
-				break;
-			case "front_left":
-				return ['y', DEG2RAD(-90)]
-				break;
-			case "front_down":
-				return ['x', DEG2RAD(-90)]
-			break;
-			case "up_up":
-				return ['x', DEG2RAD(90)]
-				break;
-			case "up_right":
-				return ['z', DEG2RAD(-90)]
-			break;
-			case "up_left":
-				return ['z', DEG2RAD(90)]
-			break;
-			case "up_down":
-				return ['x', DEG2RAD(-90)]
-			break;
-			case "back_up":
-				return ['x', DEG2RAD(90)]
-			break;
-			case "back_right":
-				return ['y', DEG2RAD(-90)]
-			break;
-			case "back_left":
-				return ['y', DEG2RAD(90)]
-			break;
-			case "back_down":
-				return ['x', DEG2RAD(-90)]
-			break;
-			case "down_up":
-				return ['x', DEG2RAD(90)]
-			break;
-			case "down_right":
-				return ['z', DEG2RAD(-90)]
-			break;
-			case "down_left":
-				return ['z', DEG2RAD(90)]
-			break;
-			case "down_down":
-				return ['x', DEG2RAD(-90)]
-			break;
-			case "left_up":
-				return ['z', DEG2RAD(-90)]
-			break;
-			case "left_right":
-				return ['y', DEG2RAD(90)]
-			break;
-			case "left_left":
-				return ['y', DEG2RAD(-90)]
-			break;
-			case "left_down":
-				return ['z', DEG2RAD(-90)]
-			break;
-			case "right_up":
-				return ['z', DEG2RAD(90)]
-			break;
-			case "right_right":
-				return ['y', DEG2RAD(90)]
-			break;
-			case "right_left":
-				return ['y', DEG2RAD(-90)]
-			break;
-			case "right_down":
-				return ['z', DEG2RAD(-90)]
-			break;
-			default: console.log("This shouldn't be happening")
-		}
+
 
 		return edge
 	}

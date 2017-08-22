@@ -143,3 +143,39 @@ function GenerateGrid(size, spacing, color)
 
 	return lines
 }
+
+function RotateUpAxis(object, rads, axis)
+{
+	object.up.applyAxisAngle(axis, rads)
+
+	var err = "ROTATE UP AXIS ERROR: Object - " + object.name
+	var hasError = false
+
+	if(isNaN(object.up.x))
+	{
+		err += " x_axis "
+
+		hasError = true
+	}
+	if(isNaN(object.up.y))
+	{
+		err += " y_axis "
+
+		hasError = true
+	}
+	if(isNaN(object.up.z))
+	{
+		err += " z_axis "
+
+		hasError = true
+	}
+		
+
+	if(hasError)
+		throw err
+
+	for(var index in object.children)
+	{
+		RotateUpAxis(object.children[index], rads, axis)
+	}
+}

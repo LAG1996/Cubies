@@ -73,7 +73,7 @@ $(document).ready(function(){
 
 	SCENE.scene_handler.AddUpdateFunction('draw_hinges', function(){
 
-		SCENE.ClearJunk(SCENE.hinge_junk, SCENE.current_context == 'rotate-context' ? [PolyCube.Rotation_Scene] : [null])
+		SCENE.ClearJunk(SCENE.hinge_junk, [PolyCube.Rotation_Scene, null])
 
 		for(var p_name in PolyCube.L_Polycubes)
 		{
@@ -85,8 +85,11 @@ $(document).ready(function(){
 			{
 				for(var windex in rot_lines[kindex])
 				{
-					HighlightParts(rot_lines[kindex][windex], SCENE.rot_highlight, 'hinge', SCENE.hinge_junk, SCENE.current_context == 'rotate-context' ? [PolyCube.Rotation_Scene] : [null])
-					HighlightParts(rot_lines[kindex][windex]['incidentEdge'], SCENE.rot_highlight, 'hinge', SCENE.hinge_junk, SCENE.current_context == 'rotate-context' ? [PolyCube.Rotation_Scene] : [null])
+					HighlightParts(SCENE.current_context == 'rotate-context' ?  PolyCube.Rotation_Scene.getObjectByName(rot_lines[kindex][windex].name) : rot_lines[kindex][windex], 
+						SCENE.rot_highlight, 'hinge', SCENE.hinge_junk, SCENE.current_context == 'rotate-context' ? [PolyCube.Rotation_Scene] : [null])
+
+					HighlightParts(SCENE.current_context == 'rotate-context' ?  PolyCube.Rotation_Scene.getObjectByName(rot_lines[kindex][windex]['incidentEdge'].name) : rot_lines[kindex][windex]['incidentEdge'], 
+						SCENE.rot_highlight, 'hinge', SCENE.hinge_junk, SCENE.current_context == 'rotate-context' ? [PolyCube.Rotation_Scene] : [null])
 				}
 			}
 		}
@@ -113,8 +116,18 @@ $(document).ready(function(){
 
 		PostUrgentMessage(['SEE_SUB_GRAPHS', SCENE.selected_object, SCENE.current_poly])
 
-		HighlightParts(SCENE.sub_graph_1, SCENE.prime_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
-		HighlightParts(SCENE.sub_graph_2, SCENE.second_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+		for(var index in SCENE.sub_graph_1)
+		{
+			HighlightParts(PolyCube.Rotation_Scene.getObjectByName(SCENE.sub_graph_1[index].name), SCENE.prime_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+		}
+
+		//HighlightParts(SCENE.sub_graph_1, SCENE.prime_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+		//HighlightParts(SCENE.sub_graph_2, SCENE.second_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+
+		for(var index in SCENE.sub_graph_2)
+		{
+			HighlightParts(PolyCube.Rotation_Scene.getObjectByName(SCENE.sub_graph_2[index].name), SCENE.second_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+		}
 	})
 
 	$("#rotate_action").on('click', function(){
@@ -133,8 +146,8 @@ $(document).ready(function(){
 		if(!ObjectExists(SCENE.sub_graph_1) || !ObjectExists(SCENE.sub_graph_2))
 			return
 
-		HighlightParts(SCENE.sub_graph_1[0], SCENE.prime_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
-		HighlightParts(SCENE.sub_graph_2[0], SCENE.second_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+		HighlightParts(PolyCube.Rotation_Scene.getObjectByName(SCENE.sub_graph_1[0].name), SCENE.prime_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+		HighlightParts(PolyCube.Rotation_Scene.getObjectByName(SCENE.sub_graph_2[0].name), SCENE.second_highlight, 'face', SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
 
 		SCENE.ready_to_rotate = true
 
@@ -345,10 +358,16 @@ function OnLeftMouseClick(){
 				if(face.name == SCENE.sub_graph_1[0].name)
 				{
 					p_cube.HandleRotation(SCENE.sub_graph_1, SCENE.rotation_hinge['edge'])
+
+					SCENE.ClearJunk(SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+					SCENE.ready_to_rotate = false
 				}
 				else if(face.name == SCENE.sub_graph_2[0].name)
 				{
 					p_cube.HandleRotation(SCENE.sub_graph_2, SCENE.rotation_hinge['incidentEdge']['edge'])
+
+					SCENE.ClearJunk(SCENE.face_graph_junk, [PolyCube.Rotation_Scene])
+					SCENE.ready_to_rotate = false
 				}
 
 				p_cube.SwitchToContext('hinge')
@@ -413,6 +432,11 @@ function HighlightParts(package, color, context, junk_collector, scenes = [null]
 		for(var index = 0; index < package.length; index++)
 		{
 			var part = ObjectExists(package[index].face) ? package[index].face : package[index].edge
+			
+			if(!ObjectExists(part))
+			{
+				part = package[index]
+			}
 
 			highlight.position.copy(part.getWorldPosition())
 			highlight.rotation.copy(part.getWorldRotation())
@@ -435,6 +459,11 @@ function HighlightParts(package, color, context, junk_collector, scenes = [null]
 	else
 	{
 		var part = ObjectExists(package.face) ? package.face : package.edge
+
+		if(!ObjectExists(part))
+		{
+			part = package
+		}
 
 		highlight.position.copy(part.getWorldPosition())
 		highlight.rotation.copy(part.getWorldRotation())

@@ -31,7 +31,7 @@ function PolyCube(position, name = ""){
 	var L_Cubes = []
 	var L_CubeNames = []
 	var L_Hinges = []
-	var ParentFaceGraphs = {}
+	var Hinge2RotObject = {}
 
 	var Color2Face_Map = []
 	var Color2Edge_Map = []
@@ -290,25 +290,46 @@ function PolyCube(position, name = ""){
 
 		console.log("rotating")
 		console.log(facegraph.length + " faces")
-		var object = new THREE.Group()
+
+
+		if(ObjectExists(Hinge2RotObject[hinge]))
+		{
+			object = Hinge2RotObject[hinge]
+		}
+		else
+		{
+			object = new THREE.Group()
+
+			Hinge2RotObject[hinge] = object
+		}
+		
 		object.position.copy(hinge.getWorldPosition())
-		object.rotation.copy(hinge.getWorldRotation())
+		//object.rotation.copy(hinge.getWorldRotation())
 
 		PolyCube.Rotation_Scene.add(object)
 
 		for(var index in facegraph)
 		{
 			var face = PolyCube.Rotation_Scene.getObjectByName(facegraph[index]['name'])
+			var parent = face.parent
 			
 			var position = face.getWorldPosition()
-			//var rotation = facegraph[index]['face'].getWorldRotation()
+			var rotation = face.getWorldRotation()
 
 			object.add(face)
 
 			face.position.copy(position)
 			face.position.sub(object.getWorldPosition())
-			//facegraph[index]['face'].rotation.copy(rotation)
+			face.rotation.copy(rotation)
+
+			face.scale.set(0.9, 0.9, 0.9)
 		}
+
+		console.log("rotating around axis: ")
+		console.log(hinge.up)
+		
+		object.rotateOnAxis(hinge.up, DEG2RAD(90))
+		RotateUpAxis(face, DEG2RAD(90), hinge.up)
 	}
 
 	this.toJSON = function(){
