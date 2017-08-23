@@ -653,9 +653,9 @@ PolyCube.CubeFaceString = function(cubeID, dir)
 	return "c" + cubeID + dir
 }
 
-PolyCube.ToPolyCubeIDString = function(p_cube)
+PolyCube.ToPolyCubeIDString = function(p_cube_name)
 {
-	return "p" + p_cube.id
+	return "p" + PolyCube.L_Polycubes[p_cube_name].id
 }
 
 //A static utility function for generating a new polycube object.

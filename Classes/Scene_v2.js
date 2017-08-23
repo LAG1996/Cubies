@@ -1,5 +1,6 @@
-function Scene(scene_handle = null){
+function Scene(controller, scene_handle = null){
 
+	this.controller = controller
 	this.scene_handler = scene_handle != null ? scene_handle : new SceneHandler()
 
 	//Add a grid to the scene so we can orient ourselves

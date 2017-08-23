@@ -44,6 +44,7 @@ function SceneHandler(bg_color = 0xFFFFE6){
 			this.active_scene.add(object)
 			return true
 		}
+		
 		return false
 	}
 
@@ -105,6 +106,7 @@ function SceneHandler(bg_color = 0xFFFFE6){
 	}
 
 	this.Pick = function(id_object = null){
+
 		renderer.render(this.active_picking_scene, CAMERA, picking_texture)
 		return GetPixelColor(id_object)
 	}
