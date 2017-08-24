@@ -23,7 +23,6 @@ function Toolbar_Handler(controller){
 	//check that runs every frame step that will simply deactivate and activate objects accordingly.
 
 	setInterval(function(){
-		//Update_Object_Viewer()
 		Update_Cube_Add_Handlers()
 	}, 10)
 
@@ -140,11 +139,11 @@ function Toolbar_Handler(controller){
 		})
 
 		$(that.toolbar_btns[1]).on('click', function(){
-			controller.Alert('SAVE_POLYCUBE')
+			that.controller.Alert('SAVE_POLYCUBE')
 		})
 
 		$(that.toolbar_btns[2]).on('click', function(){
-			controller.Alert('DESTROY_POLYCUBE')
+			that.controller.Alert('DESTROY_POLYCUBE')
 		})
 
 		
@@ -168,9 +167,9 @@ function Toolbar_Handler(controller){
 			_Toggle_Object_L()
 		})
 		//Set the function for the left sidebar buttons
-		$("#s_editview").click(function(){that.Switch_Context_H("edit-context")})
+		$("#s_editview").click(function(){controller.Switch_Context('edit-context')})
 		//$("#s_camera_control").click(function(){that.Switch_Context_H("camera-control")})
-		$("#s_rotateview").click(function(){that.Switch_Context_H('rotate-context')})
+		$("#s_rotateview").click(function(){controller.Switch_Context('rotate-context')})
 
 		//Set the functions for the object list sidebar buttons
 		$("#dropdown_add_polycube").click(function(){
@@ -194,7 +193,7 @@ function Toolbar_Handler(controller){
 
 			//Items have been verified. Make a new polycube
 
-			controller.Alert('NEW_POLYCUBE', 
+			that.controller.Alert('NEW_POLYCUBE', 
 				new THREE.Vector3(parseInt($("#add_poly_modal_x").val(), 10), 
 				parseInt($("#add_poly_modal_y").val(), 10), 
 				parseInt($("#add_poly_modal_z").val(), 10)), 
@@ -209,40 +208,13 @@ function Toolbar_Handler(controller){
 		})
 
 		$("#polycube_file_read").on("change", function(){
-			//Instantiate a file reader that will read the file specified
-			var reader = new FileReader()
-			var that = this
-	
-			reader.onload = function(){
-				data = reader.result
-				var obj = JSON.parse(data)
+			
+			that.controller.Alert("LOAD_POLYCUBE")
 
-				//TODO: Verify the file
+			$(that).val("")
+			$("#add_poly_modal").hide()
 
-				//The file has been verified. Create a new polycube with all of the specified cubes
 
-				var p = AddPolyCube(new THREE.Vector3(obj.position[0], obj.position[1], obj.position[2]), obj.name)
-
-				Cube_Add_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
-
-				$(that).val("")
-				$("#add_poly_modal").hide()
-			}
-			reader.onerror = function(){
-				data = ""
-			}
-			reader.onabort = function(){
-				data = ""
-			}
-
-			if(event.target.files[0])
-			{
-				reader.readAsText(event.target.files[0])
-			}
-			else
-			{
-				reader.abort()
-			}
 		})
 
 
@@ -253,35 +225,13 @@ function Toolbar_Handler(controller){
 			//TODO: handle verification
 
 			//Data has been verified. Make a new polycube
-			controller.Alert('ADD_CUBE', 
+			that.controller.Alert('ADD_CUBE', 
 				new THREE.Vector3(parseInt($("#add_cube_to_poly_modal_x").val(), 10), parseInt($("#add_cube_to_poly_modal_y").val(), 10), parseInt($("#add_cube_to_poly_modal_z").val(), 10)))
 
 			//PostMessage(["ADD_CUBE", PolyCube.Active_Polycube, 
 				//new THREE.Vector3(parseInt($("#add_cube_to_poly_modal_x").val(), 10), parseInt($("#add_cube_to_poly_modal_y").val(), 10), parseInt($("#add_cube_to_poly_modal_z").val(), 10))])
 			//PolyCube.Active_Polycube.Add_Cube(new THREE.Vector3(parseInt($("#add_cube_to_poly_modal_x").val(), 10), parseInt($("#add_cube_to_poly_modal_y").val(), 10), parseInt($("#add_cube_to_poly_modal_z").val(), 10)))
 		})
-	}
-
-	function Update_Object_Viewer()
-	{
-		if(ObjectExists(PolyCube.Active_Polycube))
-		{
-			var activePolycubeDataDOM = $("#" + PolyCube.ToPolyCubeIDString(PolyCube.Active_Polycube) + "_data")
-			var activePolyCubeDataEditDOM = activePolycubeDataDOM.find("#"+ PolyCube.ToPolyCubeIDString(PolyCube.Active_Polycube) + "_data_edit")
-
-			if(!activePolyCubeDataEditDOM.attr(":visible"))
-			{
-				$(".obj_data_edit").hide()
-				$(".obj_data_trigger").attr("class", "w3-button w3-black obj_data_trigger")	
-				activePolyCubeDataEditDOM.show()
-				activePolycubeDataDOM.find("#active_toggle").attr("class", "w3-button w3-white w3-right obj_data_trigger")
-			}
-		}
-		else
-		{
-			$(".obj_data_edit").hide()
-			$(".obj_data_trigger").attr("class", "w3-button w3-black obj_data_trigger")	
-		}
 	}
 
 	function Update_Cube_Add_Handlers()
@@ -299,6 +249,16 @@ function Toolbar_Handler(controller){
 		}
 	}
 
+	this.ActivePolyCubeObjectView = function(p_name){
+
+		var p_cube_DOM = $("#" + PolyCube.ToPolyCubeIDString(p_name) + "_data")
+
+		var p_cube_edit_DOM = p_cube_DOM.find("#"+ PolyCube.ToPolyCubeIDString(p_name) + "_data_edit")
+		
+		p_cube_edit_DOM.show()
+		p_cube_DOM.find("#active_toggle").attr("class", "w3-button w3-white w3-right obj_data_trigger")
+	}
+
 	this.AddPolyCubeToObjectView = function(p_name){
 			//var p_cube = PolyCube.GenerateNewPolyCube(position, name)
 
@@ -311,10 +271,10 @@ function Toolbar_Handler(controller){
 
 			$(object_data_space).find("#active_toggle").text(p_name)
 
-			$(object_data_space).find("#poly_obj_name_edit").val(p_name)
-			$(object_data_space).find("#poly_obj_x_edit").val($("#add_poly_modal_x").val())
-			$(object_data_space).find("#poly_obj_y_edit").val($("#add_poly_modal_y").val())
-			$(object_data_space).find("#poly_obj_z_edit").val($("#add_poly_modal_z").val())
+			//$(object_data_space).find("#poly_obj_name_edit").val(p_name)
+			//$(object_data_space).find("#poly_obj_x_edit").val($("#add_poly_modal_x").val())
+			//$(object_data_space).find("#poly_obj_y_edit").val($("#add_poly_modal_y").val())
+			//$(object_data_space).find("#poly_obj_z_edit").val($("#add_poly_modal_z").val())
 
 			$(object_data_space).find("#objName_data_edit").attr("id", id_string+"_edit")
 
@@ -331,8 +291,9 @@ function Toolbar_Handler(controller){
 					{
 						$(thingy).hide()
 						$(this).attr("class", "w3-button w3-black obj_data_trigger")
-						PostMessage(['SWITCH_ACTIVE_POLYCUBE', null, that])
-						//PolyCube.SwitchToNewActive(null)
+
+						that.controller.Alert('SET_ACTIVE_POLY', null)
+						
 						that.Switch_Context_H('edit-context')
 					}
 					else
@@ -341,32 +302,33 @@ function Toolbar_Handler(controller){
 						$(".obj_data_trigger").attr("class", "w3-button w3-black obj_data_trigger")
 						$(thingy).show()
 						$(this).attr("class", "w3-button w3-white w3-right obj_data_trigger")
-
-						PostMessage(['SWITCH_ACTIVE_POLYCUBE', $(this).text()])
-
-						//PolyCube.SwitchToNewActive(PolyCube.L_Polycubes[$(this).text()])
 						
-						that.Switch_Context_H('poly-context', PolyCube.Active_Polycube)
+						that.controller.Alert('SET_ACTIVE_POLY', $(this).text())
 					}
 				})
 
 			//Set up what happens when somebody changes the polycube's name
 			//It changes name property of the actual polycube object, the key that maps to it in the list of polycubes.
 			//It also changes the text found on its active toggle button, and the id's of its respective div in the DOM
-			/*$(object_data_space).find("#poly_obj_name_edit").blur(function(){
+			$(object_data_space).find("#poly_obj_name_edit").focus(function(){
+				
+				$(this).val($(this).parent().parent().find("button").text())
+
+			})
+
+			$(object_data_space).find("#poly_obj_name_edit").blur(function(){
 				var old_name = $(this).parent().parent().find("button").text()
 				var new_name = $(this).val()
 
 				if(old_name != new_name)
 				{
-					PolyCube.ChangeName(old_name, new_name)
-					$(this).parent().parent().find("#active_toggle").text(new_name)
-
-					$(this).parent().attr("id", new_name+"_data_edit")
-					$(this).parent().parent().attr("id", new_name+"_data")
+					that.controller.Alert('CHANGE_POLY_NAME', old_name, new_name, $(this))
 				}
+
+				$(this).val("Change name")
 			})
 
+/*
 			//Set up what happens when the field containing the polycube's x-coordinate is changed
 			$(object_data_space).find("#poly_obj_x_edit").blur(function(){
 				var name = $(this).parent().parent().find("#active_toggle").text()

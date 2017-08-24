@@ -100,10 +100,10 @@ function SceneHandler(bg_color = 0xFFFFE6){
 		return mouse_pos
 	}
 
-	this.Pick = function(id_object = null){
+	this.Pick = function(mouse_position, color_container = null){
 
 		renderer.render(this.active_picking_scene, CAMERA, picking_texture)
-		return GetPixelColor(id_object)
+		return GetPixelColor(mouse_position, color_container)
 	}
 
 
@@ -169,8 +169,6 @@ function SceneHandler(bg_color = 0xFFFFE6){
 
 		//Events
 		$(window).on('resize', onWindowResize)
-
-		$('canvas').on('mousemove', onMouseMove)
 	}
 
 	function onWindowResize(){
@@ -182,11 +180,6 @@ function SceneHandler(bg_color = 0xFFFFE6){
 		picking_texture.setSize(window.innerWidth, window.innerHeight)
 	}
 
-	function onMouseMove(event){
-		mouse_pos.x = event.clientX
-		mouse_pos.y = event.clientY
-	}
-
 	this.Draw = function() {
 
 		deltaTime = CLOCK.getDelta();
@@ -195,17 +188,17 @@ function SceneHandler(bg_color = 0xFFFFE6){
 	}
 
 	//Uses a simple color buffer draw trick to decide where the client is clicking
-	function GetPixelColor(id_object = null){
+	function GetPixelColor(mouse_position, color_container = null){
 		var pixelBuffer = new Uint8Array(4)
 
-		renderer.readRenderTargetPixels(picking_texture, mouse_pos.x + viewportOffset_x, 
-			picking_texture.height - (mouse_pos.y + viewportOffset_y), 1, 1, pixelBuffer)
+		renderer.readRenderTargetPixels(picking_texture, mouse_position.x + viewportOffset_x, 
+			picking_texture.height - (mouse_position.y + viewportOffset_y), 1, 1, pixelBuffer)
 
 		var id = (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | (pixelBuffer[2])
 
 		//Change an id variable by reference
-		if(id_object != null)
-			id_object['id'] = id
+		if(color_container != null)
+			color_container['id'] = id
 
 		//Return the id
 		return id

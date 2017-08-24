@@ -672,7 +672,7 @@ PolyCube.GenerateNewPolyCube = function(position, name)
 
 
 	PolyCube.ID++
-	PolyCube.SwitchToNewActive(new_pcube)
+	//PolyCube.SwitchToNewActive(new_pcube)
 
 	return new_pcube
 }
@@ -686,7 +686,7 @@ PolyCube.ChangeName = function(old_name, new_name)
 	delete PolyCube.Active_Polycube
 
 	PolyCube.L_Polycubes[new_name] = p_cube
-	PolyCube.Active_Polycube = p_cube
+	//PolyCube.Active_Polycube = p_cube
 }
 
 PolyCube.SwitchToNewActive = function(new_active)
