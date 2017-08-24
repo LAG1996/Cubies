@@ -678,7 +678,7 @@ function FaceEdgeDualGraph(){
 			for(var N in n_neighbors)
 			{
 				var n_neighbor = n_neighbors[N]
-				if(!n_neighbor['visited'] && AreCollinear(edge, n_neighbor) && !n_neighbor['cut'])
+				if(!n_neighbor['visited'] && AreCollinear(edge, n_neighbor))
 				{
 
 					//If this neighbor is the neighbor of the edge we just came from, we don't want to move backwards in the line. Skip this edge

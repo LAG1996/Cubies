@@ -22,10 +22,6 @@ function Toolbar_Handler(controller){
 	//be quite confusing. There are a few ways we could handle this, but I'll choose this approach. We create a simple
 	//check that runs every frame step that will simply deactivate and activate objects accordingly.
 
-	setInterval(function(){
-		Update_Cube_Add_Handlers()
-	}, 10)
-
 	var that = this
 
 	this.Switch_Context_H = function(context, polycube = null){
@@ -147,7 +143,7 @@ function Toolbar_Handler(controller){
 		})
 
 		
-		mode_text = "Edit"
+		mode_text = "Editing "
 	}
 
 	function _Switch_To_Rotate_Context(amt_btns)
@@ -234,29 +230,23 @@ function Toolbar_Handler(controller){
 		})
 	}
 
-	function Update_Cube_Add_Handlers()
-	{
-		for(var key in Cube_Add_Handler_List)
-		{
-			if(Cube_Add_Handler_List[key].finished == true)
-			{
-				delete Cube_Add_Handler_List[key]
-			}
-			else
-			{
-				Cube_Add_Handler_List[key].Add_Another_Cube()
-			}
-		}
-	}
-
 	this.ActivePolyCubeObjectView = function(p_name){
 
-		var p_cube_DOM = $("#" + PolyCube.ToPolyCubeIDString(p_name) + "_data")
+		if(typeof p_name == 'string')
+		{
+			var p_cube_DOM = $("#" + PolyCube.ToPolyCubeIDString(p_name) + "_data")
 
-		var p_cube_edit_DOM = p_cube_DOM.find("#"+ PolyCube.ToPolyCubeIDString(p_name) + "_data_edit")
-		
-		p_cube_edit_DOM.show()
-		p_cube_DOM.find("#active_toggle").attr("class", "w3-button w3-white w3-right obj_data_trigger")
+			var p_cube_edit_DOM = p_cube_DOM.find("#"+ PolyCube.ToPolyCubeIDString(p_name) + "_data_edit")
+			
+			p_cube_edit_DOM.show()
+			p_cube_DOM.find("#active_toggle").attr("class", "w3-button w3-white w3-right obj_data_trigger")
+		}
+		else
+		{
+			$(".obj_data_edit").hide()
+			$(".obj_data_trigger").attr("class", "w3-button w3-black obj_data_trigger")	
+		}
+
 	}
 
 	this.AddPolyCubeToObjectView = function(p_name){
