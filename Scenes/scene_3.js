@@ -1,9 +1,11 @@
 var CONTROL = new Controller()
 
 $(document).ready(function(){
+	Initialize() //Load the cube part models and then initialize the cube class with said models
 
 	CONTROL.scene_handler = new SceneHandler()
 	CONTROL.toolbar_handler = new Toolbar_Handler(CONTROL)
+	CONTROL.data_processor = new PolycubeDataVisualizer(Cube_Template.new_cube)
 
 	var grid = GenerateGrid(100, 2, 0x000000)
 	grid.position.y = -1
@@ -27,6 +29,15 @@ $(document).ready(function(){
 	CONTROL.cut_highlight = new THREE.Color(0x22EEDD)
 	CONTROL.hinge_highlight = new THREE.Color(0xAA380F)
 
+	//Some picking scenes that we're going to use
+	CONTROL.edit_mode_poly_cube_picking_scene = new Scene()
+	CONTROL.edit_mode_edge_picking_scene = new Scene()
+	CONTROL.edit_mode_face_picking_scene = new Scene()
+
+	CONTROL.rotate_mode_poly_cube_picking_scene = new Scene()
+	CONTROL.rotate_mode_edge_picking_scene = new Scene()
+	CONTROL.rotate_mode_face_picking_scene = new Scene()
+
 	//Junk collectors
 	CONTROL.face_junk = []
 	CONTROL.hinge_junk = []
@@ -44,6 +55,15 @@ $(document).ready(function(){
 	CONTROL.hovering_over_hinge = false
 	CONTROL.hovering_over_face = false
 	CONTROL.face_graphs_out = false
+
+	//Create some variables and functions for the polycube class
+	PolyCube.Active_Polycube = null
+	PolyCube.Rotation_Scene = new Scene()
+
+	PolyCube.SwitchToNewActive = function(polycube)
+	{
+		PolyCube.Active_Polycube = polycube
+	}
 
 	CONTROL.Switch_To_Edit = function(){
 
@@ -101,7 +121,6 @@ $(document).ready(function(){
 		$("#mode_text").text($("#mode_text").text() + " " + PolyCube.Active_Polycube.name)
 
 		$('#poly_cube_name_only').hide()
-		//$('.tooltip_text').text(PolyCube.Active_Polycube.name)
 
 		CONTROL.scene_handler.SwitchToDefaultScene()
 		CONTROL.scene_handler.SwitchToDefaultPickingScene()
@@ -161,11 +180,10 @@ $(document).ready(function(){
 
 		CONTROL.Mouse_Up_Funcs = [function(){
 
-			if(CONTROL.accum_mouse_delta <= 10)
+			if(CONTROL.accum_mouse_delta <= 5)
 			{
 				if(CONTROL.hovering_over_hinge)
 				{
-
 					PolyCube.Active_Polycube.CutEdge(CONTROL.hover_over_hinge)
 
 					CONTROL.ClearJunk(CONTROL.cut_junk, [PolyCube.Rotation_Scene, null])
@@ -188,6 +206,7 @@ $(document).ready(function(){
 							CONTROL.HighlightParts([line[gindex]['edge'], line[gindex]['incidentEdge']['edge']], CONTROL.hinge_highlight, 'hinge', CONTROL.hinge_junk, [PolyCube.Rotation_Scene, null])
 						}
 					}
+
 				}
 				else if(CONTROL.hovering_over_face)
 				{}
@@ -216,6 +235,8 @@ $(document).ready(function(){
 		PolyCube.SwitchToNewActive(null)
 
 		CONTROL.toolbar_handler.ActivePolyCubeObjectView(null)
+
+		CONTROL.ClearJunk(CONTROL.face_junk, PolyCube.Rotation_Scene)
 
 		CONTROL.Mouse_Hover_Funcs = [function(){
 
@@ -275,8 +296,10 @@ $(document).ready(function(){
 
 		CONTROL.Mouse_Up_Funcs = [function(){
 
-			if(CONTROL.accum_mouse_delta <= 10)
+			if(CONTROL.accum_mouse_delta <= 5)
 			{
+				CONTROL.ClearJunk(CONTROL.face_junk, PolyCube.Rotation_Scene)
+
 				if(CONTROL.hovering_over_hinge)
 				{
 					var subgraphs = CONTROL.hover_over_poly.GetSubGraphs(CONTROL.hover_over_hinge)['subgraphs']
@@ -311,7 +334,7 @@ $(document).ready(function(){
 				else
 				{
 					CONTROL.face_graphs_out = false
-					CONTROL.ClearJunk(CONTROL.face_junk, PolyCube.Rotation_Scene)
+					
 				}
 			}
 		}]
@@ -344,8 +367,13 @@ $(document).ready(function(){
 
 		CONTROL.scene_handler.RequestAddToScene(new_p_cube.Obj)
 		PolyCube.SwitchToNewActive(new_p_cube)
+		PolyCube.Active_Polycube.Add_Cube(new THREE.Vector3(0, 0, 0))
 
-		//CONTROL.toolbar_handler.ActivePolyCubeObjectView(new_p_cube.name)
+		CONTROL.data_processor.ProcessPolycubeAfterNewCube(PolyCube.Active_Polycube, PolyCube.Active_Polycube.GetCubeAtPosition(new THREE.Vector3(0, 0, 0)))
+		CONTROL.scene_handler.RequestAddToScene(CONTROL.data_processor.edit_polycubes[0])
+
+		CONTROL.toolbar_handler.ActivePolyCubeObjectView(new_p_cube.name)
+
 		CONTROL.Switch_Context('poly-context')
 	}
 
@@ -361,6 +389,8 @@ $(document).ready(function(){
 		else
 		{
 			PolyCube.Active_Polycube.Add_Cube(args[0])
+
+			CONTROL.data_processor.ProcessPolycubeAfterNewCube(PolyCube.Active_Polycube, PolyCube.Active_Polycube.GetCubeAtPosition(args[0]))
 		}
 	}
 
@@ -414,7 +444,7 @@ $(document).ready(function(){
 			PolyCube.SwitchToNewActive(p)
 
 			CONTROL.toolbar_handler.AddPolyCubeToObjectView(p.name)
-			//CONTROL.toolbar_handler.ActivePolyCubeObjectView(p.name)
+			CONTROL.toolbar_handler.ActivePolyCubeObjectView(p.name)
 	
 			CONTROL.Load_Polycube_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
 			
@@ -456,12 +486,27 @@ $(document).ready(function(){
 		var args = Array.prototype.slice.call(arguments[0], 1)
 
 
-		PolyCube.SwitchToNewActive(typeof args[0] == 'string' ? PolyCube.L_Polycubes[args[0]] : null)
+		PolyCube.SwitchToNewActive(typeof args[0] == 'string' ? PolyCube.Name2Poly[args[0]] : null)
 		
 		if(ObjectExists(PolyCube.Active_Polycube))
 			CONTROL.Switch_Context('poly-context')
 		else
 			CONTROL.Switch_Context('edit-context')
+
+	}
+
+	CONTROL.Alert_Funcs['CUT_EDGE'] = function(){
+
+		var args = Array.prototype.slice.call(arguments[0], 1)
+
+
+
+		var cuts = PolyCube.Active_Polycube.GetCutEdges()
+
+		for(var bindex in cuts)
+		{
+			CONTROL.HighlightParts(cuts[bindex], CONTROL.cut_highlight, 'hinge', CONTROL.cut_junk, [PolyCube.Rotation_Scene, null])
+		}
 
 	}
 
@@ -531,10 +576,6 @@ $(document).ready(function(){
 		}
 	}
 
-	$('canvas').on('mousemove', CONTROL.onMouseMove)
-	$('canvas').on('mousedown', CONTROL.onMouseDown)
-	$('canvas').on('mouseup', CONTROL.onMouseUp)
-
 	//Utility functions
 	CONTROL.ClearJunk = function(junk_collector, scenes = null)
 	{
@@ -580,7 +621,7 @@ $(document).ready(function(){
 		if(!ObjectExists(package) || !ObjectExists(color) || !ObjectExists(context) || !ObjectExists(junk_collector))
 			return
 	
-		var highlight = context == 'hinge' ? Cube.highlightEdge.clone() : Cube.highlightFace.clone()
+		var highlight = context == 'hinge' ? Cube_Template.highlightEdge.clone() : Cube_Template.highlightFace.clone()
 	
 		highlight.material = new THREE.MeshBasicMaterial()
 		highlight.material.color.copy(color)
@@ -705,6 +746,10 @@ $(document).ready(function(){
 			
 		}
 	}
+
+	//$('canvas').on('mousemove', CONTROL.onMouseMove)
+	//$('canvas').on('mousedown', CONTROL.onMouseDown)
+	//$('canvas').on('mouseup', CONTROL.onMouseUp)
 
 	//The update function
 	CONTROL.update = function(){

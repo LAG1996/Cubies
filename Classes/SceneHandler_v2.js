@@ -31,7 +31,6 @@ function SceneHandler(bg_color = 0xFFFFE6){
 	var that = this
 
 	initScene()
-	//requestAnimationFrame(update)
 
 	this.RequestAddToScene = function(object){
 

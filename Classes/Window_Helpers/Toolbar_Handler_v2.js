@@ -102,7 +102,7 @@ function Toolbar_Handler(controller){
 
 		$(that.toolbar_btns[0]).on('click', function(){
 
-			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
+			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.Next_ID)
 			$("#add_poly_modal").show()
 
 		})
@@ -169,7 +169,7 @@ function Toolbar_Handler(controller){
 
 		//Set the functions for the object list sidebar buttons
 		$("#dropdown_add_polycube").click(function(){
-			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)
+			$("#add_poly_modal_new_name").val("Polycube_"+ PolyCube.Next_ID)
 			$("#add_poly_modal").show()
 		})
 
@@ -234,9 +234,9 @@ function Toolbar_Handler(controller){
 
 		if(typeof p_name == 'string')
 		{
-			var p_cube_DOM = $("#" + PolyCube.ToPolyCubeIDString(p_name) + "_data")
+			var p_cube_DOM = $("#" + p_name + "_data")
 
-			var p_cube_edit_DOM = p_cube_DOM.find("#"+ PolyCube.ToPolyCubeIDString(p_name) + "_data_edit")
+			var p_cube_edit_DOM = p_cube_DOM.find("#"+ p_name + "_data_edit")
 			
 			p_cube_edit_DOM.show()
 			p_cube_DOM.find("#active_toggle").attr("class", "w3-button w3-white w3-right obj_data_trigger")
@@ -255,7 +255,7 @@ function Toolbar_Handler(controller){
 			//Now add that polycube to the scene
 			var object_data_space = $("#object_template").clone()
 
-			var id_string = PolyCube.ToPolyCubeIDString(p_name) + "_data"
+			var id_string = p_name + "_data"
 
 			$(object_data_space).attr("id", id_string)
 
@@ -313,6 +313,7 @@ function Toolbar_Handler(controller){
 				if(old_name != new_name)
 				{
 					that.controller.Alert('CHANGE_POLY_NAME', old_name, new_name, $(this))
+					$(this).attr('id', new_name)
 				}
 
 				$(this).val("Change name")
