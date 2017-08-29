@@ -39,10 +39,9 @@ function Cube(id, position){
 			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, -.5, .5))
 			]
 
-
 		that.edgeEndpoints[Cube.GetEdgeName(that, "up", "up")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, .5, .5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, .5, .5))
+			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, .5, -.5)),
+			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, .5, -.5))
 			]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "up", "right")] = [
 			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, .5, -.5)),

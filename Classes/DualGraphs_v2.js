@@ -181,6 +181,7 @@ function FaceEdgeDualGraph(){
 	this.HandleCut = function(edge_name)
 	{
 		var edge_1 = Edges[edge_name]
+		
 		if(!ObjectExists(edge_1))
 			return
 
@@ -188,9 +189,8 @@ function FaceEdgeDualGraph(){
 		if(!ObjectExists(edge_1['incidentEdge']))
 			return
 
-		if(edge['cut'])
+		if(edge_1['cut'])
 		{
-
 			var edge_2 = edge_1["incidentEdge"]
 
 			edge_1["cut"] = true
@@ -204,9 +204,9 @@ function FaceEdgeDualGraph(){
 
 			UndoCut(edge_1, edge_2, face_1, face_2)
 		}
-		else if(!edge['invalid'])
+		else if(!edge_1['invalid'])
 		{
-			var otherPartsInspected = CutHinge(edge)
+			var otherPartsInspected = CutHinge(edge_1)
 
 			/*
 			//Check if the edge cut causes the graph to be disconnected

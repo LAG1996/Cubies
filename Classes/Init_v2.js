@@ -163,7 +163,7 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	Cube_Template.highlightFace = Cube_Template.face.clone()
 
 	Cube_Template.highlightEdge = Cube_Template.hinge.clone()
-	Cube_Template.highlightEdge.scale.set(1.2, 1.0, 1.2)
+	Cube_Template.highlightEdge.scale.set(1.3, 1.0, 1.3)
 
 	for(i = 0; i < 6; i++)
 	{

@@ -17,7 +17,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 	{
 		if(ObjectExists(CubeExistsAtPosition(position)))
 		{
-			console.log("Cube exists at <" + position.x + ", " + position.y + ", " + position.z + ">")
 			return
 		}
 
@@ -49,6 +48,16 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 	this.Cut_Edge = function(edge_name)
 	{
 		DualGraphs.HandleCut(edge_name)
+	}
+
+	this.Get_Edge = function(edge_name)
+	{
+		return DualGraphs.GetEdge(edge_name)
+	}
+
+	this.Get_Face = function(face_name)
+	{
+		return DualGraphs.GetFace(face_name)
 	}
 
 	this.Get_Faces = function()
@@ -156,8 +165,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	function RecordOrthoAdjacencies(cube_1, cube_2, separating_dir_word)
 	{
-		console.log(cube_1.object_name + " and " + cube_2.object_name + " are orthogonally adjacent")
-
 		for(var word in PolyCube.direction_words)
 		{
 			var w = PolyCube.direction_words[word]
@@ -175,7 +182,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	function RecordDiagonalAdjacencies(cube_1, cube_2, direction_1, direction_2)
 	{
-		console.log(cube_1.object_name + " and " + cube_2.object_name + " are diagonally adjacent")
 
 		if(cube_1.has_faces[direction_1] && cube_2.has_faces[direction_2])
 		{
@@ -212,17 +218,20 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	function HandleEdgeAdjacency(cube_1, cube_2)
 	{
-		console.log("Checking edge stuff for " + cube_1.object_name + " and " + cube_2.object_name)
 		for(var edge_name_1 in cube_1.edgeEndpoints)
 		{
 			var e_1 = cube_1.edgeEndpoints[edge_name_1]
 
 			for(var edge_name_2 in cube_2.edgeEndpoints)
 			{
+				if(cube_1.id == cube_2.id && edge_name_1 == edge_name_2)
+					continue
+				
 				var e_2 = cube_2.edgeEndpoints[edge_name_2]
 
 				if(cube_1.has_faces[Cube.FaceNameToDirection(Cube.EdgeNameToFaceName(edge_name_1))] && cube_2.has_faces[Cube.FaceNameToDirection(Cube.EdgeNameToFaceName(edge_name_2))])
 				{
+
 					if((e_1[0].equals(e_2[0]) && e_1[1].equals(e_2[1])) || (e_1[0].equals(e_2[1]) && e_1[1].equals(e_2[0])))
 					{
 						DualGraphs.AddIncidentEdges(edge_name_1, e_1, edge_name_2, e_2)
@@ -248,7 +257,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	function HandleFaceRemoval(cube, dir_word)
 	{
-		console.log("Removing " + dir_word)
+
 		cube.has_faces[dir_word] = false
 
 		DualGraphs.RemoveFace(Cube.GetFaceName(cube, dir_word))
