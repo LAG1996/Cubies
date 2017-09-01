@@ -16,6 +16,11 @@ $(document).ready(function(){
 	CONTROL.hover_over_poly = null
 	CONTROL.hover_over_hinge = null
 	CONTROL.hover_over_face = null
+	CONTROL.last_hover_over_poly = null
+
+	CONTROL.subgraphs = []
+
+	CONTROL.FaceName2SubGraphObjects = {}
 
 	//Highlights
 	CONTROL.prime_highlight = new THREE.Color(0xFF0000)
@@ -37,10 +42,10 @@ $(document).ready(function(){
 	CONTROL.rotate_mode_face_picking_scene = new THREE.Scene()
 
 	//Junk collectors
-	CONTROL.face_junk = []
-	CONTROL.hinge_junk = []
-	CONTROL.edge_junk = []
-	CONTROL.cut_junk = []
+	CONTROL.face_junk = [[]]
+	CONTROL.hinge_junk = [[]]
+	CONTROL.edge_junk = [[]]
+	CONTROL.cut_junk = [[]]
 
 	//Some delegate functions
 	CONTROL.Mouse_Hover_Funcs = []
@@ -132,16 +137,16 @@ $(document).ready(function(){
 
 		CONTROL.Mouse_Hover_Funcs = [function(){
 
-			CONTROL.ClearJunk(CONTROL.edge_junk, CONTROL.edit_mode_scene)
-			CONTROL.ClearJunk(CONTROL.face_junk, CONTROL.edit_mode_scene)
+			CONTROL.ClearJunk(CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
+			CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
 
-			if(!ObjectExists(PolyCube.Active_Polycube) || !(ObjectExists(CONTROL.hover_over_poly)))
+			if(!ObjectExists(PolyCube.Active_Polycube) || !(ObjectExists(CONTROL.hover_over_poly)) || (CONTROL.hover_over_poly.id != PolyCube.Active_Polycube.id))
 				return
 
 			CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.edit_mode_edge_picking_scene)
 			var id = CONTROL.scene_handler.Pick(CONTROL.mouse_pos)
 
-			var hinge_name = CONTROL.data_processor.Color2Hinge[id]
+			var hinge_name = CONTROL.data_processor.Color2Hinge[PolyCube.Active_Polycube.id][id]
 
 			if(!ObjectExists(hinge_name))
 			{
@@ -151,14 +156,14 @@ $(document).ready(function(){
 				CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.edit_mode_face_picking_scene)
 				id = CONTROL.scene_handler.Pick(CONTROL.mouse_pos)
 
-				var face_name = CONTROL.data_processor.Color2Face[id]
+				var face_name = CONTROL.data_processor.Color2Face[PolyCube.Active_Polycube.id][id]
 
 				if(ObjectExists(face_name))
 				{
 					var face = PolyCube.Active_Polycube.Get_Face(face_name)
 					CONTROL.hovering_over_face = true
 					CONTROL.hover_over_face = face
-					CONTROL.HighlightParts(CONTROL.scene_handler.active_scene.getObjectByName(face.name), CONTROL.prime_highlight, 'face', CONTROL.face_junk, CONTROL.edit_mode_scene)
+					CONTROL.HighlightParts(CONTROL.edit_mode_scene.getObjectByName(face.name), CONTROL.prime_highlight, 'face', CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
 					//$("#poly_cube_name_only").hide()
 				}
 				else
@@ -174,20 +179,20 @@ $(document).ready(function(){
 			{
 				var edge_data = PolyCube.Active_Polycube.Get_Edge(hinge_name)
 
-				var edge_1 = CONTROL.scene_handler.active_picking_scene.getObjectByName(edge_data.name)
+				var edge_1 = CONTROL.edit_mode_scene.getObjectByName(edge_data.name)
 				var edge_2 = null
 
 				if(ObjectExists(edge_data.incidentEdge))
 				{
 					var edge_2_data = edge_data.incidentEdge
 
-					edge_2 = CONTROL.scene_handler.active_picking_scene.getObjectByName(edge_2_data.name)
-					CONTROL.HighlightParts(edge_2, CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk, CONTROL.edit_mode_scene)
+					edge_2 = CONTROL.edit_mode_scene.getObjectByName(edge_2_data.name)
+					CONTROL.HighlightParts(edge_2, CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
 				}
 
 				CONTROL.hovering_over_hinge = true
 				CONTROL.hover_over_hinge = edge_1
-				CONTROL.HighlightParts(edge_1, CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk, CONTROL.edit_mode_scene)
+				CONTROL.HighlightParts(edge_1, CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
 				//$("#poly_cube_name_only").hide()
 			}
 
@@ -200,16 +205,18 @@ $(document).ready(function(){
 				if(CONTROL.hovering_over_hinge)
 				{
 					PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name)
+					CONTROL.ResetRotationView(PolyCube.Active_Polycube)
 
-					CONTROL.ClearJunk(CONTROL.cut_junk, [CONTROL.rotate_mode_scene, CONTROL.edit_mode_scene])
-					CONTROL.ClearJunk(CONTROL.hinge_junk, [CONTROL.rotate_mode_scene, CONTROL.edit_mode_scene])
+					CONTROL.ClearJunk(CONTROL.cut_junk[PolyCube.Active_Polycube.id], [CONTROL.rotate_mode_scene, CONTROL.edit_mode_scene])
+					CONTROL.ClearJunk(CONTROL.hinge_junk[PolyCube.Active_Polycube.id], [CONTROL.rotate_mode_scene, CONTROL.edit_mode_scene])
 					
 					var cuts = PolyCube.Active_Polycube.Get_Cuts()
 
 					for(var bindex in cuts)
 					{
-						var edge = CONTROL.scene_handler.active_scene.getObjectByName(cuts[bindex].name)
-						CONTROL.HighlightParts(edge, CONTROL.cut_highlight, 'hinge', CONTROL.cut_junk, [CONTROL.rotate_mode_scene, CONTROL.edit_mode_scene])
+						var edge = CONTROL.edit_mode_scene.getObjectByName(cuts[bindex].name)
+						CONTROL.HighlightParts(edge, CONTROL.cut_highlight, 'hinge', CONTROL.cut_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
+						CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(cuts[bindex].name), CONTROL.cut_highlight, 'hinge', CONTROL.cut_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 					}
 
 					var l_hinges = PolyCube.Active_Polycube.Get_Rotation_Lines()
@@ -219,14 +226,16 @@ $(document).ready(function(){
 						var line  = l_hinges[lindex]
 						for(var gindex in line)
 						{
-							var edge_1 = CONTROL.scene_handler.active_scene.getObjectByName(line[gindex].name)
+							var edge_1 = CONTROL.edit_mode_scene.getObjectByName(line[gindex].name)
 
-							var edge_2 = CONTROL.scene_handler.active_scene.getObjectByName(line[gindex]['incidentEdge'].name)
+							var edge_2 = CONTROL.edit_mode_scene.getObjectByName(line[gindex]['incidentEdge'].name)
 
-							CONTROL.HighlightParts([edge_1, edge_2], CONTROL.hinge_highlight, 'hinge', CONTROL.hinge_junk, [CONTROL.rotate_mode_scene, CONTROL.edit_mode_scene])
+							CONTROL.HighlightParts([edge_1, edge_2], CONTROL.hinge_highlight, 'hinge', CONTROL.hinge_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
+
+							CONTROL.HighlightParts([CONTROL.rotate_mode_scene.getObjectByName(line[gindex].name), 
+								CONTROL.rotate_mode_scene.getObjectByName(line[gindex]['incidentEdge'].name)], CONTROL.hinge_highlight, 'hinge', CONTROL.hinge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 						}
 					}
-
 				}
 				else if(CONTROL.hovering_over_face)
 				{}
@@ -256,47 +265,55 @@ $(document).ready(function(){
 
 		CONTROL.toolbar_handler.ActivePolyCubeObjectView(null)
 
-		CONTROL.ClearJunk(CONTROL.face_junk, CONTROL.rotate_mode_scene)
+		for(var key in PolyCube.ID2Poly)
+		{
+			CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.ID2Poly.id], CONTROL.rotate_mode_scene)
+		}
+		
 
 		CONTROL.Mouse_Hover_Funcs = [function(){
-
-			CONTROL.ClearJunk(CONTROL.edge_junk, CONTROL.rotate_mode_scene)
-			
-			if(!CONTROL.face_graphs_out)
-				CONTROL.ClearJunk(CONTROL.face_junk, CONTROL.rotate_mode_scene)
-
+	
 			if(!ObjectExists(CONTROL.hover_over_poly))
 			{
-				CONTROL.hovering_over_hinge = false
-				CONTROL.hover_over_hinge = null
-
-				CONTROL.hovering_over_face = false
-				CONTROL.hover_over_face = null
+				if(ObjectExists(CONTROL.last_hover_over_poly))
+					CONTROL.ClearJunk(CONTROL.edge_junk[CONTROL.last_hover_over_poly.id], CONTROL.rotate_mode_scene)
 
 				return
 			}
+			else
+			{
+				CONTROL.ClearJunk(CONTROL.edge_junk[CONTROL.hover_over_poly.id], CONTROL.rotate_mode_scene)
+			}
 
-			CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.rotate_mode_face_picking_scene)
+			if(!CONTROL.face_graphs_out)
+				CONTROL.ClearJunk(CONTROL.face_junk[CONTROL.hover_over_poly.id], CONTROL.rotate_mode_scene)
+
+
+
+			CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.rotate_mode_edge_picking_scene)
 			var id = CONTROL.scene_handler.Pick(CONTROL.mouse_pos)
 
-			var hinge_name = CONTROL.data_processor.Color2Hinge[id]
+			var hinge_name = CONTROL.data_processor.Color2Hinge[CONTROL.hover_over_poly.id][id]
 
 			if(!ObjectExists(hinge_name))
 			{
 				CONTROL.hovering_over_hinge = false
 				CONTROL.hover_over_hinge = null
 
-				CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.edit_mode_face_picking_scene)
+				CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.rotate_mode_face_picking_scene)
 				id = CONTROL.scene_handler.Pick(CONTROL.mouse_pos)
 
-				var face_name = CONTROL.data_processor.Color2Face[id]
+				var face_name = CONTROL.data_processor.Color2Face[CONTROL.hover_over_poly.id][id]
 
-				if(ObjectExists(face_name) && !CONTROL.face_graphs_out)
+				if(ObjectExists(face_name))
 				{
 					var face = CONTROL.hover_over_poly.Get_Face(face_name)
+
 					CONTROL.hovering_over_face = true
 					CONTROL.hover_over_face = face
-					CONTROL.HighlightParts(CONTROL.scene_handler.active_scene.getObjectByName(face.name), CONTROL.prime_highlight, 'face', CONTROL.face_junk, CONTROL.rotate_mode_scene)
+
+					if(!CONTROL.face_graphs_out)
+						CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(face.name), CONTROL.prime_highlight, 'face', CONTROL.face_junk[CONTROL.hover_over_poly.id], CONTROL.rotate_mode_scene)
 					//$("#poly_cube_name_only").hide()
 				}
 				else
@@ -312,20 +329,20 @@ $(document).ready(function(){
 			{
 				var edge_data = CONTROL.hover_over_poly.Get_Edge(hinge_name)
 
-				var edge_1 = CONTROL.scene_handler.active_picking_scene.getObjectByName(edge_data.name)
+				var edge_1 =CONTROL.rotate_mode_scene.getObjectByName(edge_data.name)
 				var edge_2 = null
 
 				if(ObjectExists(edge_data.incidentEdge))
 				{
 					var edge_2_data = edge_data.incidentEdge
 
-					edge_2 = CONTROL.scene_handler.active_picking_scene.getObjectByName(edge_2_data.name)
-					CONTROL.HighlightParts(edge_2, CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk, CONTROL.rotate_mode_scene)
+					edge_2 = CONTROL.rotate_mode_scene.getObjectByName(edge_2_data.name)
+					CONTROL.HighlightParts(edge_2, CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[CONTROL.hover_over_poly.id], CONTROL.rotate_mode_scene)
 				}
 
 				CONTROL.hovering_over_hinge = true
 				CONTROL.hover_over_hinge = edge_1
-				CONTROL.HighlightParts(edge_1, CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk, CONTROL.rotate_mode_scene)
+				CONTROL.HighlightParts(edge_1, CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[CONTROL.hover_over_poly.id], CONTROL.rotate_mode_scene)
 				//$("#poly_cube_name_only").hide()
 			}
 
@@ -335,38 +352,55 @@ $(document).ready(function(){
 
 			if(CONTROL.accum_mouse_delta <= 5)
 			{
-				CONTROL.ClearJunk(CONTROL.face_junk, CONTROL.rotate_mode_scene)
+				CONTROL.ClearJunk(CONTROL.face_junk[CONTROL.last_hover_over_poly.id], CONTROL.rotate_mode_scene)
 
 				if(CONTROL.hovering_over_hinge)
 				{
-					var subgraphs = CONTROL.hover_over_poly.Get_Face_Graphs(CONTROL.hover_over_hinge.name)['subgraphs']
+					var data = CONTROL.hover_over_poly.Get_Face_Graphs(CONTROL.hover_over_hinge.name)
+
+					var subgraphs = data['subgraphs']
 
 					if(!ObjectExists(subgraphs))
 					{
-						CONTROL.face_graphs_out = false
 						return
 					}
 
 					CONTROL.face_graphs_out = true
 
+					CONTROL.subgraphs[0] = subgraphs[0]
+					CONTROL.subgraphs[1] = subgraphs[1]
+					CONTROL.hinge_to_rotate_around = CONTROL.hover_over_hinge
+
 					for(var tindex in subgraphs[0])
 					{
 						var face = subgraphs[0][tindex]
 
-						CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(face.name), CONTROL.prime_highlight, 'face', CONTROL.face_junk, CONTROL.rotate_mode_scene)
+						CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(face.name), CONTROL.prime_highlight, 'face', CONTROL.face_junk[CONTROL.hover_over_poly.id], CONTROL.rotate_mode_scene)
 					}
 
 					for(var tindex in subgraphs[1])
 					{
 						var face = subgraphs[1][tindex]
 
-						CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(face.name), CONTROL.second_highlight, 'face', CONTROL.face_junk, CONTROL.rotate_mode_scene)
+						CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(face.name), CONTROL.second_highlight, 'face', CONTROL.face_junk[CONTROL.hover_over_poly.id], CONTROL.rotate_mode_scene)
 					}
 
 				}
 				else if(CONTROL.hovering_over_face && CONTROL.face_graphs_out)
 				{
-
+					CONTROL.face_graphs_out = false
+					if(CONTROL.hover_over_face.name == CONTROL.subgraphs[0][0].name)
+					{
+						CONTROL.RotateSubGraph(CONTROL.subgraphs[0], CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly)
+					}
+					else if(CONTROL.hover_over_face.name == CONTROL.subgraphs[1][0].name)
+					{
+						CONTROL.RotateSubGraph(CONTROL.subgraphs[1], CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly)
+					}
+					else
+					{
+						console.log("adsdasd")
+					}
 				}
 				else
 				{
@@ -412,6 +446,8 @@ $(document).ready(function(){
 
 		CONTROL.toolbar_handler.ActivePolyCubeObjectView(new_p_cube.name)
 
+		CONTROL.CreateTrashCollectors(new_p_cube)
+
 		CONTROL.Switch_Context('poly-context')
 	}
 
@@ -440,7 +476,9 @@ $(document).ready(function(){
 
 		if(ObjectExists(p_cube))
 		{
-			$("#" + PolyCube.ToPolyCubeIDString(p_cube.name) + "_data").remove()
+			$("#" + p_cube.name + "_data").remove()
+
+			CONTROL.data_processor.DestroyPolycube(p_cube)
 			PolyCube.DestroyPolyCube(p_cube)
 
 		}
@@ -484,6 +522,8 @@ $(document).ready(function(){
 			CONTROL.Load_Polycube_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
 
 			CONTROL.data_processor.ProcessPolycube(p)
+
+			CONTROL.CreateTrashCollectors(p)
 
 			CONTROL.VisualizePolycube(p)
 			
@@ -534,20 +574,6 @@ $(document).ready(function(){
 
 	}
 
-	CONTROL.Alert_Funcs['CUT_EDGE'] = function(){
-
-		var args = Array.prototype.slice.call(arguments[0], 1)
-
-		var cuts = PolyCube.Active_Polycube.GetCutEdges()
-
-		for(var bindex in cuts)
-		{
-			CONTROL.HighlightParts(cuts[bindex], CONTROL.cut_highlight, 'hinge', CONTROL.cut_junk, [PolyCube.Rotation_Scene, null])
-		}
-
-	}
-
-
 	//Creating mouse functions
 	CONTROL.onMouseMove = function(event){
 		
@@ -578,7 +604,8 @@ $(document).ready(function(){
 
 		if(ObjectExists(p_cube))
 		{
-			CONTROL.hover_over_poly = p_cube	
+			CONTROL.hover_over_poly = p_cube
+			CONTROL.last_hover_over_poly = p_cube
 		}
 		else
 		{
@@ -620,53 +647,132 @@ $(document).ready(function(){
 	}
 
 	//Utility functions
+
+	CONTROL.ResetRotationView = function(polycube)
+	{
+		CONTROL.FaceName2SubGraphObjects[polycube.id] = {} 
+
+		CONTROL.data_processor.ResetRotationPolycube(PolyCube.Active_Polycube)
+		CONTROL.VisualizePolycube(PolyCube.Active_Polycube)
+	}
+	CONTROL.RotateSubGraph = function(face_subgraph, edge_object, polycube)
+	{
+		var edge_pos = edge_object.getWorldPosition()
+	
+		var cube = polycube.ID2Cube[Cube.PartNameToCubeID(edge_object.name)]
+		var axis = new THREE.Vector3().copy(cube.edgeEndpoints[edge_object.name][0]).sub(cube.edgeEndpoints[edge_object.name][1]).normalize()
+		
+		console.log("Rotating around axis: ")
+		console.log(axis)
+
+		if(!ObjectExists(CONTROL.FaceName2SubGraphObjects[polycube.id]))
+			CONTROL.FaceName2SubGraphObjects[polycube.id] = {}
+
+		if(!ObjectExists(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name]))
+		{
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name] = {}
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view = new THREE.Group()
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face = new THREE.Group()
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge = new THREE.Group()
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly = new THREE.Group()
+
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view.position.copy(edge_pos)
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face.position.copy(edge_pos)
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge.position.copy(edge_pos)
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly.position.copy(edge_pos)
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].total_rot = 0
+		
+			for(var f in face_subgraph)
+			{		
+				var face_1 = CONTROL.rotate_mode_scene.getObjectByName(face_subgraph[f].name)
+				var face_2 = CONTROL.rotate_mode_poly_cube_picking_scene.getObjectByName(face_subgraph[f].name)
+				var face_3 = CONTROL.rotate_mode_edge_picking_scene.getObjectByName(face_subgraph[f].name)
+				var face_4 = CONTROL.rotate_mode_face_picking_scene.getObjectByName(face_subgraph[f].name)
+	
+				var old_pos = new THREE.Vector3().copy(face_1.position)
+				old_pos.sub(edge_object.getWorldPosition())
+	
+				CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view.add(face_1)
+				CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face.add(face_2)
+				CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge.add(face_3)
+				CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly.add(face_4)
+	
+				face_1.position.copy(old_pos)
+				face_2.position.copy(old_pos)
+				face_3.position.copy(old_pos)
+				face_4.position.copy(old_pos)
+
+				CONTROL.rotate_mode_scene.add(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view)
+				CONTROL.rotate_mode_poly_cube_picking_scene.add(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face)
+				CONTROL.rotate_mode_edge_picking_scene.add(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge)
+				CONTROL.rotate_mode_face_picking_scene.add(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly)				
+			}
+		}
+
+		if(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].total_rot < 90)
+		{
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view.rotateOnAxis(axis, DEG2RAD(90))	
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face.rotateOnAxis(axis, DEG2RAD(90))	
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge.rotateOnAxis(axis, DEG2RAD(90))	
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly.rotateOnAxis(axis, DEG2RAD(90))
+	
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].total_rot = 90
+		}
+		else
+		{
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view.rotateOnAxis(axis, DEG2RAD(-90))	
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face.rotateOnAxis(axis, DEG2RAD(-90))	
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge.rotateOnAxis(axis, DEG2RAD(-90))	
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly.rotateOnAxis(axis, DEG2RAD(-90))
+	
+			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].total_rot = 0
+		}
+		
+		
+	}
+
 	CONTROL.VisualizePolycube = function(polycube)
 	{
+		CONTROL.edit_mode_scene.remove(CONTROL.edit_mode_scene.getObjectByName(polycube.name))
 		CONTROL.edit_mode_scene.add(CONTROL.data_processor.edit_polycubes[polycube.id])
+
+		CONTROL.rotate_mode_scene.remove(CONTROL.rotate_mode_scene.getObjectByName(polycube.name))
 		CONTROL.rotate_mode_scene.add(CONTROL.data_processor.rotate_polycubes[polycube.id])
 
+		CONTROL.edit_mode_poly_cube_picking_scene.remove(CONTROL.edit_mode_poly_cube_picking_scene.getObjectByName(polycube.name))
 		CONTROL.edit_mode_poly_cube_picking_scene.add(CONTROL.data_processor.edit_pick_polycubes[polycube.id])
+
+		CONTROL.edit_mode_face_picking_scene.remove(CONTROL.edit_mode_face_picking_scene.getObjectByName(polycube.name))
 		CONTROL.edit_mode_face_picking_scene.add(CONTROL.data_processor.edit_face_polycube[polycube.id])
+
+		CONTROL.edit_mode_edge_picking_scene.remove(CONTROL.edit_mode_edge_picking_scene.getObjectByName(polycube.name))
 		CONTROL.edit_mode_edge_picking_scene.add(CONTROL.data_processor.edit_hinge_polycubes[polycube.id])
 
+		CONTROL.rotate_mode_poly_cube_picking_scene.remove(CONTROL.rotate_mode_poly_cube_picking_scene.getObjectByName(polycube.name))
 		CONTROL.rotate_mode_poly_cube_picking_scene.add(CONTROL.data_processor.rotate_pick_polycubes[polycube.id])
+
+		CONTROL.rotate_mode_edge_picking_scene.remove(CONTROL.rotate_mode_edge_picking_scene.getObjectByName(polycube.name))
 		CONTROL.rotate_mode_edge_picking_scene.add(CONTROL.data_processor.rotate_hinge_polycubes[polycube.id])
+
+		CONTROL.rotate_mode_face_picking_scene.remove(CONTROL.rotate_mode_face_picking_scene.getObjectByName(polycube.name))
 		CONTROL.rotate_mode_face_picking_scene.add(CONTROL.data_processor.rotate_face_polycubes[polycube.id])
 	}
 
-	CONTROL.ClearJunk = function(junk_collector, scenes = null)
+	CONTROL.ClearJunk = function(junk_collector, scenes)
 	{
 		for(var jindex in junk_collector)
 		{
-
 			if(Array.isArray(scenes))
 			{
 				for(var windex in scenes)
 				{
-					if(!ObjectExists(scenes[windex]))
-					{
-						CONTROL.scene_handler.SwitchToDefaultScene()
-						CONTROL.scene_handler.RequestRemoveFromScene(junk_collector[jindex])
-					}
-					else
-					{
-						CONTROL.scene_handler.RequestSwitchToScene(scenes[windex])
-						CONTROL.scene_handler.RequestRemoveFromScene(junk_collector[jindex])
-					}
+					scenes[windex].remove(scenes[windex].getObjectById(junk_collector[jindex].id))
 				}
 			}
 			else if(ObjectExists(scenes))
 			{
-				CONTROL.scene_handler.RequestSwitchToScene(scenes)
-				CONTROL.scene_handler.RequestRemoveFromScene(junk_collector[jindex])
+				scenes.remove(scenes.getObjectById(junk_collector[jindex].id))
 			}
-			else
-			{
-				CONTROL.scene_handler.SwitchToDefaultScene()
-				CONTROL.scene_handler.RequestRemoveFromScene(junk_collector[jindex])
-			}
-
-			delete junk_collector[jindex]
 
 		}
 
@@ -700,20 +806,17 @@ $(document).ready(function(){
 					{
 						if(!ObjectExists(scenes[windex]))
 						{
-							CONTROL.scene_handler.SwitchToDefaultScene()
-
 							highlight.position.copy(part.getWorldPosition())
 							highlight.rotation.copy(part.getWorldRotation())
 						}
 						else
 						{
 							highlight.position.copy(scenes[windex].getObjectByName(part.name).getWorldPosition())
-							highlight.rotation.copy(part.getObjectByName(part.name).getWorldRotation())
-							CONTROL.scene_handler.RequestSwitchToScene(scenes[windex])
+							highlight.rotation.copy(scenes[windex].getObjectByName(part.name).getWorldRotation())
 						}
 						
 						var h = highlight.clone()
-						CONTROL.scene_handler.RequestAddToScene(h)
+						scenes[windex].add(h)
 
 						junk_collector.push(h)
 					}
@@ -722,21 +825,8 @@ $(document).ready(function(){
 				{
 					highlight.position.copy(part.getWorldPosition())
 					highlight.rotation.copy(part.getWorldRotation())
-
-					CONTROL.scene_handler.RequestSwitchToScene(scenes)
 					var h = highlight.clone()
-					CONTROL.scene_handler.RequestAddToScene(h)
-
-					junk_collector.push(h)
-				}
-				else
-				{
-					highlight.position.copy(part.getWorldPosition())
-					highlight.rotation.copy(part.getWorldRotation())
-
-					CONTROL.scene_handler.SwitchToDefaultScene()
-					var h = highlight.clone()
-					CONTROL.scene_handler.RequestAddToScene(h)
+					scenes.add(h)
 
 					junk_collector.push(h)
 				}
@@ -768,40 +858,37 @@ $(document).ready(function(){
 					else
 					{
 						highlight.position.copy(scenes[windex].getObjectByName(part.name).getWorldPosition())
-						highlight.rotation.copy(part.getObjectByName(part.name).getWorldRotation())
-						CONTROL.scene_handler.RequestSwitchToScene(scenes[windex])
+						highlight.rotation.copy(scenes[windex].getObjectByName(part.name).getWorldRotation())
 					}
 
 					var h = highlight.clone()
-					CONTROL.scene_handler.RequestAddToScene(h)
-
-					junk_collector.push(h)
+					scenes[windex].add(h)
 				}
+
+				junk_collector.push(h)
 			}
 			else if(ObjectExists(scenes))
 			{
 				highlight.position.copy(part.getWorldPosition())
 				highlight.rotation.copy(part.getWorldRotation())
-				CONTROL.scene_handler.RequestSwitchToScene(scenes)
+
 				var h = highlight.clone()
-				CONTROL.scene_handler.RequestAddToScene(h)
+				scenes.add(h)
 
 				junk_collector.push(h)
-			}
-			else
-			{
-				highlight.position.copy(part.getWorldPosition())
-				highlight.rotation.copy(part.getWorldRotation())
-
-				CONTROL.scene_handler.SwitchToDefaultScene()
-				var h = highlight.clone()
-				CONTROL.scene_handler.RequestAddToScene(h)
-
-				junk_collector.push(h)
-			}
-	
-			
+			}		
 		}
+	}
+
+	CONTROL.CreateTrashCollectors = function(polycube)
+	{
+		CONTROL.face_junk[polycube.id] = []
+
+		CONTROL.hinge_junk[polycube.id] = []
+
+		CONTROL.cut_junk[polycube.id] = []
+
+		CONTROL.edge_junk[polycube.id] = []
 	}
 
 	$('canvas').on('mousemove', CONTROL.onMouseMove)
@@ -825,6 +912,8 @@ $(document).ready(function(){
 				CONTROL.Load_Polycube_Handler_List[c].Add_Another_Cube()
 
 				CONTROL.data_processor.ProcessPolycubeAfterNewCube(CONTROL.Load_Polycube_Handler_List[c].my_polycube, CONTROL.Load_Polycube_Handler_List[c].newest_cube)
+
+				CONTROL.VisualizePolycube(CONTROL.Load_Polycube_Handler_List[c].my_polycube)
 			}
 		}
 

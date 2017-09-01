@@ -12,25 +12,26 @@ function PolycubeDataVisualizer(cube_template)
 	this.rotate_face_polycubes = {}
 	this.rotate_pick_polycubes = {}
 
-	this.Color2Hinge = {}
-	this.Color2Face = {}
+	this.Color2Hinge = []
+	this.Color2Face = []
+
 	this.Color2Poly = {}
 
 	var that = this
+
+	this.ResetRotationPolycube = function(polycube)
+	{
+		this.rotate_polycubes[polycube.id] = this.edit_polycubes[polycube.id].clone()
+		this.rotate_hinge_polycubes[polycube.id]  = this.edit_hinge_polycubes[polycube.id].clone()
+		this.rotate_face_polycubes[polycube.id]  = this.edit_face_polycube[polycube.id].clone() 
+		this.rotate_pick_polycubes[polycube.id]  = this.edit_pick_polycubes[polycube.id].clone()
+	}
 
 	this.ProcessPolycube = function(polycube)
 	{
 		if(!ObjectExists(this.edit_polycubes[polycube.id]))
 		{
-			this.edit_polycubes[polycube.id] = new THREE.Group()
-			this.edit_hinge_polycubes[polycube.id] = new THREE.Group()
-			this.edit_face_polycube[polycube.id] = new THREE.Group()
-			this.edit_pick_polycubes[polycube.id] = new THREE.Group()
-
-			this.rotate_polycubes[polycube.id] = new THREE.Group()
-			this.rotate_hinge_polycubes[polycube.id] = new THREE.Group()
-			this.rotate_face_polycubes[polycube.id] = new THREE.Group()
-			this.rotate_pick_polycubes[polycube.id] = new THREE.Group()
+			InitializePolyCubeObjects(polycube)
 		}
 
 		for(var cube_pos in polycube.Cube_Map)
@@ -43,19 +44,39 @@ function PolycubeDataVisualizer(cube_template)
 	{
 		if(!ObjectExists(this.edit_polycubes[polycube.id]))
 		{
-			this.edit_polycubes[polycube.id] = new THREE.Group()
-			this.edit_hinge_polycubes[polycube.id] = new THREE.Group()
-			this.edit_face_polycube[polycube.id] = new THREE.Group()
-			this.edit_pick_polycubes[polycube.id] = new THREE.Group()
-
-			this.rotate_polycubes[polycube.id] = new THREE.Group()
-			this.rotate_hinge_polycubes[polycube.id] = new THREE.Group()
-			this.rotate_face_polycubes[polycube.id] = new THREE.Group()
-			this.rotate_pick_polycubes[polycube.id] = new THREE.Group()
+			InitializePolyCubeObjects(polycube)
 		}
 
 		ProcessCubeData(polycube.id, polycube, cube)
+	}
 
+	this.DestroyPolycube = function(polycube)
+	{
+
+		this.edit_polycubes[polycube.id].parent.remove(this.edit_polycubes[polycube.id])
+		this.edit_hinge_polycubes[polycube.id].parent.remove(this.edit_hinge_polycubes[polycube.id])
+		this.edit_face_polycube[polycube.id].parent.remove(this.edit_face_polycube[polycube.id])
+		this.edit_pick_polycubes[polycube.id].parent.remove(this.edit_pick_polycubes[polycube.id])
+		this.rotate_polycubes[polycube.id].parent.remove(this.rotate_polycubes[polycube.id])
+		this.rotate_hinge_polycubes[polycube.id].parent.remove(this.rotate_hinge_polycubes[polycube.id])
+		this.rotate_face_polycubes[polycube.id].parent.remove(this.rotate_face_polycubes[polycube.id])
+		this.rotate_pick_polycubes[polycube.id].parent.remove(this.rotate_pick_polycubes[polycube.id])
+
+		delete this.edit_polycubes[polycube.id]
+		delete this.edit_hinge_polycubes[polycube.id]
+		delete this.edit_face_polycube[polycube.id]
+		delete this.edit_pick_polycubes[polycube.id]
+		delete this.rotate_polycubes[polycube.id]
+		delete this.rotate_hinge_polycubes[polycube.id]
+		delete this.rotate_face_polycubes[polycube.id]
+		delete this.rotate_pick_polycubes[polycube.id]
+
+		for(var key in this.Color2Hinge[polycube.id])
+			delete this.Color2Hinge[polycube.id][key]
+		for(var key in this.Color2Hinge[polycube.id])
+			delete this.Color2Face[polycube.id][key]
+
+		delete this.Color2Poly[polycube.id]
 	}
 
 	function ProcessCubeData(id, polycube, cube)
@@ -89,7 +110,7 @@ function PolycubeDataVisualizer(cube_template)
 
 		v_cube.name = cube.object_name
 
-		var f_number = 0
+		var f_number = cube.id * 6
 		for(var face_num in v_cube.children)
 		{
 			var f = v_cube.children[face_num]
@@ -123,14 +144,14 @@ function PolycubeDataVisualizer(cube_template)
 				var p = f_clone.children[part_num]
 
 				p.material = new THREE.MeshBasicMaterial()
-				p.material.color = new THREE.Color(polycube.id * 6 + f_number)
+				p.material.color = new THREE.Color(f_number)
 
 			}
 
 			that.edit_face_polycube[id].add(f_clone.clone())
-			that.rotate_face_polycubes[id] = that.edit_hinge_polycubes[id].clone()
+			that.rotate_face_polycubes[id] = that.edit_face_polycube[id].clone()
 
-			that.Color2Face[polycube.id * 6 + f_number] = f.name
+			that.Color2Face[id][f_number] = f.name
 
 			//Coloring the hinge picking polycubes
 			var hinge_num = 1
@@ -148,7 +169,7 @@ function PolycubeDataVisualizer(cube_template)
 				{
 					p.material.color = new THREE.Color(f_number * 4 + hinge_num)
 
-					that.Color2Hinge[f_number * 4 + hinge_num++] = p.name
+					that.Color2Hinge[polycube.id][f_number * 4 + hinge_num++] = p.name
 				}
 			}
 			that.edit_hinge_polycubes[id].add(f_clone.clone())
@@ -157,7 +178,7 @@ function PolycubeDataVisualizer(cube_template)
 			f_number++;
 		}
 
-		that.Color2Poly[polycube.id] = that.edit_polycubes[id]
+		that.Color2Poly[id] = that.edit_polycubes[id]
 	}
 
 	function RemoveFaces(polycube, v_cube, cube, dir, id)
@@ -187,5 +208,48 @@ function PolycubeDataVisualizer(cube_template)
 				//v_cube.children[index].visible = false
 			}
 		}
+	}
+
+	function InitializePolyCubeObjects(polycube)
+	{
+		that.edit_polycubes[polycube.id] = new THREE.Group()
+		that.edit_hinge_polycubes[polycube.id] = new THREE.Group()
+		that.edit_face_polycube[polycube.id] = new THREE.Group()
+		that.edit_pick_polycubes[polycube.id] = new THREE.Group()
+
+		that.rotate_polycubes[polycube.id] = new THREE.Group()
+		that.rotate_hinge_polycubes[polycube.id] = new THREE.Group()
+		that.rotate_face_polycubes[polycube.id] = new THREE.Group()
+		that.rotate_pick_polycubes[polycube.id] = new THREE.Group()
+
+		that.Color2Hinge[polycube.id] = {}
+		that.Color2Face[polycube.id] = {}
+
+		that.edit_polycubes[polycube.id].position.copy(polycube.position)
+		that.edit_hinge_polycubes[polycube.id].position.copy(polycube.position)
+		that.edit_face_polycube[polycube.id].position.copy(polycube.position)
+		that.edit_pick_polycubes[polycube.id].position.copy(polycube.position)
+		that.rotate_polycubes[polycube.id].position.copy(polycube.position)
+		that.rotate_hinge_polycubes[polycube.id].position.copy(polycube.position)
+		that.rotate_face_polycubes[polycube.id].position.copy(polycube.position)
+		that.rotate_pick_polycubes[polycube.id].position.copy(polycube.position)
+
+		that.edit_polycubes[polycube.id].position.multiplyScalar(2)
+		that.edit_hinge_polycubes[polycube.id].position.multiplyScalar(2)
+		that.edit_face_polycube[polycube.id].position.multiplyScalar(2)
+		that.edit_pick_polycubes[polycube.id].position.multiplyScalar(2)
+		that.rotate_polycubes[polycube.id].position.multiplyScalar(2)
+		that.rotate_hinge_polycubes[polycube.id].position.multiplyScalar(2)
+		that.rotate_face_polycubes[polycube.id].position.multiplyScalar(2)
+		that.rotate_pick_polycubes[polycube.id].position.multiplyScalar(2)
+
+		that.edit_polycubes[polycube.id].name = polycube.name
+		that.edit_hinge_polycubes[polycube.id].name = polycube.name
+		that.edit_face_polycube[polycube.id].name = polycube.name
+		that.edit_pick_polycubes[polycube.id].name = polycube.name
+		that.rotate_polycubes[polycube.id].name = polycube.name
+		that.rotate_hinge_polycubes[polycube.id].name = polycube.name
+		that.rotate_face_polycubes[polycube.id].name = polycube.name
+		that.rotate_pick_polycubes[polycube.id].name = polycube.name
 	}
 }

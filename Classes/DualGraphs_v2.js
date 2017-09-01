@@ -259,7 +259,6 @@ function FaceEdgeDualGraph(){
 
 		BuildCutPaths()
 		BuildHingePaths()
-		//BuildSubGraphs()
 	}
 
 	this.RemoveFace = function(name){
@@ -1085,7 +1084,7 @@ function FaceEdgeDualGraph(){
 
 	var UndoCut = function(edge_1, edge_2, face_1, face_2)
 	{
-		that.AddNeighboringFaces(face_1.name, face_1, face_2.name, face_2)
+		that.AddNeighboringFaces(face_1.name, face_2.name)
 
 		delete Cut_Edges[edge_1.name]
 		delete Cut_Edges[edge_2.name]

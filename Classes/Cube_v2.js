@@ -1,13 +1,15 @@
-function Cube(id, position){
+function Cube(id, position, parent_poly_id){
 
 	this.id = id 
+
+	this.parent_id = parent_poly_id
 
 	this.position = Cube.ToLatticePosition(position)
 
 	this.has_faces = {'front' : true, 'up' : true, 'back' : true, 
 		'down' : true, 'left' : true, 'right' : true}
 
-	this.object_name = 'c' + this.id
+	this.object_name = 'p' + this.parent_id + 'c' + this.id
 
 	this.edgeEndpoints = {}
 
@@ -128,7 +130,12 @@ Cube.EdgeWordToFaceDirection = function(edge_word)
 Cube.FaceNameToDirection = function(face_name)
 {
 	var re = new RegExp("\\d")
-	var word = face_name.split(re)[1]
+	var word = face_name.split(re)[2]
 
 	return word
+}
+
+Cube.PartNameToCubeID = function(part_name)
+{
+	return parseInt(part_name.split(new RegExp("\\D"))[2])
 }

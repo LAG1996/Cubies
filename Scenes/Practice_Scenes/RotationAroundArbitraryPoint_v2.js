@@ -13,7 +13,6 @@ for(var i = 0; i < 1000; i++)
 
 var big_grid = GenerateGrid(50, 2, 0x000000)
 
-
 var polyomino = new THREE.Group()
 var square = GenerateGrid(2, 2, Math.floor(Math.random() * 0xFFFFFF))
 square.rotation.x = DEG2RAD(90)

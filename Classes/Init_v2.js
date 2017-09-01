@@ -190,8 +190,8 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 		{
 			new_face.position.z = -1
 
-			RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(1, 0, 0))
-			RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(1, 0, 0))
+			//RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(1, 0, 0))
+			//RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(1, 0, 0))
 
 			new_face.rotateX(2*ninety_deg)
 			new_face.rotateY(2*ninety_deg)
@@ -200,8 +200,8 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 		{
 			new_face.position.y = -1
 
-			RotateUpAxis(new_face, -ninety_deg, new THREE.Vector3(1, 0, 0))
-			RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(0, 0, 1))
+			//RotateUpAxis(new_face, -ninety_deg, new THREE.Vector3(1, 0, 0))
+			//RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(0, 0, 1))
 
 			new_face.rotateX(-ninety_deg)
 			new_face.rotateZ(2*ninety_deg)
@@ -210,7 +210,7 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 		{
 			new_face.position.y = 1
 
-			RotateUpAxis(new_face, -ninety_deg, new THREE.Vector3(1, 0, 0))
+			///RotateUpAxis(new_face, -ninety_deg, new THREE.Vector3(1, 0, 0))
 
 			new_face.rotateX(-ninety_deg)
 		}
@@ -218,8 +218,8 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 		{
 			new_face.position.x = -1
 
-			RotateUpAxis(new_face, -ninety_deg, new THREE.Vector3(0, 1, 0))
-			RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(1, 0, 0))
+			//RotateUpAxis(new_face, -ninety_deg, new THREE.Vector3(0, 1, 0))
+			//RotateUpAxis(new_face, 2*ninety_deg, new THREE.Vector3(1, 0, 0))
 
 			new_face.rotateY(-ninety_deg)
 			new_face.rotateX(ninety_deg*2)
@@ -228,7 +228,7 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 		{
 			new_face.position.x = 1
 
-			RotateUpAxis(new_face, ninety_deg, new THREE.Vector3(0, 1, 0))
+			//RotateUpAxis(new_face, ninety_deg, new THREE.Vector3(0, 1, 0))
 
 			new_face.rotateY(ninety_deg)
 		}

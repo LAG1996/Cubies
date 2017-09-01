@@ -7,6 +7,9 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	this.Cube_Map = {}
 
+	this.ID2Cube = {}
+	this.Name2Cube = {}
+
 	var DualGraphs = new FaceEdgeDualGraph()
 
 	var that = this
@@ -20,7 +23,9 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 			return
 		}
 
-		var cube = new Cube(Object.keys(this.Cube_Map).length, position)
+		var cube = new Cube(Object.keys(this.Cube_Map).length, position, this.id)
+
+		this.ID2Cube[cube.id] = cube
 		MapCube(position, cube)
 
 		SetAdjacencies(cube)
@@ -231,7 +236,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 				if(cube_1.has_faces[Cube.FaceNameToDirection(Cube.EdgeNameToFaceName(edge_name_1))] && cube_2.has_faces[Cube.FaceNameToDirection(Cube.EdgeNameToFaceName(edge_name_2))])
 				{
-
 					if((e_1[0].equals(e_2[0]) && e_1[1].equals(e_2[1])) || (e_1[0].equals(e_2[1]) && e_1[1].equals(e_2[0])))
 					{
 						DualGraphs.AddIncidentEdges(edge_name_1, e_1, edge_name_2, e_2)
@@ -306,11 +310,12 @@ PolyCube.ID2Poly = {}
 
 //Generate new polycube, record it into the polycube dictionaries, and then return a reference to the
 //new polycube
-PolyCube.GenerateNewPolyCube = function(position, name)
+PolyCube.GenerateNewPolyCube = function(position = new Vector3(0, 0, 0), name = "PolyCube_" + PolyCube.Next_ID)
 {
 	var new_pcube = new PolyCube(position, name)
 	PolyCube.Name2Poly[name] = new_pcube
 	PolyCube.ID2Poly[new_pcube.id] = new_pcube
+	PolyCube.Next_ID++;
 
 	return new_pcube
 }
