@@ -20,7 +20,31 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 	{
 		if(ObjectExists(CubeExistsAtPosition(position)))
 		{
-			return
+			return false
+		}
+		else if(Object.keys(this.Cube_Map).length > 0)
+		{
+			//Check if there are any adjacencies
+			var has_adjacent_cubes = false
+			for(var word in PolyCube.words2directions)
+			{
+				var dir = PolyCube.words2directions[word]
+				var looking_at_pos = new THREE.Vector3().copy(position)
+	
+				looking_at_pos.add(dir)
+	
+				if(CubeExistsAtPosition(looking_at_pos))
+				{
+					has_adjacent_cubes = true
+				}
+			}
+
+			if(!has_adjacent_cubes)
+			{
+				console.log("Cannot add a cube that is not adjacent to another")
+
+				return false
+			}
 		}
 
 		var cube = new Cube(Object.keys(this.Cube_Map).length, position, this.id)
@@ -29,6 +53,8 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		MapCube(position, cube)
 
 		SetAdjacencies(cube)
+
+		return true
 
 	}
 
@@ -145,6 +171,10 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 				var cube_2 = that.GetCubeAtPosition(looking_at_pos)
 
 				RecordOrthoAdjacencies(cube_1, cube_2, word)
+			}
+			else
+			{
+				continue
 			}
 
 			for(var another_word in PolyCube.words2directions)

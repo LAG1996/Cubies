@@ -122,7 +122,6 @@ function PolycubeDataVisualizer(cube_template)
 			f.rotation.copy(rotation)
 
 			that.edit_polycubes[id].add(f.clone())
-			that.rotate_polycubes[id] = that.edit_polycubes[id].clone()
 
 			var f_clone = f.clone()
 
@@ -136,7 +135,6 @@ function PolycubeDataVisualizer(cube_template)
 			}
 
 			that.edit_pick_polycubes[id].add(f_clone.clone())
-			that.rotate_pick_polycubes[id] = that.edit_pick_polycubes[id].clone()
 
 			//Coloring the face picking polycubes
 			for(var part_num in f_clone.children)
@@ -149,7 +147,6 @@ function PolycubeDataVisualizer(cube_template)
 			}
 
 			that.edit_face_polycube[id].add(f_clone.clone())
-			that.rotate_face_polycubes[id] = that.edit_face_polycube[id].clone()
 
 			that.Color2Face[id][f_number] = f.name
 
@@ -173,12 +170,13 @@ function PolycubeDataVisualizer(cube_template)
 				}
 			}
 			that.edit_hinge_polycubes[id].add(f_clone.clone())
-			that.rotate_hinge_polycubes[id] = that.edit_hinge_polycubes[id].clone()
 
 			f_number++;
 		}
 
 		that.Color2Poly[id] = that.edit_polycubes[id]
+
+		CONTROL.Alert("RESET_ROTATIONS", polycube)
 	}
 
 	function RemoveFaces(polycube, v_cube, cube, dir, id)
@@ -186,13 +184,6 @@ function PolycubeDataVisualizer(cube_template)
 		var other_cube = polycube.GetCubeAtPosition(new THREE.Vector3().addVectors(cube.position, PolyCube.words2directions[dir]))
 		var face_name = Cube.GetFaceName(other_cube, PolyCube.direction_words_to_opposites[dir])
 
-/*
-		that.edit_polycubes[id].getObjectByName(face_name).visible = false
-		that.edit_hinge_polycubes[id].getObjectByName(face_name).visible = false
-		that.edit_face_polycube[id].getObjectByName(face_name).visible = false
-		that.rotate_polycubes[id].getObjectByName(face_name).visible = false
-		that.rotate_hinge_polycubes[id].getObjectByName(face_name).visible = false
-		that.rotate_face_polycubes[id].getObjectByName(face_name).visible = false*/
 		that.edit_polycubes[id].remove(that.edit_polycubes[id].getObjectByName(face_name))
 		that.edit_hinge_polycubes[id].remove(that.edit_hinge_polycubes[id].getObjectByName(face_name))
 		that.edit_face_polycube[id].remove(that.edit_face_polycube[id].getObjectByName(face_name))
