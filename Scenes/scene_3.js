@@ -20,7 +20,15 @@ $(document).ready(function(){
 
 	CONTROL.subgraphs = []
 
-	CONTROL.FaceName2SubGraphObjects = {}
+	//CONTROL.FaceName2SubGraphObjects = {}
+	CONTROL.HingeObject = {}
+	CONTROL.HingeObject.position = new THREE.Vector3()
+	CONTROL.HingeObject.axis = new THREE.Vector3()
+	CONTROL.HingeObject.id = -1
+	CONTROL.HingeObject.view = new THREE.Group()
+	CONTROL.HingeObject.face = new THREE.Group()
+	CONTROL.HingeObject.edge = new THREE.Group()
+	CONTROL.HingeObject.poly = new THREE.Group()
 
 	//Highlights
 	CONTROL.prime_highlight = new THREE.Color(0xFF0000)
@@ -69,6 +77,7 @@ $(document).ready(function(){
 	CONTROL.hovering_over_hinge = false
 	CONTROL.hovering_over_face = false
 	CONTROL.face_graphs_out = false
+	CONTROL.dirty_rotation_cube = false
 
 	CONTROL.cuts_need_update = false
 	CONTROL.hinges_need_update = false
@@ -646,7 +655,7 @@ $(document).ready(function(){
 	//Utility functions
 	CONTROL.ResetRotationPolycubes = function(polycube)
 	{
-		CONTROL.FaceName2SubGraphObjects[polycube.id] = {}
+		//CONTROL.FaceName2SubGraphObjects[polycube.id] = {}
 
 		CONTROL.rotate_mode_scene.remove(CONTROL.data_processor.rotate_polycubes[polycube.id])		
 		CONTROL.rotate_mode_poly_cube_picking_scene.remove(CONTROL.data_processor.rotate_pick_polycubes[polycube.id])
@@ -667,79 +676,41 @@ $(document).ready(function(){
 		var edge_pos = edge_object.getWorldPosition()
 	
 		var cube = polycube.ID2Cube[Cube.PartNameToCubeID(edge_object.name)]
-		//var axis = MakePositiveVector(new THREE.Vector3().copy(cube.edgeEndpoints[edge_object.name][0]).sub(cube.edgeEndpoints[edge_object.name][1]).normalize())
-		var axis = MakePositiveVector(edge_object.up).normalize()
+		var axis = MakePositiveVector(new THREE.Vector3().copy(cube.edgeEndpoints[edge_object.name][0]).sub(cube.edgeEndpoints[edge_object.name][1]).normalize())
 
-		console.log("Rotating around axis: ")
+		console.log("axis is: ")
 		console.log(axis)
-		console.log("Rotating around " + edge_object.name)
 
-		if(!ObjectExists(CONTROL.FaceName2SubGraphObjects[polycube.id]))
-			CONTROL.FaceName2SubGraphObjects[polycube.id] = {}
+		var q = new THREE.Quaternion(); // create once and reuse
 
-		if(!ObjectExists(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name]))
+		q.setFromAxisAngle( axis, DEG2RAD(90) ); // axis must be normalized, angle in radians
+
+		for(var f in face_subgraph)
 		{
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name] = {}
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view = new THREE.Group()
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face = new THREE.Group()
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge = new THREE.Group()
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly = new THREE.Group()
+			var face_1 = CONTROL.data_processor.rotate_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			var face_2 = CONTROL.data_processor.rotate_face_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			var face_3 = CONTROL.data_processor.rotate_hinge_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			var face_4 = CONTROL.data_processor.rotate_pick_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
 
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view.position.copy(edge_pos)
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face.position.copy(edge_pos)
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge.position.copy(edge_pos)
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly.position.copy(edge_pos)
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].total_rot = 0
-		
-			for(var f in face_subgraph)
-			{
-				var face_1 = CONTROL.data_processor.rotate_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
-				var face_2 = CONTROL.data_processor.rotate_face_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
-				var face_3 = CONTROL.data_processor.rotate_hinge_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
-				var face_4 = CONTROL.data_processor.rotate_pick_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
-		
-				var old_pos = new THREE.Vector3().copy(face_1.position)
-				old_pos.sub(edge_object.getWorldPosition())
-		
-				CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view.add(face_1)
-				CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face.add(face_2)
-				CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge.add(face_3)
-				CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly.add(face_4)
-		
-				face_1.position.copy(old_pos)
-				face_2.position.copy(old_pos)
-				face_3.position.copy(old_pos)
-				face_4.position.copy(old_pos)
-	
-				CONTROL.data_processor.rotate_polycubes[polycube.id].add(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view)
-				CONTROL.data_processor.rotate_face_polycubes[polycube.id].add(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face)
-				CONTROL.data_processor.rotate_hinge_polycubes[polycube.id].add(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge)
-				CONTROL.data_processor.rotate_pick_polycubes[polycube.id].add(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly)					
-			}
-		}
+			var rot_pos = new THREE.Vector3().copy(face_1.position)
+			rot_pos.sub(edge_pos)
+			rot_pos.applyAxisAngle(axis, DEG2RAD(90))
+			rot_pos.add(edge_pos)
 
-		var forward_rot = 90
 
-		if(CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].total_rot < 90)
-		{
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view.rotateOnAxis(axis, DEG2RAD(forward_rot))	
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face.rotateOnAxis(axis, DEG2RAD(forward_rot))	
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge.rotateOnAxis(axis, DEG2RAD(forward_rot))	
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly.rotateOnAxis(axis, DEG2RAD(forward_rot))
-	
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].total_rot = 90
-		}
-		else
-		{
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].view.rotateOnAxis(axis, DEG2RAD(-forward_rot))	
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].face.rotateOnAxis(axis, DEG2RAD(-forward_rot))	
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].edge.rotateOnAxis(axis, DEG2RAD(-forward_rot))	
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].poly.rotateOnAxis(axis, DEG2RAD(-forward_rot))
-	
-			CONTROL.FaceName2SubGraphObjects[polycube.id][face_subgraph[0].name].total_rot = 0
+
+			face_1.position.copy(rot_pos)
+			face_2.position.copy(rot_pos)
+			face_3.position.copy(rot_pos)
+			face_4.position.copy(rot_pos)
+
+			face_1.quaternion.premultiply( q );
+			face_2.quaternion.premultiply( q );
+			face_3.quaternion.premultiply( q );
+			face_4.quaternion.premultiply( q );
 		}
 		
-		
+		CONTROL.dirty_rotation_cube = true
 	}
 
 	CONTROL.VisualizePolycube = function(polycube)
