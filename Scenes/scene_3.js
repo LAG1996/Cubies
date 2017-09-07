@@ -388,11 +388,11 @@ $(document).ready(function(){
 					CONTROL.face_graphs_out = false
 					if(CONTROL.hover_over_face.name == CONTROL.subgraphs[0][0].name)
 					{
-						CONTROL.RotateSubGraph(CONTROL.subgraphs[0], CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly)
+						CONTROL.RotateSubGraph(CONTROL.subgraphs[0], CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly, DEG2RAD(90))
 					}
 					else if(CONTROL.hover_over_face.name == CONTROL.subgraphs[1][0].name)
 					{
-						CONTROL.RotateSubGraph(CONTROL.subgraphs[1], CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly)
+						CONTROL.RotateSubGraph(CONTROL.subgraphs[1], CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly, DEG2RAD(90))
 					}
 					else
 					{
@@ -484,10 +484,26 @@ $(document).ready(function(){
 		{
 			$("#" + p_cube.name + "_data").remove()
 
+			CONTROL.ClearJunk(CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
+			CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
+
+
+			CONTROL.UpdateCuts(null, CONTROL.edit_mode_scene, CONTROL.edit_cut_junk[PolyCube.Active_Polycube.id])
+			CONTROL.UpdateCuts(null, CONTROL.rotate_mode_scene, CONTROL.rotate_cut_junk[PolyCube.Active_Polycube.id])
+
+			CONTROL.UpdateHinges(null, CONTROL.edit_mode_scene, CONTROL.edit_hinge_junk[PolyCube.Active_Polycube.id])
+			CONTROL.UpdateHinges(null, CONTROL.rotate_mode_scene, CONTROL.rotate_hinge_junk[PolyCube.Active_Polycube.id])
+
+
+			CONTROL.last_hover_over_poly = null
+
+
 			CONTROL.data_processor.DestroyPolycube(p_cube)
 			PolyCube.DestroyPolyCube(p_cube)
 
 		}
+
+
 
 		CONTROL.Switch_Context('edit-context')
 	}
@@ -671,19 +687,46 @@ $(document).ready(function(){
 	}
 
 
-	CONTROL.RotateSubGraph = function(face_subgraph, edge_object, polycube)
+	CONTROL.RotateSubGraph = function(face_subgraph, edge_object, polycube, rads)
 	{
 		var edge_pos = edge_object.getWorldPosition()
 	
 		var cube = polycube.ID2Cube[Cube.PartNameToCubeID(edge_object.name)]
-		var axis = MakePositiveVector(new THREE.Vector3().copy(cube.edgeEndpoints[edge_object.name][0]).sub(cube.edgeEndpoints[edge_object.name][1]).normalize())
+		//var axis = MakePositiveVector(new THREE.Vector3().copy(cube.edgeEndpoints[edge_object.name][0]).sub(cube.edgeEndpoints[edge_object.name][1]).normalize())
+
+		//Get the axis we are going to rotate around
+		var axis = new THREE.Vector3().copy(MakePositiveVector(edge_object.up).normalize())
+
+		axis.y = Math.floor(axis.y)
+		axis.z = Math.floor(axis.z)
+		axis.x = Math.floor(axis.x)
 
 		console.log("axis is: ")
 		console.log(axis)
 
+		//Calculate the angle we want to rotate
+		var f = CONTROL.data_processor.rotate_polycubes[polycube.id].getObjectByName(face_subgraph[0].name)
+		var dir_from_edge = new THREE.Vector3().copy(f.position)
+		dir_from_edge.sub(edge_pos)
+
+		dir_from_edge.x = Math.round(dir_from_edge.x)
+		dir_from_edge.y = Math.round(dir_from_edge.y)
+		dir_from_edge.z = Math.round(dir_from_edge.z)
+
+		var cross = new THREE.Vector3().crossVectors(f.up, axis)
+
+		cross.x = Math.round(cross.x)
+		cross.y = Math.round(cross.y)
+		cross.z = Math.round(cross.z)
+
+		rads = cross.equals(dir_from_edge) ? rads : -1*rads
+
+		console.log("cross product is: ")
+		console.log(cross)
+
 		var q = new THREE.Quaternion(); // create once and reuse
 
-		q.setFromAxisAngle( axis, DEG2RAD(90) ); // axis must be normalized, angle in radians
+		q.setFromAxisAngle( axis, rads ); // axis must be normalized, angle in radians
 
 		for(var f in face_subgraph)
 		{
@@ -694,10 +737,8 @@ $(document).ready(function(){
 
 			var rot_pos = new THREE.Vector3().copy(face_1.position)
 			rot_pos.sub(edge_pos)
-			rot_pos.applyAxisAngle(axis, DEG2RAD(90))
+			rot_pos.applyAxisAngle(axis, rads)
 			rot_pos.add(edge_pos)
-
-
 
 			face_1.position.copy(rot_pos)
 			face_2.position.copy(rot_pos)
@@ -708,9 +749,15 @@ $(document).ready(function(){
 			face_2.quaternion.premultiply( q );
 			face_3.quaternion.premultiply( q );
 			face_4.quaternion.premultiply( q );
+
+			RotateUpAxis(face_1, rads, axis)
+			RotateUpAxis(face_2, rads, axis)
+			RotateUpAxis(face_3, rads, axis)
+			RotateUpAxis(face_4, rads, axis)
 		}
 		
 		CONTROL.dirty_rotation_cube = true
+
 	}
 
 	CONTROL.VisualizePolycube = function(polycube)
@@ -736,6 +783,8 @@ $(document).ready(function(){
 	{
 		CONTROL.ClearJunk(junk_collector, scene)
 		
+		if(!ObjectExists(polycube))
+			return
 		
 		var cuts = polycube.Get_Cuts()
 
@@ -750,6 +799,9 @@ $(document).ready(function(){
 	CONTROL.UpdateHinges = function(polycube, scene, junk_collector)
 	{
 		CONTROL.ClearJunk(junk_collector, scene)
+
+		if(!ObjectExists(polycube))
+			return
 
 		var l_hinges = polycube.Get_Rotation_Lines()
 

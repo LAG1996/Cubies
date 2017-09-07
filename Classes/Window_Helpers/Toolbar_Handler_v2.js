@@ -207,7 +207,7 @@ function Toolbar_Handler(controller){
 			
 			that.controller.Alert("LOAD_POLYCUBE")
 
-			$(that).val("")
+			$(this).val("")
 			$("#add_poly_modal").hide()
 
 

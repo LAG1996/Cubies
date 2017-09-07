@@ -173,9 +173,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 				RecordOrthoAdjacencies(cube_1, cube_2, word)
 			}
 			else
-			{
 				continue
-			}
 
 			for(var another_word in PolyCube.words2directions)
 			{
@@ -203,8 +201,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		for(var word in PolyCube.direction_words)
 		{
 			var w = PolyCube.direction_words[word]
-
-			if(w == PolyCube.direction_words_to_opposites[separating_dir_word])
 
 			if(cube_1.has_faces[w] && cube_2.has_faces[w])
 			{

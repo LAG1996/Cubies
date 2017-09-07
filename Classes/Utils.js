@@ -173,6 +173,7 @@ function RotateUpAxis(object, rads, axis)
 	if(hasError)
 		throw err
 
+
 	object.up.normalize()
 	for(var index in object.children)
 	{
