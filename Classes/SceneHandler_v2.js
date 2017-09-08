@@ -5,6 +5,7 @@ function SceneHandler(bg_color = 0xFFFFE6){
 	this.defaultPickingScene
 	this.active_scene
 	this.active_picking_scene
+	this.CAMERA
 
 	var active = true
 
@@ -13,12 +14,12 @@ function SceneHandler(bg_color = 0xFFFFE6){
 	var viewportOffset_x = 0
 	var viewportOffset_y = 0
 
-	var WIDTH, HEIGHT, INIT, CLOCK, CAMERA
+	var WIDTH, HEIGHT, INIT, CLOCK
 	var container, renderer, picking_texture
 
 	var mouse_pos = new THREE.Vector2()
 
-	var VIEW_ANGLE, ASPECT, NEAR, FAR, CAMERA, cam_cam
+	var VIEW_ANGLE, ASPECT, NEAR, FAR
 
 	var DIR_LIGHT
 
@@ -101,7 +102,7 @@ function SceneHandler(bg_color = 0xFFFFE6){
 
 	this.Pick = function(mouse_position, color_container = null){
 
-		renderer.render(this.active_picking_scene, CAMERA, picking_texture)
+		renderer.render(this.active_picking_scene, this.CAMERA, picking_texture)
 		return GetPixelColor(mouse_position, color_container)
 	}
 
@@ -163,20 +164,20 @@ function SceneHandler(bg_color = 0xFFFFE6){
 		NEAR = 0.1 //The near clipping plane
 		FAR = 10000 //The far clipping plane
 
-		CAMERA = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR)
-		CAMERA.position.z = 10
-		CAMERA.position.y = 10
-		CAMERA.position.x = -10
+		that.CAMERA = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR)
+		that.CAMERA.position.z = 10
+		that.CAMERA.position.y = 10
+		that.CAMERA.position.x = -10
 
-		Controls = new THREE.OrbitControls(CAMERA, renderer.domElement)
+		Controls = new THREE.OrbitControls(that.CAMERA, renderer.domElement)
 
 		//Events
 		$(window).on('resize', onWindowResize)
 	}
 
 	function onWindowResize(){
-		CAMERA.aspect = window.innerWidth/ window.innerHeight
-		CAMERA.updateProjectionMatrix()
+		that.CAMERA.aspect = window.innerWidth/ window.innerHeight
+		that.CAMERA.updateProjectionMatrix()
 
 		renderer.setSize(window.innerWidth, window.innerHeight)
 		renderer.setPixelRatio(window.devicePixelRatio)
@@ -187,7 +188,7 @@ function SceneHandler(bg_color = 0xFFFFE6){
 
 		deltaTime = CLOCK.getDelta();
 
-		renderer.render(that.active_scene, CAMERA)
+		renderer.render(that.active_scene, that.CAMERA)
 	}
 
 	//Uses a simple color buffer draw trick to decide where the client is clicking

@@ -646,8 +646,8 @@ $(document).ready(function(){
 			var p_cube = PolyCube.ID2Poly[id]
 			if(ObjectExists(p_cube))
 			{
-				CONTROL.hover_over_poly = cube
-				CONTROL.last_hover_over_po = p_cube
+				CONTROL.hover_over_poly = p_cube
+				CONTROL.last_hover_over_poly = p_cube
 			}
 			else
 			{
