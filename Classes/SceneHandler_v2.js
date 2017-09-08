@@ -117,6 +117,10 @@ function SceneHandler(bg_color = 0xFFFFE6){
 		active = !active
 	}
 
+	this.ClearDepthBuffer = function(){
+		renderer.clearDepth()
+	}
+
 	function initScene(){
 		WIDTH = window.innerWidth;
 		HEIGHT = window.innerHeight;

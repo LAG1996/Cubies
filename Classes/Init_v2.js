@@ -2,6 +2,7 @@ function Initialize()
 {
 	this.cubeFace = null
 	this.cubeHinge = null
+	this.arrow = null
 	this.flags = []
 
 	var that = this
@@ -10,6 +11,7 @@ function Initialize()
 		"HAS_PARTS",
 		"HAS_FACE",
 		"HAS_HINGE",
+		"HAS_ARROW",
 		"IS_COMPLETE"
 	]
 
@@ -51,45 +53,54 @@ function Initialize()
 				that.cubeFace = object.children[0]
 				that.flags["HAS_FACE"] = true
 
-			}, function(xhr){
-				if(xhr.lengthComputable) {
-					var percentComplete = xhr.loaded/xhr.total * 100
-					console.log(Math.round(percentComplete, 2) + '% uploaded')
-				}
+		}, 
+		function(xhr){}, 
+		function(xhr) {
+			throw "INIT_ERROR: NO FACE OBJECT FOUND"
+		})
 
-			}, function(xhr) {
-				console.log("File cannot be read")
-			})
-
-			loader.load('./Models/cubeHinge.obj', function (object) {
+		loader.load('./Models/cubeHinge.obj', function (object) {
+			
+			object.traverse(function(child){
 				
-				object.traverse(function(child){
-					
-					if(child instanceof THREE.Mesh){
-						child.material = that.material
-					}
-
-				})
-
-				that.cubeHinge = object.children[0]
-				that.flags["HAS_HINGE"] = true
-
-			}, function(xhr){
-				if(xhr.lengthComputable) {
-					var percentComplete = xhr.loaded/xhr.total * 100
-					console.log(Math.round(percentComplete, 2) + '% uploaded')
+				if(child instanceof THREE.Mesh){
+					child.material = that.material
 				}
 
-			}, function(xhr) {
-				console.log("File cannot be read")
 			})
+
+			that.cubeHinge = object.children[0]
+			that.flags["HAS_HINGE"] = true
+
+		}, 
+		function(xhr){}, 
+		function(xhr) {
+			throw "INIT_ERROR: NO HINGE OBJECT FOUND"
+		})
+
+		loader.load("./Models/Arrow.obj", function (object){
+
+			object.traverse(function(child){
+				if(child instanceof THREE.Mesh){
+					child.material = that.meterial
+				}
+			})
+
+			that.arrow = object.children[0]
+			that.flags["HAS_ARROW"] = true
+		}, 
+		function(xhr){},
+		function(xhr){
+			throw "INIT_ERROR: NO ARROW OBJECT FOUND"
+		})
 	}
 
 	function CheckIfHasParts()
 	{
-		if(that.flags["HAS_FACE"] && that.flags["HAS_HINGE"])
+		if(that.flags["HAS_FACE"] && that.flags["HAS_HINGE"] && that.flags["HAS_ARROW"])
 		{
 			that.flags["HAS_PARTS"] = true
+			Arrow_Template.SetArrowObject(that.arrow)
 			Cube_Template.GenerateCube(that.cubeFace, that.cubeHinge)
 		}
 
@@ -109,6 +120,29 @@ function Initialize()
 		that.flags["IS_COMPLETE"] = true
 		return true
 	}
+}
+
+var Arrow_Template = {}
+Arrow_Template.arrow = null
+
+Arrow_Template.SetArrowObject = function(arrowMesh)
+{
+	var obj = new THREE.Group()
+	
+	var main_arrow = arrowMesh.clone()
+	main_arrow.name = "main"
+	main_arrow.material.color.setHex(0xFFFFFF)
+
+	var outline = arrowMesh.clone()
+	outline.name = "outline"
+	outline.scale.set(1.01, 1.1, 1.1)
+	outline.material.color.setHex(0x000000)
+	outline.material.side = THREE.BackSide
+
+	obj.add(main_arrow)
+	obj.add(outline)
+
+	Arrow_Template.arrow = obj
 }
 
 var Cube_Template = {}

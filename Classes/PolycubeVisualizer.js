@@ -79,6 +79,77 @@ function PolycubeDataVisualizer(cube_template)
 		delete this.Color2Poly[polycube.id]
 	}
 
+	this.RotateSubGraph = function(face_subgraph, edge_object, polycube, rads)
+	{
+		var edge_pos = edge_object.getWorldPosition()
+	
+		var cube = polycube.ID2Cube[Cube.PartNameToCubeID(edge_object.name)]
+		//var axis = MakePositiveVector(new THREE.Vector3().copy(cube.edgeEndpoints[edge_object.name][0]).sub(cube.edgeEndpoints[edge_object.name][1]).normalize())
+
+		//Get the axis we are going to rotate around
+		var axis = new THREE.Vector3().copy(MakePositiveVector(edge_object.up).normalize())
+
+		axis.y = Math.floor(axis.y)
+		axis.z = Math.floor(axis.z)
+		axis.x = Math.floor(axis.x)
+
+		console.log("axis is: ")
+		console.log(axis)
+
+		//Calculate the angle we want to rotate
+		var f = this.rotate_polycubes[polycube.id].getObjectByName(face_subgraph[0].name)
+		var dir_from_edge = new THREE.Vector3().copy(f.position)
+		dir_from_edge.sub(edge_pos)
+
+		dir_from_edge.x = Math.round(dir_from_edge.x)
+		dir_from_edge.y = Math.round(dir_from_edge.y)
+		dir_from_edge.z = Math.round(dir_from_edge.z)
+
+		var cross = new THREE.Vector3().crossVectors(f.up, axis)
+
+		cross.x = Math.round(cross.x)
+		cross.y = Math.round(cross.y)
+		cross.z = Math.round(cross.z)
+
+		rads = cross.equals(dir_from_edge) ? rads : -1*rads
+
+		console.log("cross product is: ")
+		console.log(cross)
+
+		var q = new THREE.Quaternion(); // create once and reuse
+
+		q.setFromAxisAngle( axis, rads ); // axis must be normalized, angle in radians
+
+		for(var f in face_subgraph)
+		{
+			var face_1 = this.rotate_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			var face_2 = this.rotate_face_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			var face_3 = this.rotate_hinge_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			var face_4 = this.rotate_pick_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+
+			var rot_pos = new THREE.Vector3().copy(face_1.position)
+			rot_pos.sub(edge_pos)
+			rot_pos.applyAxisAngle(axis, rads)
+			rot_pos.add(edge_pos)
+
+			face_1.position.copy(rot_pos)
+			face_2.position.copy(rot_pos)
+			face_3.position.copy(rot_pos)
+			face_4.position.copy(rot_pos)
+
+			face_1.quaternion.premultiply( q );
+			face_2.quaternion.premultiply( q );
+			face_3.quaternion.premultiply( q );
+			face_4.quaternion.premultiply( q );
+
+			RotateUpAxis(face_1, rads, axis)
+			RotateUpAxis(face_2, rads, axis)
+			RotateUpAxis(face_3, rads, axis)
+			RotateUpAxis(face_4, rads, axis)
+		}
+
+	}
+
 	function ProcessCubeData(id, polycube, cube)
 	{
 		var v_cube = that.cube_template.clone()
