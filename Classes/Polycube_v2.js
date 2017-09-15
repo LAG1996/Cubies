@@ -78,7 +78,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	this.Cut_Edge = function(edge_name)
 	{
-		DualGraphs.HandleCut(edge_name)
+		return DualGraphs.HandleCut(edge_name)
 	}
 
 	this.Get_Edge = function(edge_name)

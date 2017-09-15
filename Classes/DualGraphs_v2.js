@@ -183,11 +183,14 @@ function FaceEdgeDualGraph(){
 		var edge_1 = Edges[edge_name]
 		
 		if(!ObjectExists(edge_1))
-			return
+			return false
 
 		//There is nothing to do with this edge, since it is a cut that cannot be undone
 		if(!ObjectExists(edge_1['incidentEdge']))
-			return
+			return false
+
+		if(edge_1['invalid'])
+			return false
 
 		if(edge_1['cut'])
 		{
@@ -203,6 +206,7 @@ function FaceEdgeDualGraph(){
 			var face_2 = Faces[Cube.EdgeNameToFaceName(edge_2.name)]
 
 			UndoCut(edge_1, edge_2, face_1, face_2)
+
 		}
 		else if(!edge_1['invalid'])
 		{
@@ -259,6 +263,8 @@ function FaceEdgeDualGraph(){
 
 		BuildCutPaths()
 		BuildHingePaths()
+
+		return true
 	}
 
 	this.RemoveFace = function(name){

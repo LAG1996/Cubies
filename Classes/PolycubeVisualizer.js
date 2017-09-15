@@ -89,9 +89,9 @@ function PolycubeDataVisualizer(cube_template)
 		//Get the axis we are going to rotate around
 		var axis = new THREE.Vector3().copy(MakePositiveVector(edge_object.up).normalize())
 
-		axis.y = Math.floor(axis.y)
-		axis.z = Math.floor(axis.z)
-		axis.x = Math.floor(axis.x)
+		axis.y = Math.round(axis.y)
+		axis.z = Math.round(axis.z)
+		axis.x = Math.round(axis.x)
 
 		console.log("axis is: ")
 		console.log(axis)
