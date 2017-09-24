@@ -353,6 +353,15 @@ function FaceEdgeDualGraph(){
 		return Edges[name]
 	}
 
+	this.IsHinge = function(name)
+	{
+		return name in Edge2RotationLine
+	}
+
+	this.IsCut = function(name){
+		return name in Cut_Edges
+	}
+
 	this.GetCutEdges = function(){
 		return Cut_Edges
 	}

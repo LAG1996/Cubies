@@ -35,6 +35,7 @@ $(document).ready(function(){
 		CONTROL.holding_down_shift = false
 	
 		//Highlights
+		CONTROL.mouse_over_hinge_highlight = new THREE.Color(0xFFFF00)
 		CONTROL.prime_highlight = new THREE.Color(0xFF0000)
 		CONTROL.second_highlight = new THREE.Color(0x0000FF)
 		CONTROL.cut_highlight = new THREE.Color(0x22EEDD)
@@ -255,18 +256,19 @@ $(document).ready(function(){
 	
 					var edge_1 =CONTROL.rotate_mode_scene.getObjectByName(edge_data.name)
 					var edge_2 = null
+					var is_hinge = PolyCube.Active_Polycube.Is_Hinge(edge_data.name)
 	
 					if(ObjectExists(edge_data.incidentEdge))
 					{
 						var edge_2_data = edge_data.incidentEdge
 	
 						edge_2 = CONTROL.rotate_mode_scene.getObjectByName(edge_2_data.name)
-						CONTROL.HighlightParts(edge_2, CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+						CONTROL.HighlightParts(edge_2, is_hinge ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 					}
 	
 					CONTROL.hovering_over_hinge = true
 					CONTROL.hover_over_hinge = edge_1
-					CONTROL.HighlightParts(edge_1, CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+					CONTROL.HighlightParts(edge_1, is_hinge ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 					//$("#poly_cube_name_only").hide()
 				}
 	
@@ -366,6 +368,10 @@ $(document).ready(function(){
 							{
 								var face = CONTROL.rotate_mode_scene.getObjectByName(CONTROL.subgraphs[0][0].name)
 								CONTROL.arrow_pair.visible = true
+
+								face.up.x = Math.round(face.up.x)
+								face.up.y = Math.round(face.up.y)
+								face.up.z = Math.round(face.up.z)
 
 								CONTROL.arrow_pair.position.copy(face.getWorldPosition())
 								CONTROL.pick_arrow_pair.position.copy(face.getWorldPosition())

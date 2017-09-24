@@ -106,6 +106,16 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		return DualGraphs.GetCutEdges()
 	}
 
+	this.Is_Hinge = function(edge_name)
+	{
+		return DualGraphs.IsHinge(edge_name)
+	}
+
+	this.Is_Invalid_Cut = function(edge_name)
+	{
+		return DualGraphs.IsInvalid(edge_name)
+	}
+
 	this.Get_Rotation_Lines = function()
 	{
 		return DualGraphs.GetRotationLines()
