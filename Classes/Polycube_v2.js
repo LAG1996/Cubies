@@ -11,6 +11,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 	this.Name2Cube = {}
 
 	var DualGraphs = new FaceEdgeDualGraph()
+	var FaceEdgeLocations = new FlexiFaceEdgeMap()
 
 	var that = this
 
@@ -54,6 +55,36 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 		SetAdjacencies(cube)
 
+		for(var f_dir in cube.has_faces)
+		{
+			if(cube.has_faces[f_dir])
+			{
+				var face_name = Cube.GetFaceName(cube, f_dir)
+				var face_loc = new THREE.Vector3().addVectors(cube.position, PolyCube.words2directions[f_dir])
+				var face_normal = PolyCube.words2directions[f_dir]
+				FaceEdgeLocations.AddFace(face_name, face_loc, face_normal)
+
+				for(var e_dir in cube.has_faces)
+				{
+					if(e_dir == "front" || e_dir == "back")
+						continue
+
+					var edge_name = Cube.GetEdgeName(cube, f_dir, e_dir)
+					
+					var axis = new THREE.Vector3().subVectors(cube.edgeEndpoints[edge_name][0], cube.edgeEndpoints[edge_name][1])
+
+					var edge_axis = MakePositiveVector(axis).normalize()
+
+					var loc = new THREE.Vector3().addVectors(cube.edgeEndpoints[edge_name][1], axis.multiplyScalar(.5))
+
+					loc.sub(cube.position)
+
+					var edge_loc = new THREE.Vector3().addVectors(face_loc, loc)
+					FaceEdgeLocations.AddEdge(edge_name, face_name, edge_loc, edge_axis)
+				}
+			}
+		}
+
 		return true
 
 	}
@@ -71,7 +102,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 			if(CubeExistsAtPosition(looking_at_pos))
 			{
 				HandleFaceRemoval(cube, word)
-				HandleFaceRemoval(this.GetCubeAtPosition(looting_at_pos), PolyCube.direction_words_to_opposites[word])
+				HandleFaceRemoval(this.GetCubeAtPosition(looking_at_pos), PolyCube.direction_words_to_opposites[word])
 			}
 		}
 	}
@@ -86,9 +117,19 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		return DualGraphs.GetEdge(edge_name)
 	}
 
+	this.Get_Edge_Loc = function(edge_name)
+	{
+		return FaceEdgeLocations.GetEdgeLoc(edge_name)
+	}
+
 	this.Get_Face = function(face_name)
 	{
 		return DualGraphs.GetFace(face_name)
+	}
+
+	this.Get_Face_Loc = function(face_name)
+	{
+		return FaceEdgeLocations.GetFaceLoc(face_name)
 	}
 
 	this.Get_Faces = function()
@@ -297,16 +338,19 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	function HandleFaceRemoval(cube, dir_word)
 	{
+		var face_name = Cube.GetFaceName(cube, dir_word)
 
 		cube.has_faces[dir_word] = false
 
-		DualGraphs.RemoveFace(Cube.GetFaceName(cube, dir_word))
+		DualGraphs.RemoveFace(face_name)
 
 		for(var word in PolyCube.direction_words)
 		{
 			if(PolyCube.direction_words[word] != 'front' && PolyCube.direction_words[word] != 'back')
 				DualGraphs.RemoveEdge(Cube.GetEdgeName(cube, dir_word, PolyCube.direction_words[word]))
 		}
+
+		FaceEdgeLocations.RemoveFace(face_name)
 	}
 
 }
