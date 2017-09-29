@@ -390,11 +390,13 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 		for(var n in f_1.neighbors)
 		{
+			HandleEdgeAdjacencyByFace(face_2_name, n)
 			HandleEdgeAdjacencyByFace(face_1_name, n)
 		}
 
 		for(var n in f_2.neighbors)
 		{
+			HandleEdgeAdjacencyByFace(face_1_name, n)
 			HandleEdgeAdjacencyByFace(face_2_name, n)
 		}
 

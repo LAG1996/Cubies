@@ -27,12 +27,12 @@ function FlexiFaceEdgeMap()
 		Loc2Face_Map[s] = face_name
 
 		Face2Data_Map[face_name] = {}
-		Face2Data_Map[face_name]["normal"] = normal.clone()
-		Face2Data_Map[face_name]["location"] = location.clone()
+		Face2Data_Map[face_name]["normal"] = new THREE.Vector3().copy(normal)
+		Face2Data_Map[face_name]["location"] = new THREE.Vector3().copy(location)
 
 		Face2FlexiData_Map[face_name] = {}
-		Face2FlexiData_Map[face_name]["normal"] = normal.clone()
-		Face2FlexiData_Map[face_name]["location"] = location.clone()
+		Face2FlexiData_Map[face_name]["normal"] = new THREE.Vector3().copy(normal)
+		Face2FlexiData_Map[face_name]["location"] = new THREE.Vector3().copy(location)
 
 		Face2Edges[face_name] = []
 	}
@@ -72,12 +72,12 @@ function FlexiFaceEdgeMap()
 		var s = location.x.toString() + "," + location.y.toString() + "," + location.z.toString()
 
 		Edge2Data_Map[edge_name] = {}
-		Edge2Data_Map[edge_name]["axis"] = axis.clone()
-		Edge2Data_Map[edge_name]["location"] = location.clone()
+		Edge2Data_Map[edge_name]["axis"] = new THREE.Vector3().copy(axis)
+		Edge2Data_Map[edge_name]["location"] = new THREE.Vector3().copy(location)
 
 		Edge2FlexiData_Map[edge_name] = {}
-		Edge2FlexiData_Map[edge_name]["axis"] = axis.clone()
-		Edge2FlexiData_Map[edge_name]["location"] = location.clone()
+		Edge2FlexiData_Map[edge_name]["axis"] = new THREE.Vector3().copy(axis)
+		Edge2FlexiData_Map[edge_name]["location"] = new THREE.Vector3().copy(location)
 
 		Face2Edges[parent_face_name].push(edge_name)
 	}
@@ -94,7 +94,8 @@ function FlexiFaceEdgeMap()
 		var obj = Face2FlexiData_Map[face_name]
 		var pEObj = Edge2FlexiData_Map[edge_name]
 
-		var separating_vec = new THREE.Vector3().subVectors(obj.location, pEObj.location)
+		var separating_vec = new THREE.Vector3().subVectors(obj.location, pEObj.location).normalize()
+		separating_vec.multiplyScalar(obj.location.distanceTo(pEObj.location))
 
 		separating_vec.applyAxisAngle(axis, rads)
 
@@ -119,7 +120,8 @@ function FlexiFaceEdgeMap()
 
 			obj = Edge2FlexiData_Map[e_n]
 
-			separating_vec = new THREE.Vector3().subVectors(obj.location, pEObj.location)
+			separating_vec = new THREE.Vector3().subVectors(obj.location, pEObj.location).normalize()
+			separating_vec.multiplyScalar(obj.location.distanceTo(pEObj.location))
 
 			separating_vec.applyAxisAngle(axis, rads)
 

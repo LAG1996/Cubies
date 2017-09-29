@@ -123,8 +123,7 @@ $(document).ready(function(){
 		var grid = GenerateGrid(100, 2, 0x000000)
 		grid.position.y = -1
 		grid.add(new THREE.AxisHelper(50))
-		CONTROL.edit_mode_scene.add(grid)
-		CONTROL.rotate_mode_scene.add(grid.clone())
+		CONTROL.rotate_mode_scene.add(grid)
 	
 		//Create some variables and functions for the polycube class	PolyCube.Rotation_Scene = new Scene()
 		PolyCube.Active_Polycube = null
@@ -329,10 +328,10 @@ $(document).ready(function(){
 					{
 						if(!CONTROL.holding_down_shift)
 						{
-							if(!PolyCube.Active_Polycube.Is_Cut(CONTROL.hover_over_hinge.name))
-								PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name)
-							//if(PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name))
-								//CONTROL.ResetRotationPolycubes(PolyCube.Active_Polycube)
+							//if(!PolyCube.Active_Polycube.Is_Cut(CONTROL.hover_over_hinge.name))
+								//PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name)
+							if(PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name))
+								CONTROL.ResetRotationPolycubes(PolyCube.Active_Polycube)
 		
 							CONTROL.cuts_need_update = true
 							CONTROL.hinges_need_update = true
