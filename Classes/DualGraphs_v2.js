@@ -467,6 +467,16 @@ function FaceEdgeDualGraph(){
 		return {'subgraphs' : subgraphs, 'rotation_line_index' : rotation_line} 
 	}
 
+	this.UpdateCutPaths = function()
+	{
+		BuildCutPaths()
+	}
+
+	this.UpdateHingePaths = function()
+	{
+		BuildHingePaths()
+	}
+
 	function BuildCutPaths(){
 		var start_cut
 		var path_num = 0

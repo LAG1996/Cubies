@@ -140,6 +140,41 @@ function FlexiFaceEdgeMap()
 		}
 	}
 
+	this.GetEndPoints = function(edge_name)
+	{
+
+		var data = this.GetEdgeData(edge_name)
+
+		return [new THREE.Vector3().addVectors(data.location, data.axis), new THREE.Vector3().addVectors(data.location, new THREE.Vector3().copy(data.axis).multiplyScalar(-1))]
+
+	}
+
+	this.HaveCommonEdge = function(face_1_name, face_2_name)
+	{
+		var edges_1 = Face2Edges[face_1_name]
+		var edges_2 = Face2Edges[face_2_name]
+
+		for(var e in edges_1)
+		{
+			var edge = edges_1[e]
+
+			
+			var e_1_d = this.GetEdgeData(edge)
+
+			for(var h in edges_2)
+			{
+				var hedge = edges_2[h]
+
+				var e_2_d = this.GetEdgeData(hedge)
+
+				if(e_1_d.location.equals(e_2_d.location))
+					return true
+			}
+		}
+
+		return false
+	}
+
 	this.GetEdgeData = function(edge_name)
 	{
 		return Edge2FlexiData_Map[edge_name]
