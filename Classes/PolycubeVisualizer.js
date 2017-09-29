@@ -79,7 +79,7 @@ function PolycubeDataVisualizer(cube_template)
 		delete this.Color2Poly[polycube.id]
 	}
 
-	this.RotateSubGraph = function(face_subgraph, edge_object, polycube, rads)
+	this.RotateSubGraph = function(face_subgraph, edge_object, polycube, rads, controller)
 	{
 		var edge_pos = edge_object.getWorldPosition()
 	
@@ -87,7 +87,8 @@ function PolycubeDataVisualizer(cube_template)
 		//var axis = MakePositiveVector(new THREE.Vector3().copy(cube.edgeEndpoints[edge_object.name][0]).sub(cube.edgeEndpoints[edge_object.name][1]).normalize())
 
 		//Get the axis we are going to rotate around
-		var axis = new THREE.Vector3().copy(MakePositiveVector(edge_object.up).normalize())
+		//var axis = new THREE.Vector3().copy(MakePositiveVector(edge_object.up).normalize())
+		var axis = polycube.Get_Edge_Data(edge_object.name).axis
 
 		axis.y = Math.round(axis.y)
 		axis.z = Math.round(axis.z)
@@ -105,7 +106,7 @@ function PolycubeDataVisualizer(cube_template)
 		dir_from_edge.y = Math.round(dir_from_edge.y)
 		dir_from_edge.z = Math.round(dir_from_edge.z)
 
-		var cross = new THREE.Vector3().crossVectors(f.up, axis)
+		var cross = new THREE.Vector3().crossVectors(polycube.Get_Face_Data(f.name).normal, axis)
 
 		cross.x = Math.round(cross.x)
 		cross.y = Math.round(cross.y)
@@ -142,10 +143,12 @@ function PolycubeDataVisualizer(cube_template)
 			face_3.quaternion.premultiply( q );
 			face_4.quaternion.premultiply( q );
 
-			RotateUpAxis(face_1, rads, axis)
-			RotateUpAxis(face_2, rads, axis)
-			RotateUpAxis(face_3, rads, axis)
-			RotateUpAxis(face_4, rads, axis)
+			//RotateUpAxis(face_1, rads, axis)
+			//RotateUpAxis(face_2, rads, axis)
+			//RotateUpAxis(face_3, rads, axis)
+			//RotateUpAxis(face_4, rads, axis)
+
+			controller.Alert('ROTATE_FACE_ROUND_EDGE', edge_object.name, face_1.name, rads, axis)
 		}
 
 	}

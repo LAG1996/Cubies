@@ -60,7 +60,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 			if(cube.has_faces[f_dir])
 			{
 				var face_name = Cube.GetFaceName(cube, f_dir)
-				var face_loc = new THREE.Vector3().addVectors(cube.position, PolyCube.words2directions[f_dir])
+				var face_loc = new THREE.Vector3().addVectors(cube.lattice_position, PolyCube.words2directions[f_dir])
 				var face_normal = PolyCube.words2directions[f_dir]
 				FaceEdgeLocations.AddFace(face_name, face_loc, face_normal)
 
@@ -75,11 +75,8 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 					var edge_axis = MakePositiveVector(axis).normalize()
 
-					var loc = new THREE.Vector3().addVectors(cube.edgeEndpoints[edge_name][1], axis.multiplyScalar(.5))
+					var edge_loc = new THREE.Vector3().addVectors(cube.edgeEndpoints[edge_name][1], axis.multiplyScalar(.5))
 
-					loc.sub(cube.position)
-
-					var edge_loc = new THREE.Vector3().addVectors(face_loc, loc)
 					FaceEdgeLocations.AddEdge(edge_name, face_name, edge_loc, edge_axis)
 				}
 			}
@@ -107,6 +104,16 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		}
 	}
 
+	this.Rotate_Data = function(edge_name, face_name, rads, axis)
+	{
+		FaceEdgeLocations.RotateFaceAroundEdge(edge_name, face_name, rads, axis)
+	}
+
+	this.Reset_Data = function()
+	{
+		FaceEdgeLocations.ResetData()
+	}
+
 	this.Cut_Edge = function(edge_name)
 	{
 		return DualGraphs.HandleCut(edge_name)
@@ -117,9 +124,9 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		return DualGraphs.GetEdge(edge_name)
 	}
 
-	this.Get_Edge_Loc = function(edge_name)
+	this.Get_Edge_Data = function(edge_name)
 	{
-		return FaceEdgeLocations.GetEdgeLoc(edge_name)
+		return FaceEdgeLocations.GetEdgeData(edge_name)
 	}
 
 	this.Get_Face = function(face_name)
@@ -127,9 +134,9 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		return DualGraphs.GetFace(face_name)
 	}
 
-	this.Get_Face_Loc = function(face_name)
+	this.Get_Face_Data = function(face_name)
 	{
-		return FaceEdgeLocations.GetFaceLoc(face_name)
+		return FaceEdgeLocations.GetFaceData(face_name)
 	}
 
 	this.Get_Faces = function()

@@ -27,12 +27,12 @@ function FlexiFaceEdgeMap()
 		Loc2Face_Map[s] = face_name
 
 		Face2Data_Map[face_name] = {}
-		Face2Data_Map[face_name]["normal"] = normal
-		Face2Data_Map[face_name]["location"] = location
+		Face2Data_Map[face_name]["normal"] = normal.clone()
+		Face2Data_Map[face_name]["location"] = location.clone()
 
 		Face2FlexiData_Map[face_name] = {}
-		Face2FlexiData_Map[face_name]["normal"] = normal
-		Face2FlexiData_Map[face_name]["location"] = location
+		Face2FlexiData_Map[face_name]["normal"] = normal.clone()
+		Face2FlexiData_Map[face_name]["location"] = location.clone()
 
 		Face2Edges[face_name] = []
 	}
@@ -72,12 +72,12 @@ function FlexiFaceEdgeMap()
 		var s = location.x.toString() + "," + location.y.toString() + "," + location.z.toString()
 
 		Edge2Data_Map[edge_name] = {}
-		Edge2Data_Map[edge_name]["axis"] = axis
-		Edge2Data_Map[edge_name]["location"] = location
+		Edge2Data_Map[edge_name]["axis"] = axis.clone()
+		Edge2Data_Map[edge_name]["location"] = location.clone()
 
 		Edge2FlexiData_Map[edge_name] = {}
-		Edge2FlexiData_Map[edge_name]["axis"] = axis
-		Edge2FlexiData_Map[edge_name]["location"] = location
+		Edge2FlexiData_Map[edge_name]["axis"] = axis.clone()
+		Edge2FlexiData_Map[edge_name]["location"] = location.clone()
 
 		Face2Edges[parent_face_name].push(edge_name)
 	}
@@ -89,26 +89,29 @@ function FlexiFaceEdgeMap()
 	}
 
 	//How the fuck am I supposed to write this one???
-	this.RotateFaceAroundEdge = function(edge_name, face_name, angle, axis)
+	this.RotateFaceAroundEdge = function(edge_name, face_name, rads, axis)
 	{
 		var obj = Face2FlexiData_Map[face_name]
 		var pEObj = Edge2FlexiData_Map[edge_name]
 
 		var separating_vec = new THREE.Vector3().subVectors(obj.location, pEObj.location)
 
-		separating_vec.applyAxisAngle(axis, angle)
+		separating_vec.applyAxisAngle(axis, rads)
 
 		obj.location.copy(separating_vec)
+		obj.location.add(pEObj.location)
 
 		obj.location.x = Math.round(obj.location.x)
 		obj.location.y = Math.round(obj.location.y)
 		obj.location.z = Math.round(obj.location.z)
 
-		obj.normal.applyAxisAngle(axis, angle)
+		obj.normal.applyAxisAngle(axis, rads)
 
-		obj.normal.x = Math.round(obj.location.x)
-		obj.normal.y = Math.round(obj.location.y)
-		obj.normal.z = Math.round(obj.location.z)
+		obj.normal.x = Math.round(obj.normal.x)
+		obj.normal.y = Math.round(obj.normal.y)
+		obj.normal.z = Math.round(obj.normal.z)
+
+		obj.normal.normalize()
 
 		for(var e in Face2Edges[face_name])
 		{
@@ -118,29 +121,47 @@ function FlexiFaceEdgeMap()
 
 			separating_vec = new THREE.Vector3().subVectors(obj.location, pEObj.location)
 
-			separating_vec.applyAxisAngle(axis, angle)
+			separating_vec.applyAxisAngle(axis, rads)
 
 			obj.location.copy(separating_vec)
+			obj.location.add(pEObj.location)
 
 			obj.location.x = Math.round(obj.location.x)
 			obj.location.y = Math.round(obj.location.y)
 			obj.location.z = Math.round(obj.location.z)
 
-			obj.axis.applyAxisAngle(axis, angle)
+			obj.axis.applyAxisAngle(axis, rads)
 
-			obj.axis.x = Math.round(obj.location.x)
-			obj.axis.y = Math.round(obj.location.y)
-			obj.axis.z = Math.round(obj.location.z)
+			obj.axis.x = Math.round(obj.axis.x)
+			obj.axis.y = Math.round(obj.axis.y)
+			obj.axis.z = Math.round(obj.axis.z)
+
+			obj.axis.normalize()
 		}
 	}
 
-	this.GetEdgeLoc = function(edge_name)
+	this.GetEdgeData = function(edge_name)
 	{
 		return Edge2FlexiData_Map[edge_name]
 	}
 
-	this.GetFaceLoc = function(face_name)
+	this.GetFaceData = function(face_name)
 	{
 		return Face2FlexiData_Map[face_name]
+	}
+
+	this.ResetData = function()
+	{
+		for(var f in Face2Data_Map)
+		{
+			Face2FlexiData_Map[f].location.copy(Face2Data_Map[f].location)
+			Face2FlexiData_Map[f].normal.copy(Face2Data_Map[f].normal)
+		}
+
+		for(var e in Edge2Data_Map)
+		{
+			Edge2FlexiData_Map[e].location.copy(Edge2Data_Map[e].location)
+			Edge2FlexiData_Map[e].axis.copy(Edge2Data_Map[e].axis)
+		}
 	}
 }

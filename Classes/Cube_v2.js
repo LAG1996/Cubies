@@ -5,6 +5,7 @@ function Cube(id, position, parent_poly_id){
 	this.parent_id = parent_poly_id
 
 	this.position = Cube.ToLatticePosition(position)
+	this.lattice_position = position.clone().multiplyScalar(2)
 
 	this.has_faces = {'front' : true, 'up' : true, 'back' : true, 
 		'down' : true, 'left' : true, 'right' : true}
@@ -25,59 +26,59 @@ function Cube(id, position, parent_poly_id){
 	function CalculateEdgeEndpoints(){
 
 		that.edgeEndpoints[Cube.GetEdgeName(that, "front", "up")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, .5, .5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, .5, .5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, 1, 1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, 1, 1))
 			]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "front", "right")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, .5, .5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, -.5, .5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, 1, 1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, -1, 1))
 			]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "front", "down")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, -.5, .5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, -.5, .5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, -1, 1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, -1, 1))
 			]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "front", "left")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, .5, .5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, -.5, .5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, 1, 1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, -1, 1))
 			]
 
 		that.edgeEndpoints[Cube.GetEdgeName(that, "up", "up")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, .5, -.5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, .5, -.5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, 1, -1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, 1, -1))
 			]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "up", "right")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, .5, -.5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, .5, .5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, 1, -1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, 1, 1))
 			]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "up", "down")] = that.edgeEndpoints[Cube.GetEdgeName(that, "front", "up")]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "up", "left")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, .5, .5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, .5, -.5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, 1, 1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, 1, -1))
 			]
 
 		that.edgeEndpoints[Cube.GetEdgeName(that, "back", "up")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, -.5, -.5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, -.5, -.5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, -1, -1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, -1, -1))
 			]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "back", "right")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, .5, -.5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, -.5, -.5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, 1, -1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, -1, -1))
 			]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "back", "down")] = that.edgeEndpoints[Cube.GetEdgeName(that, "up", "up")]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "back", "left")] = [
-		new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, .5, -.5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, -.5, -.5))
+		new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, 1, -1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, -1, -1))
 			]
 
 		that.edgeEndpoints[Cube.GetEdgeName(that, "down", "up")] = that.edgeEndpoints[Cube.GetEdgeName(that, "front", "down")]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "down", "right")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, -.5, .5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(-.5, -.5, -.5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, -1, 1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(-1, -1, -1))
 			]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "down", "down")] = that.edgeEndpoints[Cube.GetEdgeName(that, "back", "up")]
 		that.edgeEndpoints[Cube.GetEdgeName(that, "down", "left")] = [
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, -.5, .5)),
-			new THREE.Vector3().addVectors(that.position, new THREE.Vector3(.5, -.5, -.5))
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, -1, 1)),
+			new THREE.Vector3().addVectors(that.lattice_position, new THREE.Vector3(1, -1, -1))
 			]
 
 		that.edgeEndpoints[Cube.GetEdgeName(that, "right", "up")] = that.edgeEndpoints[Cube.GetEdgeName(that, "up", "right")]

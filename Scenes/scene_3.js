@@ -286,14 +286,14 @@ $(document).ready(function(){
 
 						if(color == 0xFF0000)
 						{
-							CONTROL.data_processor.RotateSubGraph(CONTROL.active_subgraph, CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly, DEG2RAD(90))
+							CONTROL.data_processor.RotateSubGraph(CONTROL.active_subgraph, CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly, DEG2RAD(90), CONTROL)
 
 							CONTROL.cuts_need_update = true
 							CONTROL.hinges_need_update = true
 						}
 						else if(color == 0x00FF00)
 						{
-							CONTROL.data_processor.RotateSubGraph(CONTROL.active_subgraph, CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly, DEG2RAD(-90))
+							CONTROL.data_processor.RotateSubGraph(CONTROL.active_subgraph, CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly, DEG2RAD(-90), CONTROL)
 							CONTROL.cuts_need_update = true
 							CONTROL.hinges_need_update = true
 						}
@@ -369,34 +369,32 @@ $(document).ready(function(){
 								var face = CONTROL.rotate_mode_scene.getObjectByName(CONTROL.subgraphs[0][0].name)
 								CONTROL.arrow_pair.visible = true
 
-								face.up.x = Math.round(face.up.x)
-								face.up.y = Math.round(face.up.y)
-								face.up.z = Math.round(face.up.z)
-
 								CONTROL.arrow_pair.position.copy(face.getWorldPosition())
 								CONTROL.pick_arrow_pair.position.copy(face.getWorldPosition())
 
-								if(face.up.equals(new THREE.Vector3(-1, 0, 0)))
+								var normal = PolyCube.Active_Polycube.Get_Face_Data(face.name).normal.clone()
+
+								if(normal.equals(new THREE.Vector3(-1, 0, 0)))
 								{
 									CONTROL.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
 									CONTROL.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
 								}
-								else if(face.up.equals(new THREE.Vector3(0, 1, 0)))
+								else if(normal.equals(new THREE.Vector3(0, 1, 0)))
 								{
 									CONTROL.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
 									CONTROL.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
 								}
-								else if(face.up.equals(new THREE.Vector3(0, -1, 0)))
+								else if(normal.equals(new THREE.Vector3(0, -1, 0)))
 								{
 									CONTROL.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
 									CONTROL.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
 								}
-								else if(face.up.equals(new THREE.Vector3(0, 0, 1)))
+								else if(normal.equals(new THREE.Vector3(0, 0, 1)))
 								{
 									CONTROL.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
 									CONTROL.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
 								}
-								else if(face.up.equals(new THREE.Vector3(0, 0, -1)))
+								else if(normal.equals(new THREE.Vector3(0, 0, -1)))
 								{
 									CONTROL.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
 									CONTROL.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
@@ -419,31 +417,29 @@ $(document).ready(function(){
 								CONTROL.arrow_pair.position.copy(face.getWorldPosition())
 								CONTROL.pick_arrow_pair.position.copy(face.getWorldPosition())
 
-								face.up.x = Math.round(face.up.x)
-								face.up.y = Math.round(face.up.y)
-								face.up.z = Math.round(face.up.z)
+								var normal = PolyCube.Active_Polycube.Get_Face_Data(face.name).normal.clone()
 
-								if(face.up.equals(new THREE.Vector3(-1, 0, 0)))
+								if(normal.equals(new THREE.Vector3(-1, 0, 0)))
 								{
 									CONTROL.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
 									CONTROL.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
 								}
-								else if(face.up.equals(new THREE.Vector3(0, 1, 0)))
+								else if(normal.equals(new THREE.Vector3(0, 1, 0)))
 								{
 									CONTROL.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
 									CONTROL.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
 								}
-								else if(face.up.equals(new THREE.Vector3(0, -1, 0)))
+								else if(normal.equals(new THREE.Vector3(0, -1, 0)))
 								{
 									CONTROL.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
 									CONTROL.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
 								}
-								else if(face.up.equals(new THREE.Vector3(0, 0, 1)))
+								else if(normal.equals(new THREE.Vector3(0, 0, 1)))
 								{
 									CONTROL.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
 									CONTROL.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
 								}
-								else if(face.up.equals(new THREE.Vector3(0, 0, -1)))
+								else if(normal.equals(new THREE.Vector3(0, 0, -1)))
 								{
 									CONTROL.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
 									CONTROL.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
@@ -665,6 +661,15 @@ $(document).ready(function(){
 				CONTROL.Switch_Context('edit-context')
 	
 		}
+
+		CONTROL.Alert_Funcs['ROTATE_FACE_ROUND_EDGE'] = function(){
+
+			var args = Array.prototype.slice.call(arguments[0], 1)
+
+
+			PolyCube.Active_Polycube.Rotate_Data(args[0], args[1], args[2], args[3])
+
+		}
 	
 		//Creating mouse functions
 		CONTROL.onMouseMove = function(event){
@@ -753,6 +758,8 @@ $(document).ready(function(){
 			CONTROL.rotate_mode_poly_cube_picking_scene.add(CONTROL.data_processor.rotate_pick_polycubes[polycube.id])
 			CONTROL.rotate_mode_edge_picking_scene.add(CONTROL.data_processor.rotate_hinge_polycubes[polycube.id])
 			CONTROL.rotate_mode_face_picking_scene.add(CONTROL.data_processor.rotate_face_polycubes[polycube.id])
+
+			polycube.Reset_Data()
 		}
 	
 		CONTROL.VisualizePolycube = function(polycube)
