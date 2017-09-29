@@ -64,6 +64,7 @@ function FaceEdgeDualGraph(){
 		{
 			new_edge_1 = {"name": name_1, "endPoints" : endPoints_1, "neighbors": {}, 'collinearNeighbors': {}, "cut" : true, "invalid": false, "visited": false}
 			Edges[name_1] = new_edge_1
+			Cut_Edges[name_1] = new_edge_1
 		}
 		else
 		{
@@ -74,6 +75,7 @@ function FaceEdgeDualGraph(){
 		{
 			new_edge_2 = {"name": name_2, "neighbors": {}, "endPoints" : endPoints_2, 'collinearNeighbors': {}, "cut" : true, "invalid": false, "visited": false}
 			Edges[name_2] = new_edge_2
+			Cut_Edges[name_2] = new_edge_2
 		}
 		else
 		{
@@ -321,7 +323,7 @@ function FaceEdgeDualGraph(){
 				edge["incidentEdge"]["cut"] = true
 				Cut_Edges[edge["incidentEdge"]["name"]] = edge["incidentEdge"]
 				
-				delete edge["incidentEdge"]["incidentEdge"]
+				edge["incidentEdge"]["incidentEdge"] = null
 			}
 			
 			if(edge["cut"])
@@ -713,10 +715,28 @@ function FaceEdgeDualGraph(){
 				if(!n_neighbor['visited'] && AreCollinear(edge, n_neighbor))
 				{
 
+					
+					//if(ObjectExists(parent['neighbors'][n_neighbor['name']]) || ( ObjectExists(parent['neighbors'][n_neighbor['incidentEdge']) && ObjectExists(parent['neighbors'][n_neighbor['incidentEdge']['name']]))
+					//	|| (ObjectExists(parent['incidentEdge']) && ) || ObjectExists(parent['incidentEdge']['neighbors'][n_neighbor['incidentEdge']['name']])))
+					//	continue
+
 					//If this neighbor is the neighbor of the edge we just came from, we don't want to move backwards in the line. Skip this edge
-					if(ObjectExists(parent['neighbors'][n_neighbor['name']]) || ObjectExists(parent['neighbors'][n_neighbor['incidentEdge']['name']])
-						|| (ObjectExists(parent['incidentEdge']) && (ObjectExists(parent['incidentEdge']['neighbors'][n_neighbor['name']]) || ObjectExists(parent['incidentEdge']['neighbors'][n_neighbor['incidentEdge']['name']]))))
+					if(ObjectExists(parent['neighbors'][n_neighbor['name']]))
+					{
 						continue
+					}
+					if(ObjectExists(parent['incidentEdge']))
+					{
+						if(ObjectExists(parent['incidentEdge']['neighbors'][n_neighbor['name']]))
+							continue
+						else if(ObjectExists(n_neighbor['incidentEdge']))
+						{
+							if(ObjectExists(parent['neighbors'][n_neighbor['incidentEdge']['name']]))
+								continue
+							else if(ObjectExists(parent['incidentEdge']['neighbors'][n_neighbor['incidentEdge']['name']]))
+								continue
+						}
+					}
 
 					GenerateLineFrom(n_neighbor, edge)
 

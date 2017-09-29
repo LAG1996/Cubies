@@ -120,6 +120,9 @@ function FlexiFaceEdgeMap()
 
 			obj = Edge2FlexiData_Map[e_n]
 
+			if(obj.location.equals(pEObj.location))
+				continue
+
 			separating_vec = new THREE.Vector3().subVectors(obj.location, pEObj.location).normalize()
 			separating_vec.multiplyScalar(obj.location.distanceTo(pEObj.location))
 

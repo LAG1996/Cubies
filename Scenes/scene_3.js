@@ -280,7 +280,7 @@ $(document).ready(function(){
 					CONTROL.hovering_over_hinge = true
 					CONTROL.hover_over_hinge = edge_1
 					CONTROL.HighlightParts(edge_1, CONTROL.holding_down_shift ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
-					//$("#poly_cube_name_only").hide()
+					console.log(hinge_name)
 				}
 	
 			}]

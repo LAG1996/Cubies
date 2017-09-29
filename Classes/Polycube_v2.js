@@ -368,7 +368,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		var f_1 = this.Get_Face(face_1_name)
 		var f_2 = this.Get_Face(face_2_name)
 
-		for(var dir in PolyCube.direction_words[dir])
+		for(var dir in PolyCube.direction_words)
 		{
 			if(PolyCube.direction_words[dir] == "front" || PolyCube.direction_words[dir] == "back")
 				continue
@@ -378,7 +378,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 			DualGraphs.RemoveEdge(edge_name)
 		}
 
-		for(var dir in PolyCube.direction_words[dir])
+		for(var dir in PolyCube.direction_words)
 		{
 			if(PolyCube.direction_words[dir] == "front" || PolyCube.direction_words[dir] == "back")
 				continue
