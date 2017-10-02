@@ -143,6 +143,11 @@ function PolycubeDataVisualizer(cube_template)
 			face_3.quaternion.premultiply( q );
 			face_4.quaternion.premultiply( q );
 
+			face_1.updateMatrix()
+			face_2.updateMatrix()
+			face_3.updateMatrix()
+			face_4.updateMatrix()
+
 			//RotateUpAxis(face_1, rads, axis)
 			//RotateUpAxis(face_2, rads, axis)
 			//RotateUpAxis(face_3, rads, axis)
@@ -194,6 +199,8 @@ function PolycubeDataVisualizer(cube_template)
 
 			f.position.copy(position)
 			f.rotation.copy(rotation)
+
+			f.updateMatrix()
 
 			that.edit_polycubes[id].add(f.clone())
 
@@ -287,6 +294,15 @@ function PolycubeDataVisualizer(cube_template)
 		that.rotate_face_polycubes[polycube.id] = new THREE.Group()
 		that.rotate_pick_polycubes[polycube.id] = new THREE.Group()
 
+		that.edit_polycubes[polycube.id].matrixAutoUpdate = false
+		that.edit_hinge_polycubes[polycube.id].matrixAutoUpdate = false
+		that.edit_face_polycube[polycube.id].matrixAutoUpdate = false
+		that.edit_pick_polycubes[polycube.id].matrixAutoUpdate = false
+		that.rotate_polycubes[polycube.id].matrixAutoUpdate = false
+		that.rotate_hinge_polycubes[polycube.id].matrixAutoUpdate = false
+		that.rotate_face_polycubes[polycube.id].matrixAutoUpdate = false
+		that.rotate_pick_polycubes[polycube.id].matrixAutoUpdate = false
+
 		that.Color2Hinge[polycube.id] = {}
 		that.Color2Face[polycube.id] = {}
 
@@ -299,6 +315,8 @@ function PolycubeDataVisualizer(cube_template)
 		that.rotate_face_polycubes[polycube.id].position.copy(polycube.position)
 		that.rotate_pick_polycubes[polycube.id].position.copy(polycube.position)
 
+		UpdatePolycubeMatrices(polycube)
+
 		that.edit_polycubes[polycube.id].position.multiplyScalar(2)
 		that.edit_hinge_polycubes[polycube.id].position.multiplyScalar(2)
 		that.edit_face_polycube[polycube.id].position.multiplyScalar(2)
@@ -308,6 +326,8 @@ function PolycubeDataVisualizer(cube_template)
 		that.rotate_face_polycubes[polycube.id].position.multiplyScalar(2)
 		that.rotate_pick_polycubes[polycube.id].position.multiplyScalar(2)
 
+		UpdatePolycubeMatrices(polycube)
+
 		that.edit_polycubes[polycube.id].name = polycube.name
 		that.edit_hinge_polycubes[polycube.id].name = polycube.name
 		that.edit_face_polycube[polycube.id].name = polycube.name
@@ -316,5 +336,18 @@ function PolycubeDataVisualizer(cube_template)
 		that.rotate_hinge_polycubes[polycube.id].name = polycube.name
 		that.rotate_face_polycubes[polycube.id].name = polycube.name
 		that.rotate_pick_polycubes[polycube.id].name = polycube.name
+	}
+
+
+	function UpdatePolycubeMatrices(polycube)
+	{
+		that.edit_polycubes[polycube.id].updateMatrix()
+		that.edit_hinge_polycubes[polycube.id].updateMatrix()
+		that.edit_face_polycube[polycube.id].updateMatrix()
+		that.edit_pick_polycubes[polycube.id].updateMatrix()
+		that.rotate_polycubes[polycube.id].updateMatrix()
+		that.rotate_hinge_polycubes[polycube.id].updateMatrix()
+		that.rotate_face_polycubes[polycube.id].updateMatrix()
+		that.rotate_pick_polycubes[polycube.id].updateMatrix()
 	}
 }

@@ -199,6 +199,9 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	Cube_Template.highlightEdge = Cube_Template.hinge.clone()
 	Cube_Template.highlightEdge.scale.set(1.3, 1.0, 1.3)
 
+	Cube_Template.highlightFace.matrixAutoUpdate = false
+	Cube_Template.highlightEdge.matrixAutoUpdate = false
+
 	for(i = 0; i < 6; i++)
 	{
 		var new_face = new THREE.Group()
@@ -215,6 +218,8 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 		new_face.add(r)
 		new_face.add(l)
 		new_face.name = face_names[i]
+
+		new_face.matrixAutoUpdate = false
 
 		if(face_names[i] == "front")
 		{
@@ -274,8 +279,11 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 			new_face.rotateY(ninety_deg)
 		}
 
+		new_face.updateMatrix()
 		Cube_Template.new_cube.add(new_face)
 	}
 
 	Cube_Template.new_cube.scale.set(0.9, 0.9, 0.9)
+
+	Cube_Template.new_cube.matrixAutoUpdate = false
 }

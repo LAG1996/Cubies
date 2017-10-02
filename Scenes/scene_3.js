@@ -9,6 +9,7 @@ $(document).ready(function(){
 
 			clearInterval(wait_for_int)
 
+			console.log("Completed loading models")
 			FinishInitialization()
 		}	
 	}, 10)
@@ -923,6 +924,7 @@ $(document).ready(function(){
 							}
 							
 							var h = highlight.clone()
+							h.updateMatrix()
 							scenes[windex].add(h)
 	
 							junk_collector.push(h)
@@ -933,6 +935,7 @@ $(document).ready(function(){
 						highlight.position.copy(part.getWorldPosition())
 						highlight.rotation.copy(part.getWorldRotation())
 						var h = highlight.clone()
+						h.updateMatrix()
 						scenes.add(h)
 	
 						junk_collector.push(h)
@@ -969,6 +972,7 @@ $(document).ready(function(){
 						}
 	
 						var h = highlight.clone()
+						h.updateMatrix()
 						scenes[windex].add(h)
 					}
 	
@@ -980,6 +984,8 @@ $(document).ready(function(){
 					highlight.rotation.copy(part.getWorldRotation())
 	
 					var h = highlight.clone()
+
+					h.updateMatrix()
 					scenes.add(h)
 	
 					junk_collector.push(h)
@@ -1033,11 +1039,10 @@ $(document).ready(function(){
 	
 			CONTROL.scene_handler.Draw()
 	
-			var last_active_scene = CONTROL.scene_handler.active_scene
-	
 			//Load up cubes from any opened files
 			for(var c in CONTROL.Load_Polycube_Handler_List)
 			{
+				console.log("loading cubes")
 				if(CONTROL.Load_Polycube_Handler_List[c].finished)
 				{
 					delete CONTROL.Load_Polycube_Handler_List[c]
