@@ -159,11 +159,12 @@ function FlexiFaceEdgeMap()
 		var edges_1 = Face2Edges[face_1_name]
 		var edges_2 = Face2Edges[face_2_name]
 
+		var package = {"common" : false, "edge_1" : null, "edge_2" : null}
+
 		for(var e in edges_1)
 		{
 			var edge = edges_1[e]
 
-			
 			var e_1_d = this.GetEdgeData(edge)
 
 			for(var h in edges_2)
@@ -173,11 +174,15 @@ function FlexiFaceEdgeMap()
 				var e_2_d = this.GetEdgeData(hedge)
 
 				if(e_1_d.location.equals(e_2_d.location))
-					return true
+				{
+					package.common = true
+					package.edge_1 = edge
+					package.edge_2 = hedge
+				}
 			}
 		}
 
-		return false
+		return package
 	}
 
 	this.GetEdgeData = function(edge_name)

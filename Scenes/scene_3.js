@@ -32,7 +32,10 @@ $(document).ready(function(){
 		CONTROL.last_hover_over_poly = null
 		CONTROL.subgraphs = []
 		CONTROL.active_subgraph = null
+
+		//Keyboard commands
 		CONTROL.holding_down_shift = false
+		CONTROL.holding_down_control = false
 
 		CONTROL.tape = {'face_1' : null, 'face_2': null}
 	
@@ -251,7 +254,19 @@ $(document).ready(function(){
 						CONTROL.hover_over_face = face
 	
 						if(!CONTROL.face_graphs_out)
-							CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(face.name), CONTROL.holding_down_shift ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'face', CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+						{
+							if(CONTROL.holding_down_control)
+							{
+								for(var n in face.neighbors)
+								{
+									CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(n), CONTROL.second_highlight, 'face', CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+								}
+
+								CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(face.name), CONTROL.prime_highlight, 'face', CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+							}
+							else
+								CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(face.name), CONTROL.holding_down_shift ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'face', CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+						}
 						//$("#poly_cube_name_only").hide()
 					}
 					else
@@ -267,21 +282,42 @@ $(document).ready(function(){
 				{
 					var edge_data = PolyCube.Active_Polycube.Get_Edge(hinge_name)
 	
-					var edge_1 =CONTROL.rotate_mode_scene.getObjectByName(edge_data.name)
-					var edge_2 = null
-	
 					if(ObjectExists(edge_data.incidentEdge))
 					{
 						var edge_2_data = edge_data.incidentEdge
-	
-						edge_2 = CONTROL.rotate_mode_scene.getObjectByName(edge_2_data.name)
-						CONTROL.HighlightParts(edge_2, CONTROL.holding_down_shift ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+
+						if(CONTROL.holding_down_control)
+						{
+							for(var n in edge_2_data.neighbors)
+							{
+								CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(n), CONTROL.second_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+							}
+
+							CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(edge_2_data.name), CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+
+						}
+						else
+							CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(edge_2_data.name), CONTROL.holding_down_shift ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 					}
 	
 					CONTROL.hovering_over_hinge = true
-					CONTROL.hover_over_hinge = edge_1
-					CONTROL.HighlightParts(edge_1, CONTROL.holding_down_shift ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
-					console.log(hinge_name)
+					CONTROL.hover_over_hinge = CONTROL.rotate_mode_scene.getObjectByName(edge_data.name)
+
+					if(CONTROL.holding_down_control)
+					{
+						for(var n in edge_data.neighbors)
+						{
+							CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(n), CONTROL.second_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+						}
+
+						CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(edge_data.name), CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+
+					}
+					else
+						CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(edge_data.name), CONTROL.holding_down_shift ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+
+					CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(edge_data.name), CONTROL.holding_down_shift ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'hinge', CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+					console.log(edge_data.name)
 				}
 	
 			}]
@@ -299,7 +335,12 @@ $(document).ready(function(){
 						if(color == 0xFF0000)
 						{
 							CONTROL.data_processor.RotateSubGraph(CONTROL.active_subgraph, CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly, DEG2RAD(90), CONTROL)
-
+/*
+							for(var f in CONTROL.active_subgraph)
+							{
+								PolyCube.Active_Polycube.Recalculate_Edge_Neighbors()
+							}
+*/
 							CONTROL.cuts_need_update = true
 							CONTROL.hinges_need_update = true
 						}
@@ -308,6 +349,12 @@ $(document).ready(function(){
 							CONTROL.data_processor.RotateSubGraph(CONTROL.active_subgraph, CONTROL.hinge_to_rotate_around, CONTROL.last_hover_over_poly, DEG2RAD(-90), CONTROL)
 							CONTROL.cuts_need_update = true
 							CONTROL.hinges_need_update = true
+/*
+							for(var f in CONTROL.active_subgraph)
+							{
+								PolyCube.Active_Polycube.Recalculate_Edge_Neighbors()
+							}
+*/
 						}
 						else
 						{
@@ -329,10 +376,10 @@ $(document).ready(function(){
 					{
 						if(!CONTROL.holding_down_shift)
 						{
-							//if(!PolyCube.Active_Polycube.Is_Cut(CONTROL.hover_over_hinge.name))
-								//PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name)
-							if(PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name))
-								CONTROL.ResetRotationPolycubes(PolyCube.Active_Polycube)
+							if(!PolyCube.Active_Polycube.Is_Cut(CONTROL.hover_over_hinge.name))
+								PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name)
+							//if(PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name))
+								//CONTROL.ResetRotationPolycubes(PolyCube.Active_Polycube)
 		
 							CONTROL.cuts_need_update = true
 							CONTROL.hinges_need_update = true
@@ -487,11 +534,17 @@ $(document).ready(function(){
 
 								if(CONTROL.tape.face_1.name != CONTROL.tape.face_2.name)
 								{
-									if(PolyCube.Active_Polycube.Have_Common_Edge(CONTROL.tape.face_1.name, CONTROL.tape.face_2.name))
+									var packet = PolyCube.Active_Polycube.Have_Common_Edge(CONTROL.tape.face_1.name, CONTROL.tape.face_2.name)
+									if(packet.common && PolyCube.Active_Polycube.Is_Cut(packet.edge_1))
 									{
 										console.log(CONTROL.tape.face_1.name + " and " + CONTROL.tape.face_2.name + " have a common edge")
 
-										PolyCube.Active_Polycube.Recalculate_Edge_Neighbors(CONTROL.tape.face_1.name, CONTROL.tape.face_2.name)
+										CONTROL.tape.face_1.neighbors[CONTROL.tape.face_2.name] = CONTROL.tape.face_2
+										CONTROL.tape.face_2.neighbors[CONTROL.tape.face_1.name] = CONTROL.tape.face_1
+
+										PolyCube.Active_Polycube.Recalculate_Edge_Neighbors()
+										
+										PolyCube.Active_Polycube.Cut_Edge(packet.edge_1)
 
 										CONTROL.cuts_need_update = true
 										CONTROL.hinges_need_update = true
@@ -1019,6 +1072,10 @@ $(document).ready(function(){
 				CONTROL.holding_down_shift = true
 			}
 
+			if(event.key == "Control")
+			{
+				CONTROL.holding_down_control = true
+			}
 
 		})
 
@@ -1027,6 +1084,11 @@ $(document).ready(function(){
 			if(event.key =="Shift")
 			{
 				CONTROL.holding_down_shift = false
+			}
+
+			if(event.key == "Control")
+			{
+				CONTROL.holding_down_control = false
 			}
 
 			CONTROL.tape.face_1 = null

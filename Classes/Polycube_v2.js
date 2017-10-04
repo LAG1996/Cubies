@@ -363,46 +363,45 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		}
 	}
 
-	this.Recalculate_Edge_Neighbors = function(face_1_name, face_2_name)
+	function UpdateEdgeEndpoints(edge_name, endpoints)
 	{
-		var f_1 = this.Get_Face(face_1_name)
-		var f_2 = this.Get_Face(face_2_name)
+		var e = DualGraphs.GetEdge(edge_name)
 
-		for(var dir in PolyCube.direction_words)
+		e.endpoints = endpoints
+	}
+
+	this.Recalculate_Edge_Neighbors = function()
+	{
+		var faces = this.Get_Faces()
+		var edges = this.Get_Edges()
+
+		var cut_edges = Object.keys(this.Get_Cuts())
+
+		for(var e in edges)
 		{
-			if(PolyCube.direction_words[dir] == "front" || PolyCube.direction_words[dir] == "back")
-				continue
-
-			var edge_name = face_1_name + "_" + PolyCube.direction_words[dir]
-
-			DualGraphs.RemoveEdge(edge_name)
+			DualGraphs.RemoveEdge(e)
 		}
 
-		for(var dir in PolyCube.direction_words)
+		for(var f_1 in faces)
 		{
-			if(PolyCube.direction_words[dir] == "front" || PolyCube.direction_words[dir] == "back")
-				continue
+			for(var f_2 in faces)
+			{
+				if(f_1 != f_2)
+				{
+					HandleEdgeAdjacencyByFace(f_1, f_2)
+				}
+			}
 
-			var edge_name = face_2_name + "_" + PolyCube.direction_words[dir]
-
-			DualGraphs.RemoveEdge(edge_name)
+			HandleEdgeAdjacencyByFace(f_1, f_1)
 		}
 
-		for(var n in f_1.neighbors)
+		for(var e in cut_edges)
 		{
-			HandleEdgeAdjacencyByFace(face_2_name, n)
-			HandleEdgeAdjacencyByFace(face_1_name, n)
+			var edge = this.Get_Edge(cut_edges[e])
+
+			edge.cut = true
+			this.Get_Cuts()[cut_edges[e]] = edge
 		}
-
-		for(var n in f_2.neighbors)
-		{
-			HandleEdgeAdjacencyByFace(face_1_name, n)
-			HandleEdgeAdjacencyByFace(face_2_name, n)
-		}
-
-		DualGraphs.AddNeighboringFaces(face_1_name, face_2_name)
-
-		HandleEdgeAdjacencyByFace(face_1_name, face_2_name)
 
 		DualGraphs.UpdateCutPaths()
 		DualGraphs.UpdateHingePaths()
@@ -426,6 +425,9 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 					continue
 
 				var edge_name_2 = face_2_name + "_" + PolyCube.direction_words[dir2]
+
+				if(edge_name_1 == edge_name_2)
+					continue
 
 				var e_2_d = FaceEdgeLocations.GetEdgeData(edge_name_2)	
 				var e_2_e = FaceEdgeLocations.GetEndPoints(edge_name_2)
