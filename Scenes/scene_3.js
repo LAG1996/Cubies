@@ -229,7 +229,10 @@ $(document).ready(function(){
 				}
 	
 				if(!CONTROL.face_graphs_out)
-					CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)	
+					CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+
+				if(!CONTROL.hover_over_poly)
+					return
 	
 				CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.rotate_mode_edge_picking_scene)
 				var id = CONTROL.scene_handler.Pick(CONTROL.mouse_pos)
@@ -368,6 +371,7 @@ $(document).ready(function(){
 						CONTROL.face_graphs_out = false
 						CONTROL.arrow_pair.visible = false
 						CONTROL.arrows_out = false
+						CONTROL.data_processor.FadeFaces(PolyCube.Active_Polycube.id, .5)
 
 						return
 					}
@@ -417,7 +421,8 @@ $(document).ready(function(){
 		
 								CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(face.name), CONTROL.second_highlight, 'face', CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 							}
-		
+							
+							CONTROL.data_processor.FadeFaces(PolyCube.Active_Polycube.id, 0)
 						}
 					}
 					else if(CONTROL.hovering_over_face)
@@ -518,6 +523,8 @@ $(document).ready(function(){
 							}
 
 							CONTROL.arrows_out = true
+
+							//CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 						}
 						else if(CONTROL.holding_down_shift)
 						{
@@ -558,13 +565,14 @@ $(document).ready(function(){
 					}
 					else
 					{
-
+						CONTROL.data_processor.FadeFaces(PolyCube.Active_Polycube.id, .5)
 						if(!CONTROL.face_graphs_out)
 						{
 							CONTROL.Switch_Context('edit-context')
 						}
 						else
 						{
+							
 							CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 						}
 
@@ -791,7 +799,7 @@ $(document).ready(function(){
 			$('#poly_cube_name_only').css("left", "" + (CONTROL.mouse_pos.x + 10) + "px")
 	
 	
-			CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.toolbar_handler.context == 'rotate-context' ? CONTROL.rotate_mode_poly_cube_picking_scene : CONTROL.edit_mode_poly_cube_picking_scene)
+			CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.rotate_mode_poly_cube_picking_scene)
 			var id = CONTROL.scene_handler.Pick(CONTROL.mouse_pos)
 	
 			var p_cube = PolyCube.ID2Poly[id]
@@ -949,6 +957,8 @@ $(document).ready(function(){
 		
 			highlight.material = new THREE.MeshBasicMaterial()
 			highlight.material.color.copy(color)
+			highlight.material.transparent = true
+			highlight.material.opacity = .5
 		
 			if(Array.isArray(package))
 			{

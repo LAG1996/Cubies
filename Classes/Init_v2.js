@@ -161,6 +161,12 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	Cube_Template.face = cubeFaceMesh.clone()
 	Cube_Template.hinge = cubeHingeMesh.clone()
 
+	Cube_Template.face.material.transparent = true
+	Cube_Template.hinge.material.transparent = true
+
+	Cube_Template.face.material.opacity = 0.6
+	//Cube_Template.face.material.opacity = 0.5
+
 	Cube_Template.hinge.scale.set(1.25, 1, 1.25)
 
 	var body = Cube_Template.face.clone()
@@ -194,13 +200,6 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	left_hinge.material.color.setHex(0x010101)
 	left_hinge.up.set(0, -1, 0)
 
-	Cube_Template.highlightFace = Cube_Template.face.clone()
-
-	Cube_Template.highlightEdge = Cube_Template.hinge.clone()
-	Cube_Template.highlightEdge.scale.set(1.3, 1.0, 1.3)
-
-	Cube_Template.highlightFace.matrixAutoUpdate = false
-	Cube_Template.highlightEdge.matrixAutoUpdate = false
 
 	for(i = 0; i < 6; i++)
 	{
@@ -279,11 +278,30 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 			new_face.rotateY(ninety_deg)
 		}
 
+		new_face.scale.set(.9, .9, .9)
 		new_face.updateMatrix()
 		Cube_Template.new_cube.add(new_face)
+		Cube_Template.new_cube.updateMatrix()
 	}
 
-	Cube_Template.new_cube.scale.set(0.9, 0.9, 0.9)
+	Cube_Template.highlightFace = Cube_Template.face.clone()
+	Cube_Template.highlightFace.material = new THREE.MeshBasicMaterial({'color' : 0x000000})
+	Cube_Template.highlightFace.material.transparent = true
+	Cube_Template.highlightFace.material.opacity = 0.1
 
-	Cube_Template.new_cube.matrixAutoUpdate = false
+	Cube_Template.highlightEdge = Cube_Template.hinge.clone()
+	Cube_Template.highlightEdge.material = new THREE.MeshBasicMaterial({'color' : 0x000000})
+	Cube_Template.highlightEdge.material.transparent = true
+	Cube_Template.highlightEdge.material.opacity = 0.1
+
+
+	Cube_Template.highlightFace.matrixAutoUpdate = false
+	Cube_Template.highlightEdge.matrixAutoUpdate = false
+
+	Cube_Template.highlightEdge.scale.set(1.3, 1.0, 1.3)
+	Cube_Template.highlightFace.scale.set(.9, .9, .9)
+
+	Cube_Template.highlightFace.updateMatrix()
+	Cube_Template.highlightEdge.updateMatrix()
+
 }

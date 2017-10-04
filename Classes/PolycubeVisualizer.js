@@ -143,6 +143,22 @@ function PolycubeDataVisualizer(cube_template)
 			face_3.quaternion.premultiply( q );
 			face_4.quaternion.premultiply( q );
 
+			face_1.position.x = Math.round(face_1.position.x)
+			face_1.position.y = Math.round(face_1.position.y)
+			face_1.position.z = Math.round(face_1.position.z)
+
+			face_2.position.x = Math.round(face_2.position.x)
+			face_2.position.y = Math.round(face_2.position.y)
+			face_2.position.z = Math.round(face_2.position.z)
+
+			face_3.position.x = Math.round(face_3.position.x)
+			face_3.position.y = Math.round(face_3.position.y)
+			face_3.position.z = Math.round(face_3.position.z)
+
+			face_4.position.x = Math.round(face_4.position.x)
+			face_4.position.y = Math.round(face_4.position.y)
+			face_4.position.z = Math.round(face_4.position.z)
+
 			face_1.updateMatrix()
 			face_2.updateMatrix()
 			face_3.updateMatrix()
@@ -156,6 +172,13 @@ function PolycubeDataVisualizer(cube_template)
 			controller.Alert('ROTATE_FACE_ROUND_EDGE', edge_object.name, face_1.name, rads, axis)
 		}
 
+	}
+
+	this.FadeFaces = function(id, fade)
+	{
+		var p_cube = this.rotate_polycubes[id]
+
+		p_cube.children[0].children[0].material.opacity = fade
 	}
 
 	function ProcessCubeData(id, polycube, cube)
@@ -199,6 +222,10 @@ function PolycubeDataVisualizer(cube_template)
 
 			f.position.copy(position)
 			f.rotation.copy(rotation)
+
+			f.position.x = Math.round(f.position.x)
+			f.position.y = Math.round(f.position.y)
+			f.position.z = Math.round(f.position.z)
 
 			f.updateMatrix()
 
