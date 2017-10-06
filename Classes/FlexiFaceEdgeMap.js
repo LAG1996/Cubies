@@ -87,8 +87,7 @@ function FlexiFaceEdgeMap()
 		delete Edge2Data_Map[edge_name]
 		delete Edge2FlexiData_Map[edge_name]
 	}
-
-	//How the fuck am I supposed to write this one???
+	
 	this.RotateFaceAroundEdge = function(edge_name, face_name, rads, axis)
 	{
 		var obj = Face2FlexiData_Map[face_name]
