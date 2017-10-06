@@ -370,7 +370,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		e.endpoints = endpoints
 	}
 
-	this.Recalculate_Edge_Neighbors = function()
+	this.Recalculate_Edge_Neighbors = function(face_1_name, face_2_name)
 	{
 		var faces = this.Get_Faces()
 		var edges = this.Get_Edges()
@@ -394,6 +394,8 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 			HandleEdgeAdjacencyByFace(f_1, f_1)
 		}
+
+		HandleEdgeAdjacencyByFace(face_1_name, face_2_name)
 
 		for(var e in cut_edges)
 		{

@@ -542,14 +542,14 @@ $(document).ready(function(){
 								if(CONTROL.tape.face_1.name != CONTROL.tape.face_2.name)
 								{
 									var packet = PolyCube.Active_Polycube.Have_Common_Edge(CONTROL.tape.face_1.name, CONTROL.tape.face_2.name)
-									if(packet.common && PolyCube.Active_Polycube.Is_Cut(packet.edge_1))
+									if(packet.common && PolyCube.Active_Polycube.Is_Cut(packet.edge_1) && PolyCube.Active_Polycube.Is_Cut(packet.edge_2))
 									{
 										console.log(CONTROL.tape.face_1.name + " and " + CONTROL.tape.face_2.name + " have a common edge")
 
 										CONTROL.tape.face_1.neighbors[CONTROL.tape.face_2.name] = CONTROL.tape.face_2
 										CONTROL.tape.face_2.neighbors[CONTROL.tape.face_1.name] = CONTROL.tape.face_1
 
-										PolyCube.Active_Polycube.Recalculate_Edge_Neighbors()
+										PolyCube.Active_Polycube.Recalculate_Edge_Neighbors(CONTROL.tape.face_1.name, CONTROL.tape.face_2.name)
 										
 										PolyCube.Active_Polycube.Cut_Edge(packet.edge_1)
 
