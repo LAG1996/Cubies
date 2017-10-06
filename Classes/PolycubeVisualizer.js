@@ -81,14 +81,15 @@ function PolycubeDataVisualizer(cube_template)
 
 	this.RotateSubGraph = function(face_subgraph, edge_object, polycube, rads, controller)
 	{
-		var edge_pos = edge_object.getWorldPosition()
+		var edge_data = polycube.Get_Edge_Data(edge_object.name)
 	
 		var cube = polycube.ID2Cube[Cube.PartNameToCubeID(edge_object.name)]
 		//var axis = MakePositiveVector(new THREE.Vector3().copy(cube.edgeEndpoints[edge_object.name][0]).sub(cube.edgeEndpoints[edge_object.name][1]).normalize())
 
 		//Get the axis we are going to rotate around
 		//var axis = new THREE.Vector3().copy(MakePositiveVector(edge_object.up).normalize())
-		var axis = polycube.Get_Edge_Data(edge_object.name).axis
+		var axis = edge_data.axis
+		var edge_pos = new THREE.Vector3().copy(edge_data.location)
 
 		axis.y = Math.round(axis.y)
 		axis.z = Math.round(axis.z)
@@ -99,14 +100,16 @@ function PolycubeDataVisualizer(cube_template)
 
 		//Calculate the angle we want to rotate
 		var f = this.rotate_polycubes[polycube.id].getObjectByName(face_subgraph[0].name)
-		var dir_from_edge = new THREE.Vector3().copy(f.position)
+
+		var face_data  = polycube.Get_Face_Data(f.name)
+		var dir_from_edge = new THREE.Vector3().copy(face_data.location)
 		dir_from_edge.sub(edge_pos)
 
 		dir_from_edge.x = Math.round(dir_from_edge.x)
 		dir_from_edge.y = Math.round(dir_from_edge.y)
 		dir_from_edge.z = Math.round(dir_from_edge.z)
 
-		var cross = new THREE.Vector3().crossVectors(polycube.Get_Face_Data(f.name).normal, axis)
+		var cross = new THREE.Vector3().crossVectors(face_data.normal, axis)
 
 		cross.x = Math.round(cross.x)
 		cross.y = Math.round(cross.y)
@@ -128,20 +131,22 @@ function PolycubeDataVisualizer(cube_template)
 			var face_3 = this.rotate_hinge_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
 			var face_4 = this.rotate_pick_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
 
-			var rot_pos = new THREE.Vector3().copy(face_1.position)
+			face_data = polycube.Get_Face_Data(face_1.name)
+			var rot_pos = new THREE.Vector3().copy(face_data.location)
 			rot_pos.sub(edge_pos)
 			rot_pos.applyAxisAngle(axis, rads)
 			rot_pos.add(edge_pos)
+			//rot_pos.add(polycube.position)
 
 			face_1.position.copy(rot_pos)
 			face_2.position.copy(rot_pos)
 			face_3.position.copy(rot_pos)
 			face_4.position.copy(rot_pos)
 
-			face_1.quaternion.premultiply( q );
-			face_2.quaternion.premultiply( q );
-			face_3.quaternion.premultiply( q );
-			face_4.quaternion.premultiply( q );
+			face_1.quaternion.premultiply( q )
+			face_2.quaternion.premultiply( q )
+			face_3.quaternion.premultiply( q )
+			face_4.quaternion.premultiply( q )
 
 			face_1.position.x = Math.round(face_1.position.x)
 			face_1.position.y = Math.round(face_1.position.y)
