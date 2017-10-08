@@ -13,12 +13,16 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 	var DualGraphs = new FaceEdgeDualGraph()
 	var FaceEdgeLocations = new FlexiFaceEdgeMap()
 
+	var can_add_cube = true
 	var that = this
 
 
 	//Adds a new cube to the polycube, assuming lattice positions
 	this.Add_Cube = function(position)
 	{
+		if(!can_add_cube)
+			return
+
 		if(ObjectExists(CubeExistsAtPosition(position)))
 		{
 			return false
@@ -116,6 +120,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	this.Cut_Edge = function(edge_name)
 	{
+		can_add_cube = false
 		return DualGraphs.HandleCut(edge_name)
 	}
 

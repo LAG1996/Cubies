@@ -12,6 +12,7 @@ function FaceEdgeDualGraph(){
 	var Edge2RotationLine = {} //An object that maps each edge to a rotation line
 	var RotationLine2SubGraph = {} //An object that maps each rotation line index to two subgraphs
 	var RotationLine2ParentEdge = {} //An object that maps each rotation line index to a pair of parent edges
+	var Face2SubGraph = {} //An object that maps each face to a subgraph
 
 	var L_CutPaths = []
 	var L_RotationLines = []
@@ -376,75 +377,6 @@ function FaceEdgeDualGraph(){
 		return L_CutPaths
 	}
 
-	this.GetCollinearCuts = function(edgeName){
-		var l_1 = CollinearCuts[edgeName]
-
-		if(!ObjectExists(l_1))
-		{
-			l_1 = []
-		}
-
-		var i_edge = Edges[edgeName]['incidentEdge']
-
-		if(ObjectExists(i_edge))
-		{
-			var l_2 = CollinearCuts[i_edge['name']]
-
-			if(ObjectExists(l_2))
-			{
-				l_1 =  l_1.concat(CollinearCuts[i_edge['name']])
-			}
-		}
-
-		return l_1
-	}
-
-	this.GetPerpendicularCuts = function(edgeName){
-		var l_1 = PerpendicularCuts[edgeName]
-
-		if(!ObjectExists(l_1))
-		{
-			l_1 = []
-		}
-
-		var i_edge = Edges[edgeName]['incidentEdge']
-
-		if(ObjectExists(i_edge))
-		{
-			var l_2 = PerpendicularCuts[i_edge['name']]
-
-			if(ObjectExists(l_2))
-			{
-				l_1 =  l_1.concat(PerpendicularCuts[i_edge['name']])
-			}
-		}
-
-		return l_1
-	}
-
-	this.GetParallelCuts = function(edgeName){
-		var l_1 = ParallelCuts[edgeName]
-
-		if(!ObjectExists(l_1))
-		{
-			l_1 = []
-		}
-
-		var i_edge = Edges[edgeName]['incidentEdge']
-
-		if(ObjectExists(i_edge))
-		{
-			var l_2 = ParallelCuts[i_edge['name']]
-
-			if(ObjectExists(l_2))
-			{
-				l_1 =  l_1.concat(ParallelCuts[i_edge['name']])
-			}
-		}
-
-		return l_1
-	}
-
 	this.GetRotationLines = function(){
 		return L_RotationLines
 	}
@@ -457,7 +389,7 @@ function FaceEdgeDualGraph(){
 		return Edge2RotationLine[edgeName]
 	}
 
-	//Returns a data packet containing the subgraphs and the hinge line dividing them
+	//Returns a data packet containing the subgraphs and the hinge line dividing them and a mapping of faces to sub graphs
 	this.GetSubGraphs = function(edgeName){
 		var rotation_line = -1
 		rotation_line =  Edge2RotationLine[edgeName]
@@ -466,7 +398,7 @@ function FaceEdgeDualGraph(){
 			subgraphs = GenerateSubGraphs(rotation_line)
 		}
 
-		return {'subgraphs' : subgraphs, 'rotation_line_index' : rotation_line} 
+		return {'subgraphs' : subgraphs, 'rotation_line_index' : rotation_line, 'face2graph_map' : Face2SubGraph} 
 	}
 
 	this.UpdateCutPaths = function()
@@ -1069,6 +1001,9 @@ function FaceEdgeDualGraph(){
 			sub_graphs[jindex].push(face)
 			face['visited'] = true
 			Visited_Faces.push(face)
+
+			Face2SubGraph[face.name] = jindex
+
 			for(var N in face['neighbors'])
 			{
 				var neighbor = face['neighbors'][N]
