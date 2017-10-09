@@ -28,9 +28,6 @@
 							<button class = "w3-button w3-black obj_data_trigger" id = "active_toggle">objName</button>
 							<div id = "objName_data_edit" class ="w3-container obj_data_edit" style = "display:none">
 								<input id = "poly_obj_name_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "Change name">
-								<!--<input id = "poly_obj_x_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "">
-								<input id = "poly_obj_y_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "">
-								<input id = "poly_obj_z_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "">-->
 							</div>
 						</div>
 						<button class = "w3-button w3-red w3-hover-white" id = "dropdown_add_polycube">New Polycube</button>
@@ -38,37 +35,10 @@
 				</div>
 			</div>
 		</div>
-	
-		<div id = "right_sidebar" class = "w3-bar-block w3-right" style = "width:10%">
-			<div id = "right_sidebar_btn_template" class = "w3-bar-item w3-button w3-black w3-hover-white" style = "display:none">Test</div>
-		</div>
 
 		<div class = 'mouse_tooltip w3-bar' id = 'poly_cube_name_only'>
 			<span class = 'tooltip_text w3-black w3-padding w3-bar-item'></span>
 			<span class = 'tooltip_text_1 w3-red w3-padding w3-bar-item' id = 'polycube_part' style = "display:none"></span>
-		</div>
-
-		<div class = 'poly_cube_options mouse_tooltip' id = 'poly_cube_options_hinge' style = "display:none">
-
-			<span class = "w3-black w3-bar">
-				<button class = "w3-button w3-black w3-hover-white w3-bar-item" id = 'cut_action'>Cut</button>
-				<span class = "w3-border-left w3-border-dark-grey w3-white w3-bar-item" id = 'cut_action_lock'>asd</span>
-			</span>
-
-		</div>
-
-		<div class = 'poly_cube_options mouse_tooltip' id = 'poly_cube_options_rotate' style = "display:none">
-			
-			<span class = "w3-black w3-bar">
-				<button class = "w3-button w3-black w3-hover-white w3-bar-item" id = 'sub_graph_action'>See Subgraphs</button>
-				<span class = "w3-border-left w3-border-dark-grey w3-white w3-bar-item" id = 'sub_graph_action_lock'>asd</span>
-			</span>
-
-			<span class = "w3-black w3-bar">
-				<button class = "w3-button w3-black w3-hover-white w3-bar-item" id = 'rotate_action'>Rotate Around Me</button>
-				<span class = "w3-border-left w3-border-dark-grey w3-white w3-bar-item" id = 'rotate_action_lock'>asd</span>
-			</span>
-
 		</div>
 
 	</div>
@@ -132,7 +102,6 @@
 <script src = "Classes/SceneHandler_v2.js"></script>
 <script src = "Classes/Utils.js"></script>
 <script src = "Classes/Init_v2.js"></script>
-<script src = "Classes/MessageBoard.js"></script>
 
 <!--
 	The real meat of the program
@@ -147,17 +116,8 @@
 <!--
 	The entry point for our program
 -->
-<!--
-<script src = "Scenes/Practice_Scenes/LineDrawingScene.js"></script>
-<script src = "Scenes/Practice_Scenes/RotationAroundArbitraryPoint_v2.js"></script>
-<script src = "Scenes/scene_1.js"></script>
-<script src = "Scenes/scene_2.js"></script>
-<script src = "Scenes/scene_3.js"></script>
--->
 <script src = "Scenes/scene_3.js"></script>
 
-<!--Some scripts for testing-->
-<script src = "UnitTests/BuildPolyTest.js"></script>
 
 </body>
 </html>
