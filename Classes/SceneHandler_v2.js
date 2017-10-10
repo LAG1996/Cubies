@@ -102,6 +102,7 @@ function SceneHandler(bg_color = 0xFFFFE6){
 
 	this.Pick = function(mouse_position, color_container = null){
 
+		//console.log("Drawing the picking scene: " + this.active_picking_scene.name)
 		renderer.render(this.active_picking_scene, this.CAMERA, picking_texture)
 		return GetPixelColor(mouse_position, color_container)
 	}
@@ -185,10 +186,10 @@ function SceneHandler(bg_color = 0xFFFFE6){
 	}
 
 	this.Draw = function() {
-
+		//console.log("Drawing the scene: " + this.active_scene.name)
 		deltaTime = CLOCK.getDelta();
 
-		renderer.render(that.active_scene, that.CAMERA)
+		renderer.render(this.active_scene, that.CAMERA)
 	}
 
 	//Uses a simple color buffer draw trick to decide where the client is clicking

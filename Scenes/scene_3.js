@@ -48,19 +48,10 @@ $(document).ready(function(){
 		CONTROL.hinge_highlight = new THREE.Color(0xAA380F)
 	
 		//The scenes that the viewer will see
-		CONTROL.edit_mode_scene = new THREE.Scene()
-		CONTROL.edit_mode_scene.name = "edit_view"
 		CONTROL.rotate_mode_scene = new THREE.Scene()
 		CONTROL.rotate_mode_scene.name = "rotate_view"
 	
 		//Some picking scenes that we're going to use
-		CONTROL.edit_mode_poly_cube_picking_scene = new THREE.Scene()
-		CONTROL.edit_mode_poly_cube_picking_scene.name = "edit_poly_pick"
-		CONTROL.edit_mode_edge_picking_scene = new THREE.Scene()
-		CONTROL.edit_mode_edge_picking_scene.name = "edit_edge_pick"
-		CONTROL.edit_mode_face_picking_scene = new THREE.Scene()
-		CONTROL.edit_mode_face_picking_scene.name = "edit_face_pick"
-	
 		CONTROL.rotate_mode_poly_cube_picking_scene = new THREE.Scene()
 		CONTROL.rotate_mode_poly_cube_picking_scene.name = "rotate_poly_pick"
 		CONTROL.rotate_mode_edge_picking_scene = new THREE.Scene()
@@ -434,8 +425,10 @@ $(document).ready(function(){
 
 							var face_data = PolyCube.Active_Polycube.Get_Face_Data(face_name)
 
-							CONTROL.arrow_pair.position.copy(face_data.location)
-							CONTROL.pick_arrow_pair.position.copy(face_data.location)
+							var face_obj = CONTROL.data_processor.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
+
+							CONTROL.arrow_pair.position.copy(face_obj.getWorldPosition())
+							CONTROL.pick_arrow_pair.position.copy(face_obj.getWorldPosition())
 
 							var normal = face_data.normal.clone()
 
@@ -492,7 +485,6 @@ $(document).ready(function(){
 									var packet = PolyCube.Active_Polycube.Have_Common_Edge(CONTROL.tape.face_1.name, CONTROL.tape.face_2.name)
 									if(packet.common && PolyCube.Active_Polycube.Is_Cut(packet.edge_1) && PolyCube.Active_Polycube.Is_Cut(packet.edge_2))
 									{
-										console.log(CONTROL.tape.face_1.name + " and " + CONTROL.tape.face_2.name + " have a common edge")
 
 										CONTROL.tape.face_1.neighbors[CONTROL.tape.face_2.name] = CONTROL.tape.face_2
 										CONTROL.tape.face_2.neighbors[CONTROL.tape.face_1.name] = CONTROL.tape.face_1
@@ -603,18 +595,19 @@ $(document).ready(function(){
 			{
 				$("#" + p_cube.name + "_data").remove()
 	
-				CONTROL.ClearJunk(CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
-				CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.edit_mode_scene)
+				CONTROL.ClearJunk(CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
+				CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 	
 	
-				CONTROL.UpdateCuts(null, CONTROL.edit_mode_scene, CONTROL.edit_cut_junk[PolyCube.Active_Polycube.id])
 				CONTROL.UpdateCuts(null, CONTROL.rotate_mode_scene, CONTROL.rotate_cut_junk[PolyCube.Active_Polycube.id])
 	
-				CONTROL.UpdateHinges(null, CONTROL.edit_mode_scene, CONTROL.edit_hinge_junk[PolyCube.Active_Polycube.id])
 				CONTROL.UpdateHinges(null, CONTROL.rotate_mode_scene, CONTROL.rotate_hinge_junk[PolyCube.Active_Polycube.id])
 	
 	
 				CONTROL.last_hover_over_poly = null
+				CONTROL.face_graphs_out = false
+				CONTROL.arrow_pair.visible = false
+				CONTROL.arrows_out = false
 	
 	
 				CONTROL.data_processor.DestroyPolycube(p_cube)
@@ -858,15 +851,8 @@ $(document).ready(function(){
 	
 		CONTROL.VisualizePolycube = function(polycube)
 		{
-			CONTROL.edit_mode_scene.add(CONTROL.data_processor.edit_polycubes[polycube.id])
 	
 			CONTROL.rotate_mode_scene.add(CONTROL.data_processor.rotate_polycubes[polycube.id])
-	
-			CONTROL.edit_mode_poly_cube_picking_scene.add(CONTROL.data_processor.edit_pick_polycubes[polycube.id])
-	
-			CONTROL.edit_mode_face_picking_scene.add(CONTROL.data_processor.edit_face_polycube[polycube.id])
-	
-			CONTROL.edit_mode_edge_picking_scene.add(CONTROL.data_processor.edit_hinge_polycubes[polycube.id])
 	
 			CONTROL.rotate_mode_poly_cube_picking_scene.add(CONTROL.data_processor.rotate_pick_polycubes[polycube.id])
 	
@@ -1088,7 +1074,6 @@ $(document).ready(function(){
 			
 			if(CONTROL.cuts_need_update)
 			{
-				CONTROL.UpdateCuts(CONTROL.last_hover_over_poly, CONTROL.edit_mode_scene, CONTROL.edit_cut_junk[CONTROL.last_hover_over_poly.id])
 				CONTROL.UpdateCuts(CONTROL.last_hover_over_poly, CONTROL.rotate_mode_scene, CONTROL.rotate_cut_junk[CONTROL.last_hover_over_poly.id])
 	
 				CONTROL.cuts_need_update = false			
@@ -1096,7 +1081,6 @@ $(document).ready(function(){
 	
 			if(CONTROL.hinges_need_update)
 			{
-				CONTROL.UpdateHinges(CONTROL.last_hover_over_poly, CONTROL.edit_mode_scene, CONTROL.edit_hinge_junk[CONTROL.last_hover_over_poly.id])
 				CONTROL.UpdateHinges(CONTROL.last_hover_over_poly, CONTROL.rotate_mode_scene, CONTROL.rotate_hinge_junk[CONTROL.last_hover_over_poly.id])
 	
 				CONTROL.hinges_need_update = false

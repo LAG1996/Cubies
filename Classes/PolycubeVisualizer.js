@@ -53,10 +53,10 @@ function PolycubeDataVisualizer(cube_template)
 	this.DestroyPolycube = function(polycube)
 	{
 
-		this.edit_polycubes[polycube.id].parent.remove(this.edit_polycubes[polycube.id])
-		this.edit_hinge_polycubes[polycube.id].parent.remove(this.edit_hinge_polycubes[polycube.id])
-		this.edit_face_polycube[polycube.id].parent.remove(this.edit_face_polycube[polycube.id])
-		this.edit_pick_polycubes[polycube.id].parent.remove(this.edit_pick_polycubes[polycube.id])
+		//this.edit_polycubes[polycube.id].parent.remove(this.edit_polycubes[polycube.id])
+		//this.edit_hinge_polycubes[polycube.id].parent.remove(this.edit_hinge_polycubes[polycube.id])
+		//this.edit_face_polycube[polycube.id].parent.remove(this.edit_face_polycube[polycube.id])
+		//this.edit_pick_polycubes[polycube.id].parent.remove(this.edit_pick_polycubes[polycube.id])
 		this.rotate_polycubes[polycube.id].parent.remove(this.rotate_polycubes[polycube.id])
 		this.rotate_hinge_polycubes[polycube.id].parent.remove(this.rotate_hinge_polycubes[polycube.id])
 		this.rotate_face_polycubes[polycube.id].parent.remove(this.rotate_face_polycubes[polycube.id])
@@ -218,6 +218,9 @@ function PolycubeDataVisualizer(cube_template)
 		v_cube.name = cube.object_name
 
 		var f_number = cube.id * 6
+		var material = new THREE.MeshBasicMaterial({color: 0xC0BD88})
+		material.transparent = true
+		material.opacity = 0.5
 		for(var face_num in v_cube.children)
 		{
 			var f = v_cube.children[face_num]
@@ -231,6 +234,8 @@ function PolycubeDataVisualizer(cube_template)
 			f.position.x = Math.round(f.position.x)
 			f.position.y = Math.round(f.position.y)
 			f.position.z = Math.round(f.position.z)
+
+			f.children[0].material = material.clone()
 
 			f.updateMatrix()
 

@@ -164,7 +164,7 @@ Cube_Template.GenerateCube = function(cubeFaceMesh, cubeHingeMesh)
 	Cube_Template.face.material.transparent = true
 	Cube_Template.hinge.material.transparent = true
 
-	Cube_Template.face.material.opacity = 0.6
+	Cube_Template.face.material.opacity = 0.5
 	//Cube_Template.face.material.opacity = 0.5
 
 	Cube_Template.hinge.scale.set(1.25, 1, 1.25)
