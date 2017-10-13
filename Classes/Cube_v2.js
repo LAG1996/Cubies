@@ -96,9 +96,9 @@ function Cube(id, position, parent_poly_id){
 Cube.ToLatticePosition = function(position)
 {
 
-	position.x = Math.floor(position.x)
-	position.y = Math.floor(position.y)
-	position.z = Math.floor(position.z)
+	position.x = position.x >= 0 ? Math.floor(position.x) : Math.ceil(position.x)
+	position.y = position.x >= 0 ? Math.floor(position.y) : Math.ceil(position.y)
+	position.z = position.x >= 0 ? Math.floor(position.z) : Math.ceil(position.z)
 
 	return position
 }

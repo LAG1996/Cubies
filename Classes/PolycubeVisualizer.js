@@ -169,11 +169,6 @@ function PolycubeDataVisualizer(cube_template)
 			face_3.updateMatrix()
 			face_4.updateMatrix()
 
-			//RotateUpAxis(face_1, rads, axis)
-			//RotateUpAxis(face_2, rads, axis)
-			//RotateUpAxis(face_3, rads, axis)
-			//RotateUpAxis(face_4, rads, axis)
-
 			controller.Alert('ROTATE_FACE_ROUND_EDGE', edge_object.name, face_1.name, rads, axis)
 		}
 

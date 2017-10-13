@@ -205,20 +205,7 @@ $(document).ready(function(){
 				CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.ID2Poly.id], CONTROL.rotate_mode_scene)
 			}
 			
-	
 			CONTROL.Mouse_Hover_Funcs = [function(){
-		
-				if(!ObjectExists(PolyCube.Active_Polycube))
-				{
-					if(ObjectExists(CONTROL.last_hover_over_poly))
-						CONTROL.ClearJunk(CONTROL.edge_junk[CONTROL.last_hover_over_poly.id], CONTROL.rotate_mode_scene)
-	
-					return
-				}
-				else
-				{
-					CONTROL.ClearJunk(CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
-				}
 	
 				if(!CONTROL.face_graphs_out)
 					CONTROL.ClearJunk(CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
@@ -228,6 +215,8 @@ $(document).ready(function(){
 
 				if(PolyCube.Active_Polycube.name != CONTROL.hover_over_poly.name)
 					return
+
+				CONTROL.ClearJunk(CONTROL.edge_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 	
 				CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.rotate_mode_edge_picking_scene)
 				var id = CONTROL.scene_handler.Pick(CONTROL.mouse_pos)
@@ -265,15 +254,11 @@ $(document).ready(function(){
 							else
 								CONTROL.HighlightParts(CONTROL.rotate_mode_scene.getObjectByName(face.name), CONTROL.holding_down_shift ? CONTROL.mouse_over_hinge_highlight : CONTROL.prime_highlight, 'face', CONTROL.face_junk[PolyCube.Active_Polycube.id], CONTROL.rotate_mode_scene)
 						}
-						//$("#poly_cube_name_only").hide()
 					}
 					else
 					{
 						CONTROL.hover_over_face = null
 						CONTROL.hovering_over_face = false
-	
-						//$("#poly_cube_name_only").show()
-						//$(".tooltip_text").text("Exit " + PolyCube.Active_Polycube.name)
 					}
 				}
 				else
@@ -739,11 +724,11 @@ $(document).ready(function(){
 			$('#poly_cube_name_only').css("top", "" + CONTROL.mouse_pos.y + "px")
 			$('#poly_cube_name_only').css("left", "" + (CONTROL.mouse_pos.x + 10) + "px")
 	
-	
 			CONTROL.scene_handler.RequestSwitchToPickingScene(CONTROL.rotate_mode_poly_cube_picking_scene)
 			var id = CONTROL.scene_handler.Pick(CONTROL.mouse_pos)
 	
 			var p_cube = PolyCube.ID2Poly[id]
+
 			if(ObjectExists(p_cube))
 			{
 				CONTROL.hover_over_poly = p_cube
@@ -751,6 +736,13 @@ $(document).ready(function(){
 			}
 			else
 			{
+
+				if(ObjectExists(CONTROL.hover_over_poly))
+				{
+					CONTROL.ClearJunk(CONTROL.edge_junk[CONTROL.hover_over_poly.id], CONTROL.rotate_mode_scene)
+					CONTROL.ClearJunk(CONTROL.face_junk[CONTROL.hover_over_poly.id], CONTROL.rotate_mode_scene)
+				}
+
 				CONTROL.hover_over_poly = null
 				
 				CONTROL.hovering_over_hinge = false
@@ -1058,7 +1050,6 @@ $(document).ready(function(){
 			//Load up cubes from any opened files
 			for(var c in CONTROL.Load_Polycube_Handler_List)
 			{
-				console.log("loading cubes")
 				if(CONTROL.Load_Polycube_Handler_List[c].finished)
 				{
 					delete CONTROL.Load_Polycube_Handler_List[c]
@@ -1091,6 +1082,6 @@ $(document).ready(function(){
 	
 		CONTROL.Switch_Context('edit-context')
 	
-		requestAnimationFrame(CONTROL.update)
+		CONTROL.update()
 	}
 })
