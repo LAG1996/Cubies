@@ -349,8 +349,6 @@ $(document).ready(function(){
 						{
 							if(!PolyCube.Active_Polycube.Is_Cut(CONTROL.hover_over_hinge.name))
 								PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name)
-							//if(PolyCube.Active_Polycube.Cut_Edge(CONTROL.hover_over_hinge.name))
-								//CONTROL.ResetRotationPolycubes(PolyCube.Active_Polycube)
 		
 							CONTROL.cuts_need_update = true
 							CONTROL.hinges_need_update = true
@@ -538,8 +536,7 @@ $(document).ready(function(){
 	
 			var new_p_cube = PolyCube.GenerateNewPolyCube(args[0], args[1])
 			CONTROL.toolbar_handler.AddPolyCubeToObjectView(args[1])
-	
-			//CONTROL.scene_handler.RequestAddToScene(new_p_cube.Obj)
+			
 			PolyCube.SwitchToNewActive(new_p_cube)
 			PolyCube.Active_Polycube.Add_Cube(new THREE.Vector3(0, 0, 0))
 	

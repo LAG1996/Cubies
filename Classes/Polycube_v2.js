@@ -16,7 +16,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 	var can_add_cube = true
 	var that = this
 
-
 	//Adds a new cube to the polycube, assuming lattice positions
 	this.Add_Cube = function(position)
 	{
@@ -287,7 +286,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 				DualGraphs.AddNeighboringFaces(f_1, f_2)
 
-				//that.HandleEdgeAdjacency(f_1, f_2)
 			}
 		}
 
@@ -303,8 +301,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 			var f_2 = Cube.GetFaceName(cube_2, direction_2)
 
 			DualGraphs.AddNeighboringFaces(f_1, f_2)
-
-			//that.HandleEdgeAdjacency(f_1, f_2)
 		}
 
 		HandleEdgeAdjacency(cube_1, cube_2)
@@ -329,8 +325,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 							var f_2 = Cube.GetFaceName(cube, dir_2)
 
 							DualGraphs.AddNeighboringFaces(f_1, f_2)
-
-							//that.HandleEdgeAdjacency(f_1, f_2)
 						}
 					}
 				}

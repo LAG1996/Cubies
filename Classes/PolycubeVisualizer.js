@@ -53,10 +53,6 @@ function PolycubeDataVisualizer(cube_template)
 	this.DestroyPolycube = function(polycube)
 	{
 
-		//this.edit_polycubes[polycube.id].parent.remove(this.edit_polycubes[polycube.id])
-		//this.edit_hinge_polycubes[polycube.id].parent.remove(this.edit_hinge_polycubes[polycube.id])
-		//this.edit_face_polycube[polycube.id].parent.remove(this.edit_face_polycube[polycube.id])
-		//this.edit_pick_polycubes[polycube.id].parent.remove(this.edit_pick_polycubes[polycube.id])
 		this.rotate_polycubes[polycube.id].parent.remove(this.rotate_polycubes[polycube.id])
 		this.rotate_hinge_polycubes[polycube.id].parent.remove(this.rotate_hinge_polycubes[polycube.id])
 		this.rotate_face_polycubes[polycube.id].parent.remove(this.rotate_face_polycubes[polycube.id])
@@ -95,9 +91,6 @@ function PolycubeDataVisualizer(cube_template)
 		axis.z = Math.round(axis.z)
 		axis.x = Math.round(axis.x)
 
-		console.log("axis is: ")
-		console.log(axis)
-
 		//Calculate the angle we want to rotate
 		var f = this.rotate_polycubes[polycube.id].getObjectByName(face_subgraph[0].name)
 
@@ -116,9 +109,6 @@ function PolycubeDataVisualizer(cube_template)
 		cross.z = Math.round(cross.z)
 
 		rads = cross.equals(dir_from_edge) ? rads : -1*rads
-
-		console.log("cross product is: ")
-		console.log(cross)
 
 		var q = new THREE.Quaternion(); // create once and reuse
 
@@ -184,7 +174,7 @@ function PolycubeDataVisualizer(cube_template)
 	function ProcessCubeData(id, polycube, cube)
 	{
 		var v_cube = that.cube_template.clone()
-		v_cube.position.copy(cube.position).multiplyScalar(2 + 0.12)
+		v_cube.position.copy(cube.position).multiplyScalar(2)
 	
 		for(var dir in cube.has_faces)
 		{
