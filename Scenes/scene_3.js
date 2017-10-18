@@ -1075,10 +1075,12 @@ $(document).ready(function(){
 			}
 			
 			requestAnimationFrame(CONTROL.update)
+
 		}
 	
 		CONTROL.Switch_Context('edit-context')
-	
+
 		CONTROL.update()
+	
 	}
 })
