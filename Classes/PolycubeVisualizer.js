@@ -79,13 +79,10 @@ function PolycubeDataVisualizer(cube_template)
 	{
 		var edge_data = polycube.Get_Edge_Data(edge_object.name)
 	
-		var cube = polycube.ID2Cube[Cube.PartNameToCubeID(edge_object.name)]
-		//var axis = MakePositiveVector(new THREE.Vector3().copy(cube.edgeEndpoints[edge_object.name][0]).sub(cube.edgeEndpoints[edge_object.name][1]).normalize())
-
 		//Get the axis we are going to rotate around
 		//var axis = new THREE.Vector3().copy(MakePositiveVector(edge_object.up).normalize())
 		var axis = edge_data.axis
-		var edge_pos = new THREE.Vector3().copy(edge_data.location)
+		var edge_pos = new THREE.Vector3().copy(edge_data.position)
 
 		axis.y = Math.round(axis.y)
 		axis.z = Math.round(axis.z)
@@ -95,7 +92,7 @@ function PolycubeDataVisualizer(cube_template)
 		var f = this.rotate_polycubes[polycube.id].getObjectByName(face_subgraph[0].name)
 
 		var face_data  = polycube.Get_Face_Data(f.name)
-		var dir_from_edge = new THREE.Vector3().copy(face_data.location)
+		var dir_from_edge = new THREE.Vector3().copy(face_data.position)
 		dir_from_edge.sub(edge_pos)
 
 		dir_from_edge.x = Math.round(dir_from_edge.x)
@@ -122,7 +119,7 @@ function PolycubeDataVisualizer(cube_template)
 			var face_4 = this.rotate_pick_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
 
 			face_data = polycube.Get_Face_Data(face_1.name)
-			var rot_pos = new THREE.Vector3().copy(face_data.location)
+			var rot_pos = new THREE.Vector3().copy(face_data.position)
 			rot_pos.sub(edge_pos)
 			rot_pos.applyAxisAngle(axis, rads)
 			rot_pos.add(edge_pos)

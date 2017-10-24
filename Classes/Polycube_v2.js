@@ -5,14 +5,12 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 	this.position = position
 	this.auto_cleanse = auto_cleanse_flag
 
-	this.Cube_Map = {}
-
-	this.ID2Cube = {}
-	this.Name2Cube = {}
+	this.Cube_Map = []
 
 	var DualGraphs = new FaceEdgeDualGraph()
 	var FaceEdgeLocations = new FlexiFaceEdgeMap()
 
+	var cube_count = 0
 	var can_add_cube = true
 	var that = this
 
@@ -26,7 +24,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		{
 			return false
 		}
-		else if(Object.keys(this.Cube_Map).length > 0)
+		else if(cube_count > 0)
 		{
 			//Check if there are any adjacencies
 			var has_adjacent_cubes = false
@@ -51,9 +49,10 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 			}
 		}
 
-		var cube = new Cube(Object.keys(this.Cube_Map).length, position, this.id)
+		var cube = new Cube(cube_count++, position, this.id)
 
-		this.ID2Cube[cube.id] = cube
+		//this.ID2Cube[cube.id] = cube
+
 		MapCube(position, cube)
 
 		for(var f_dir in cube.has_faces)
@@ -87,24 +86,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 		return true
 
-	}
-
-	this.Clean_Cube = function(cube)
-	{
-		for(var word in PolyCube.words2directions)
-		{
-			var dir = PolyCube.words2directions[word]
-
-			var looking_at_pos = new THREE.Vector3().copy(cube.position)
-
-			looking_at_pos.add(dir)
-
-			if(CubeExistsAtPosition(looking_at_pos))
-			{
-				HandleFaceRemoval(cube, word)
-				HandleFaceRemoval(this.GetCubeAtPosition(looking_at_pos), PolyCube.direction_words_to_opposites[word])
-			}
-		}
 	}
 
 	this.Rotate_Data = function(edge_name, face_name, rads, axis)
@@ -195,12 +176,15 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	this.GetCubeAtPosition = function(position)
 	{
-		return this.Cube_Map[that.PositionToKey(position)]
+		if(!Array.isArray(this.Cube_Map[position.x]))
+			return null
+
+		return this.Cube_Map[position.x][position.y][position.z]
 	}
 
 	this.PositionToKey = function(position)
 	{
-		return position.x.toFixed(1)+","+position.y.toFixed(1)+","+position.z.toFixed(1)
+		return ((position.x * 73856093) ^ (position.y * 19349663) ^ (position.z * 83492791)) % max_size
 	}
 
 	this.toJSON = function(){
@@ -220,143 +204,39 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	this.Destroy = function()
 	{
-		for(var c in this.Cube_Map)
-		{
-			this.Cube_Map[c].Destroy()
-		}
+		delete this.Cube_Map
 
 		delete this
 	}
 
-	function SetAdjacencies(cube_1)
+	function SetAdjacencies(cube)
 	{
+		Clean_Cube(cube)
+
 		for(var word in PolyCube.words2directions)
 		{
-			var dir = PolyCube.words2directions[word]
-			var looking_at_pos = new THREE.Vector3().copy(cube_1.position)
-
-			looking_at_pos.add(dir)
-
-			if(CubeExistsAtPosition(looking_at_pos))
-			{
-				if(that.auto_cleanse)
-				{
-					HandleFaceRemoval(cube_1, word)
-					HandleFaceRemoval(that.GetCubeAtPosition(looking_at_pos), PolyCube.direction_words_to_opposites[word])
-				}
-
-				var cube_2 = that.GetCubeAtPosition(looking_at_pos)
-
-				RecordOrthoAdjacencies(cube_1, cube_2, word)
-			}
-			else
+			if(!cube.has_faces[word])
 				continue
 
-			for(var another_word in PolyCube.words2directions)
-			{
-				looking_at_pos.copy(cube_1.position)
+			var face_name = Cube.GetFaceName(cube, word)
 
-				if(another_word != word && another_word != PolyCube.direction_words_to_opposites[word])
+			FindAdjacentFaces(face_name)
+		}
+
+		function Clean_Cube(cube)
+		{
+			for(var word in PolyCube.words2directions)
+			{
+				var dir = PolyCube.words2directions[word]
+	
+				var looking_at_pos = new THREE.Vector3().copy(cube.position)
+	
+				looking_at_pos.add(dir)
+	
+				if(CubeExistsAtPosition(looking_at_pos))
 				{
-					var diag_dir = new THREE.Vector3().addVectors(dir, PolyCube.words2directions[another_word])
-					looking_at_pos.add(diag_dir)
-					if(CubeExistsAtPosition(looking_at_pos))
-					{
-						cube_2 = that.GetCubeAtPosition(looking_at_pos)
-
-						RecordDiagonalAdjacencies(cube_1, cube_2, another_word, PolyCube.direction_words_to_opposites[word])
-					}
-				}
-			}
-		}
-
-		RecordAdjacencyWithSelf(cube_1)
-	}
-
-	function RecordOrthoAdjacencies(cube_1, cube_2, separating_dir_word)
-	{
-		for(var word in PolyCube.direction_words)
-		{
-			var w = PolyCube.direction_words[word]
-
-			if(cube_1.has_faces[w] && cube_2.has_faces[w])
-			{
-				var f_1 = Cube.GetFaceName(cube_1, w)
-				var f_2 = Cube.GetFaceName(cube_2, w)
-
-				DualGraphs.AddNeighboringFaces(f_1, f_2)
-
-			}
-		}
-
-		HandleEdgeAdjacency(cube_1, cube_2)
-	}
-
-	function RecordDiagonalAdjacencies(cube_1, cube_2, direction_1, direction_2)
-	{
-
-		if(cube_1.has_faces[direction_1] && cube_2.has_faces[direction_2])
-		{
-			var f_1 = Cube.GetFaceName(cube_1, direction_1)
-			var f_2 = Cube.GetFaceName(cube_2, direction_2)
-
-			DualGraphs.AddNeighboringFaces(f_1, f_2)
-		}
-
-		HandleEdgeAdjacency(cube_1, cube_2)
-	}
-
-	function RecordAdjacencyWithSelf(cube) 
-	{
-		for(var word in PolyCube.direction_words)
-		{
-			var dir_1 = PolyCube.direction_words[word]
-
-			if(cube.has_faces[dir_1])
-			{
-				for(var word_2 in PolyCube.direction_words)
-				{
-					var dir_2 = PolyCube.direction_words[word_2]
-					if(dir_1 != dir_2 && dir_2 != PolyCube.direction_words_to_opposites[dir_1])
-					{
-						if(cube.has_faces[dir_2])
-						{
-							var f_1 = Cube.GetFaceName(cube, dir_1)							
-							var f_2 = Cube.GetFaceName(cube, dir_2)
-
-							DualGraphs.AddNeighboringFaces(f_1, f_2)
-						}
-					}
-				}
-			}
-		}
-
-		HandleEdgeAdjacency(cube, cube)
-	}
-
-	function HandleEdgeAdjacency(cube_1, cube_2)
-	{
-		for(var edge_name_1 in cube_1.edgeEndpoints)
-		{
-			var e_1 = cube_1.edgeEndpoints[edge_name_1]
-
-			for(var edge_name_2 in cube_2.edgeEndpoints)
-			{
-				if(cube_1.id == cube_2.id && edge_name_1 == edge_name_2)
-					continue
-				
-				var e_2 = cube_2.edgeEndpoints[edge_name_2]
-
-				if(cube_1.has_faces[Cube.FaceNameToDirection(Cube.EdgeNameToFaceName(edge_name_1))] && cube_2.has_faces[Cube.FaceNameToDirection(Cube.EdgeNameToFaceName(edge_name_2))])
-				{
-					if((e_1[0].equals(e_2[0]) && e_1[1].equals(e_2[1])) || (e_1[0].equals(e_2[1]) && e_1[1].equals(e_2[0])))
-					{
-						DualGraphs.AddIncidentEdges(edge_name_1, e_1, edge_name_2, e_2)
-					}
-					else if(e_1[0].equals(e_2[0]) || e_1[0].equals(e_2[1]) || e_1[1].equals(e_2[0]) || e_1[1].equals(e_2[1])) 
-					{
-						DualGraphs.AddNeighboringEdges(edge_name_1, e_1, edge_name_2, e_2)
-					}
+					HandleFaceRemoval(cube, word)
+					HandleFaceRemoval(that.GetCubeAtPosition(looking_at_pos), PolyCube.direction_words_to_opposites[word])
 				}
 			}
 		}
@@ -369,7 +249,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		e.endpoints = endpoints
 	}
 
-	this.Recalculate_Edge_Neighbors = function(face_1_name, face_2_name)
+	this.Recalculate_Edge_Neighbors = function(face_1_name, face_2_name, edge_1_name, edge_2_name)
 	{
 		var faces = this.Get_Faces()
 		var edges = this.Get_Edges()
@@ -380,66 +260,65 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		{
 			DualGraphs.RemoveEdge(e)
 		}
-
-		for(var f_1 in faces)
+	
+		for(var f in faces)
 		{
-			for(var f_2 in faces)
-			{
-				if(f_1 != f_2)
-				{
-					HandleEdgeAdjacencyByFace(f_1, f_2)
-				}
-			}
-
-			HandleEdgeAdjacencyByFace(f_1, f_1)
+			FindAdjacentFaces(faces[f].name)
 		}
-
-		HandleEdgeAdjacencyByFace(face_1_name, face_2_name)
 
 		for(var e in cut_edges)
 		{
-			var edge = this.Get_Edge(cut_edges[e])
+			var edge_name = cut_edges[e]
 
-			edge.cut = true
-			this.Get_Cuts()[cut_edges[e]] = edge
+			if(edge_name == edge_1_name || edge_name == edge_2_name)
+				continue
+
+			DualGraphs.HandleCutNoUpdate(edge_name)
 		}
 
 		DualGraphs.UpdateCutPaths()
 		DualGraphs.UpdateHingePaths()
 	}
 
-	function HandleEdgeAdjacencyByFace(face_1_name, face_2_name)
+	function FindAdjacentFaces(face_name)
 	{
-		for(var dir in PolyCube.direction_words)
+		var edges = FaceEdgeLocations.GetEdgesFromFace(face_name)
+
+		for(var e in edges)
 		{
-			if(PolyCube.direction_words[dir] == "front" || PolyCube.direction_words[dir] == "back")
-				continue
+			var edge_1 = edges[e]
+			var edge_2_name = FaceEdgeLocations.GetEdgesAtLoc(edge_1.position)
+			edge_2_name = edge_2_name[0] == edge_1.name ? edge_2_name[1] : edge_2_name[0]
+			var other_face = FaceEdgeLocations.GetFaceFromEdge(edge_2_name)
 
-			var edge_name_1 = face_1_name + "_" + PolyCube.direction_words[dir]
+			DualGraphs.AddNeighboringFaces(face_name, other_face.name)
 
-			var e_1_d = FaceEdgeLocations.GetEdgeData(edge_name_1)
-			var e_1_e = FaceEdgeLocations.GetEndPoints(edge_name_1)
+			DualGraphs.AddIncidentEdges(edge_1.name, FaceEdgeLocations.GetEndPoints(edge_1.name), 
+				edge_2_name, FaceEdgeLocations.GetEndPoints(edge_2_name))
 
-			for(var dir2 in PolyCube.direction_words)
+			FindAdjacentEdges(edges, FaceEdgeLocations.GetEdgesFromFace(other_face.name))
+		}
+	}
+
+	function FindAdjacentEdges(edges_1, edges_2)
+	{
+		for(var e_1 in edges_1)
+		{
+			for(var e_2 in edges_2)
 			{
-				if(PolyCube.direction_words[dir2] == "front" || PolyCube.direction_words[dir2] == "back")
-					continue
+				var ed_1 = edges_1[e_1]
+				var ed_2 = edges_2[e_2]
 
-				var edge_name_2 = face_2_name + "_" + PolyCube.direction_words[dir2]
+				if(ed_1.position.equals(ed_2.position))
+					continue 
 
-				if(edge_name_1 == edge_name_2)
-					continue
+				var endpoints_1 = FaceEdgeLocations.GetEndPoints(ed_1.name)
+				var endpoints_2 = FaceEdgeLocations.GetEndPoints(ed_2.name)
 
-				var e_2_d = FaceEdgeLocations.GetEdgeData(edge_name_2)	
-				var e_2_e = FaceEdgeLocations.GetEndPoints(edge_name_2)
-
-				if(e_1_d.location.equals(e_2_d.location))
+				if(endpoints_1[0].equals(endpoints_2[0]) || endpoints_1[0].equals(endpoints_2[1]) || 
+					endpoints_1[1].equals(endpoints_2[0]) || endpoints_1[1].equals(endpoints_2[1]))
 				{
-					DualGraphs.AddIncidentEdges(edge_name_1, e_1_e, edge_name_2, e_2_e)
-				}
-				else if(e_1_e[0].equals(e_2_e[0]) || e_1_e[0].equals(e_2_e[1]) || e_1_e[1].equals(e_2_e[0]) || e_1_e[1].equals(e_2_e[1]))
-				{
-					DualGraphs.AddNeighboringEdges(edge_name_1, e_1_e, edge_name_2, e_2_e)
+					DualGraphs.AddNeighboringEdges(ed_1.name, endpoints_1, ed_2.name, endpoints_2)
 				}
 			}
 		}
@@ -447,12 +326,33 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	function MapCube(position, cube)
 	{
-		that.Cube_Map[that.PositionToKey(position)] = cube
+		if(!Array.isArray(that.Cube_Map[position.x]))
+		{
+			that.Cube_Map[position.x] = []
+			that.Cube_Map[position.x][position.y] = []
+		}
+		else if(!Array.isArray(that.Cube_Map[position.x][position.y]))
+		{
+			that.Cube_Map[position.x][position.y] = []
+		}
+
+
+		that.Cube_Map[position.x][position.y][position.z] = cube
 	}
 
 	function CubeExistsAtPosition(position)
 	{
-		return ObjectExists(that.Cube_Map[that.PositionToKey(position)])
+
+		if(!Array.isArray(that.Cube_Map[position.x]))
+		{
+			return false
+		}
+		else if(!Array.isArray(that.Cube_Map[position.x][position.y]))
+		{
+			return false
+		}
+
+		return ObjectExists(that.Cube_Map[position.x][position.y][position.z])
 	}
 
 	function HandleFaceRemoval(cube, dir_word)
@@ -502,7 +402,6 @@ PolyCube.direction_words_to_opposites = {
 	"front": "back", 
 	"back": "front"
 }
-
 
 PolyCube.Name2Poly = {}
 PolyCube.ID2Poly = {}	

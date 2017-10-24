@@ -178,6 +178,40 @@ function FaceEdgeDualGraph(){
 			return null
 	}
 
+	this.HandleCutNoUpdate = function(edge_name)
+	{
+		var edge_1 = Edges[edge_name]
+		
+		if(!ObjectExists(edge_1))
+			return false
+
+		//There is nothing to do with this edge, since it is a cut that cannot be undone
+		if(!ObjectExists(edge_1['incidentEdge']))
+			return false
+
+		if(edge_1['invalid'])
+			return false
+
+		if(edge_1['cut'])
+		{
+			var edge_2 = edge_1["incidentEdge"]
+
+			edge_1["cut"] = true
+			edge_2["cut"] = true
+
+			Cut_Edges[edge_1.name] = edge_1
+			Cut_Edges[edge_2.name] = edge_2
+
+			var face_1 = Faces[Cube.EdgeNameToFaceName(edge_1.name)]
+			var face_2 = Faces[Cube.EdgeNameToFaceName(edge_2.name)]
+
+			UndoCut(edge_1, edge_2, face_1, face_2)
+
+		}
+
+		CutHinge(edge_1)
+	}
+
 	//Function that handles cutting hinges, and also the undoing of these cuts. 
 	//The keyword here is "hinges". A hinge is two incident edges. If an edge without an incident partner is passed in the parameter, then there is nothing to do
 	//since it is already cut and there is not incident edge to "stick back together" with it.
