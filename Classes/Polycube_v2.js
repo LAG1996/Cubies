@@ -1,3 +1,4 @@
+"use strict";
 function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	this.id = PolyCube.Next_ID
@@ -50,8 +51,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		}
 
 		var cube = new Cube(cube_count++, position, this.id)
-
-		//this.ID2Cube[cube.id] = cube
 
 		MapCube(position, cube)
 

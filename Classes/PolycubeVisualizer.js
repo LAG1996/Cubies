@@ -2,11 +2,6 @@ function PolycubeDataVisualizer(cube_template)
 {
 	this.cube_template = cube_template
 
-	this.edit_polycubes = {}
-	this.edit_hinge_polycubes = {}
-	this.edit_face_polycube = {}
-	this.edit_pick_polycubes = {}
-
 	this.rotate_polycubes = {}
 	this.rotate_hinge_polycubes = {}
 	this.rotate_face_polycubes = {}
@@ -19,17 +14,10 @@ function PolycubeDataVisualizer(cube_template)
 
 	var that = this
 
-	this.ResetRotationPolycube = function(polycube)
-	{
-		this.rotate_polycubes[polycube.id] = this.edit_polycubes[polycube.id].clone()
-		this.rotate_hinge_polycubes[polycube.id]  = this.edit_hinge_polycubes[polycube.id].clone()
-		this.rotate_face_polycubes[polycube.id]  = this.edit_face_polycube[polycube.id].clone() 
-		this.rotate_pick_polycubes[polycube.id]  = this.edit_pick_polycubes[polycube.id].clone()
-	}
 
 	this.ProcessPolycube = function(polycube)
 	{
-		if(!ObjectExists(this.edit_polycubes[polycube.id]))
+		if(!ObjectExists(this.rotate_polycubes[polycube.id]))
 		{
 			InitializePolyCubeObjects(polycube)
 		}
@@ -42,7 +30,7 @@ function PolycubeDataVisualizer(cube_template)
 
 	this.ProcessPolycubeAfterNewCube = function(polycube, cube)
 	{
-		if(!ObjectExists(this.edit_polycubes[polycube.id]))
+		if(!ObjectExists(this.rotate_polycubes[polycube.id]))
 		{
 			InitializePolyCubeObjects(polycube)
 		}
@@ -58,10 +46,6 @@ function PolycubeDataVisualizer(cube_template)
 		this.rotate_face_polycubes[polycube.id].parent.remove(this.rotate_face_polycubes[polycube.id])
 		this.rotate_pick_polycubes[polycube.id].parent.remove(this.rotate_pick_polycubes[polycube.id])
 
-		delete this.edit_polycubes[polycube.id]
-		delete this.edit_hinge_polycubes[polycube.id]
-		delete this.edit_face_polycube[polycube.id]
-		delete this.edit_pick_polycubes[polycube.id]
 		delete this.rotate_polycubes[polycube.id]
 		delete this.rotate_hinge_polycubes[polycube.id]
 		delete this.rotate_face_polycubes[polycube.id]
@@ -221,7 +205,7 @@ function PolycubeDataVisualizer(cube_template)
 
 			f.updateMatrix()
 
-			that.edit_polycubes[id].add(f.clone())
+			that.rotate_polycubes[id].add(f.clone())
 
 			var f_clone = f.clone()
 
@@ -234,7 +218,7 @@ function PolycubeDataVisualizer(cube_template)
 				p.material.color = new THREE.Color(polycube.id)
 			}
 
-			that.edit_pick_polycubes[id].add(f_clone.clone())
+			that.rotate_pick_polycubes[id].add(f_clone.clone())
 
 			//Coloring the face picking polycubes
 			for(var part_num in f_clone.children)
@@ -246,7 +230,7 @@ function PolycubeDataVisualizer(cube_template)
 
 			}
 
-			that.edit_face_polycube[id].add(f_clone.clone())
+			that.rotate_face_polycubes[id].add(f_clone.clone())
 
 			that.Color2Face[id][f_number] = f.name
 
@@ -269,14 +253,12 @@ function PolycubeDataVisualizer(cube_template)
 					that.Color2Hinge[polycube.id][f_number * 4 + hinge_num++] = p.name
 				}
 			}
-			that.edit_hinge_polycubes[id].add(f_clone.clone())
+			that.rotate_hinge_polycubes[id].add(f_clone.clone())
 
 			f_number++;
 		}
 
-		that.Color2Poly[id] = that.edit_polycubes[id]
-
-		CONTROL.Alert("RESET_ROTATIONS", polycube)
+		that.Color2Poly[id] = that.rotate_polycubes[id]
 	}
 
 	function RemoveFaces(polycube, v_cube, cube, dir, id)
@@ -284,9 +266,6 @@ function PolycubeDataVisualizer(cube_template)
 		var other_cube = polycube.GetCubeAtPosition(new THREE.Vector3().addVectors(cube.position, PolyCube.words2directions[dir]))
 		var face_name = Cube.GetFaceName(other_cube, PolyCube.direction_words_to_opposites[dir])
 
-		that.edit_polycubes[id].remove(that.edit_polycubes[id].getObjectByName(face_name))
-		that.edit_hinge_polycubes[id].remove(that.edit_hinge_polycubes[id].getObjectByName(face_name))
-		that.edit_face_polycube[id].remove(that.edit_face_polycube[id].getObjectByName(face_name))
 		that.rotate_polycubes[id].remove(that.rotate_polycubes[id].getObjectByName(face_name))
 		that.rotate_hinge_polycubes[id].remove(that.rotate_hinge_polycubes[id].getObjectByName(face_name))
 		that.rotate_face_polycubes[id].remove(that.rotate_face_polycubes[id].getObjectByName(face_name))
@@ -296,27 +275,18 @@ function PolycubeDataVisualizer(cube_template)
 			if(v_cube.children[index].name == dir)
 			{
 				v_cube.remove(v_cube.children[index])
-				//v_cube.children[index].visible = false
 			}
 		}
 	}
 
 	function InitializePolyCubeObjects(polycube)
 	{
-		that.edit_polycubes[polycube.id] = new THREE.Group()
-		that.edit_hinge_polycubes[polycube.id] = new THREE.Group()
-		that.edit_face_polycube[polycube.id] = new THREE.Group()
-		that.edit_pick_polycubes[polycube.id] = new THREE.Group()
 
 		that.rotate_polycubes[polycube.id] = new THREE.Group()
 		that.rotate_hinge_polycubes[polycube.id] = new THREE.Group()
 		that.rotate_face_polycubes[polycube.id] = new THREE.Group()
 		that.rotate_pick_polycubes[polycube.id] = new THREE.Group()
 
-		that.edit_polycubes[polycube.id].matrixAutoUpdate = false
-		that.edit_hinge_polycubes[polycube.id].matrixAutoUpdate = false
-		that.edit_face_polycube[polycube.id].matrixAutoUpdate = false
-		that.edit_pick_polycubes[polycube.id].matrixAutoUpdate = false
 		that.rotate_polycubes[polycube.id].matrixAutoUpdate = false
 		that.rotate_hinge_polycubes[polycube.id].matrixAutoUpdate = false
 		that.rotate_face_polycubes[polycube.id].matrixAutoUpdate = false
@@ -325,10 +295,6 @@ function PolycubeDataVisualizer(cube_template)
 		that.Color2Hinge[polycube.id] = {}
 		that.Color2Face[polycube.id] = {}
 
-		that.edit_polycubes[polycube.id].position.copy(polycube.position)
-		that.edit_hinge_polycubes[polycube.id].position.copy(polycube.position)
-		that.edit_face_polycube[polycube.id].position.copy(polycube.position)
-		that.edit_pick_polycubes[polycube.id].position.copy(polycube.position)
 		that.rotate_polycubes[polycube.id].position.copy(polycube.position)
 		that.rotate_hinge_polycubes[polycube.id].position.copy(polycube.position)
 		that.rotate_face_polycubes[polycube.id].position.copy(polycube.position)
@@ -336,10 +302,6 @@ function PolycubeDataVisualizer(cube_template)
 
 		UpdatePolycubeMatrices(polycube)
 
-		that.edit_polycubes[polycube.id].position.multiplyScalar(2)
-		that.edit_hinge_polycubes[polycube.id].position.multiplyScalar(2)
-		that.edit_face_polycube[polycube.id].position.multiplyScalar(2)
-		that.edit_pick_polycubes[polycube.id].position.multiplyScalar(2)
 		that.rotate_polycubes[polycube.id].position.multiplyScalar(2)
 		that.rotate_hinge_polycubes[polycube.id].position.multiplyScalar(2)
 		that.rotate_face_polycubes[polycube.id].position.multiplyScalar(2)
@@ -347,10 +309,6 @@ function PolycubeDataVisualizer(cube_template)
 
 		UpdatePolycubeMatrices(polycube)
 
-		that.edit_polycubes[polycube.id].name = polycube.name
-		that.edit_hinge_polycubes[polycube.id].name = polycube.name
-		that.edit_face_polycube[polycube.id].name = polycube.name
-		that.edit_pick_polycubes[polycube.id].name = polycube.name
 		that.rotate_polycubes[polycube.id].name = polycube.name
 		that.rotate_hinge_polycubes[polycube.id].name = polycube.name
 		that.rotate_face_polycubes[polycube.id].name = polycube.name
@@ -360,10 +318,6 @@ function PolycubeDataVisualizer(cube_template)
 
 	function UpdatePolycubeMatrices(polycube)
 	{
-		that.edit_polycubes[polycube.id].updateMatrix()
-		that.edit_hinge_polycubes[polycube.id].updateMatrix()
-		that.edit_face_polycube[polycube.id].updateMatrix()
-		that.edit_pick_polycubes[polycube.id].updateMatrix()
 		that.rotate_polycubes[polycube.id].updateMatrix()
 		that.rotate_hinge_polycubes[polycube.id].updateMatrix()
 		that.rotate_face_polycubes[polycube.id].updateMatrix()

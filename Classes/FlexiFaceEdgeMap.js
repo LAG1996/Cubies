@@ -9,26 +9,22 @@ The usage of this class should be for keeping track of face and edge positions a
 
 function FlexiFaceEdgeMap()
 {
-	var Loc2Face_Map = {} //A bijective mapping of a coordinate in R^3 to a face name.
+	var Loc2Face_Map = [] //A bijective mapping of a coordinate in R^3 to a face name.
 	var Face2Data_Map = {} //A mapping of a face's name to its coordinate in R^3, as well as it's normal. This map should be kept invariant.
 	var Face2FlexiData_Map = {} //Another mapping of a face's name to its coordinate in R^3, as well as it's normal. This is the one that could be changed.
 
-	var Loc2Edge_Map = {} //A surjective mapping of a coordinate in R^3 to an edge name 
+	var Loc2Edge_Map = [] //A surjective mapping of a coordinate in R^3 to an edge name 
 	var Edge2Data_Map = {}
 	var Edge2FlexiData_Map = {}
 
 	var Face2Edges = {}
 	var Edges2Face = {}
 
-
 	var that = this
 
 	this.AddFace = function(face_name, position, normal)
 	{
-		var s = HashPosition(position)
-
-		Loc2Face_Map[s] = face_name
-
+		//Loc2Face_Map[s] = face_name
 		Face2Data_Map[face_name] = {}
 		Face2Data_Map[face_name]["name"] = face_name
 		Face2Data_Map[face_name]["normal"] = new THREE.Vector3().copy(normal)
@@ -38,6 +34,8 @@ function FlexiFaceEdgeMap()
 		Face2FlexiData_Map[face_name]["name"] = face_name
 		Face2FlexiData_Map[face_name]["normal"] = new THREE.Vector3().copy(normal)
 		Face2FlexiData_Map[face_name]["position"] = new THREE.Vector3().copy(position)
+
+		MapObject(face_name, Loc2Face_Map, position)	
 
 		Face2Edges[face_name] = []
 	}
@@ -49,9 +47,7 @@ function FlexiFaceEdgeMap()
 		if(!ObjectExists(face_data))
 			return
 
-		var s = HashPosition(face_data.position)
-
-		delete Loc2Face_Map[s]
+		RemoveObjectFromMap(face_data.name, Loc2Face_Map, face_data.position)
 
 		delete Face2Data_Map[face_name]
 
@@ -75,8 +71,6 @@ function FlexiFaceEdgeMap()
 			throw "Cannot add new edge data if face doesn't exist"
 		}
 
-		var s = HashPosition(position)
-
 		Edge2Data_Map[edge_name] = {}
 		Edge2Data_Map[edge_name]["name"] = edge_name 
 		Edge2Data_Map[edge_name]["axis"] = new THREE.Vector3().copy(axis)
@@ -87,12 +81,8 @@ function FlexiFaceEdgeMap()
 		Edge2FlexiData_Map[edge_name]["axis"] = new THREE.Vector3().copy(axis)
 		Edge2FlexiData_Map[edge_name]["position"] = new THREE.Vector3().copy(position)
 
-		if(!ObjectExists(Loc2Edge_Map[s]))
-		{
-			Loc2Edge_Map[s] = []
-		}
 
-		Loc2Edge_Map[s].push(edge_name)
+		MapObject(edge_name, Loc2Edge_Map, position)
 
 		Edges2Face[edge_name] = Face2FlexiData_Map[parent_face_name]
 
@@ -101,9 +91,7 @@ function FlexiFaceEdgeMap()
 
 	function RemoveEdge(edge_data)
 	{
-		var h = HashPosition(edge_data.position)
-
-		Loc2Edge_Map[h].splice(Loc2Edge_Map[h].indexOf(edge_data.name), 1)
+		RemoveObjectFromMap(edge_data.name, Loc2Edge_Map, edge_data.position)
 		
 		delete Edges2Face[edge_data.name]
 		delete Edge2Data_Map[edge_data.name]
@@ -125,6 +113,8 @@ function FlexiFaceEdgeMap()
 
 		separating_vec.applyAxisAngle(axis, rads)
 
+		RemoveObjectFromMap(obj.name, Loc2Face_Map, obj.position)
+
 		obj.position.copy(separating_vec)
 		obj.position.add(pEObj.position)
 
@@ -140,6 +130,8 @@ function FlexiFaceEdgeMap()
 
 		obj.normal.normalize()
 
+		MapObject(obj, Loc2Face_Map, obj.position)
+
 		for(var e in Face2Edges[face_name])
 		{
 			var e_n = Face2Edges[face_name][e].name
@@ -154,9 +146,7 @@ function FlexiFaceEdgeMap()
 
 			separating_vec.applyAxisAngle(axis, rads)
 
-			var s = HashPosition(obj.position)
-
-			Loc2Edge_Map[s].splice(Loc2Edge_Map[s].indexOf(e_n), 1)
+			RemoveObjectFromMap(obj.name, Loc2Edge_Map, obj.position)
 
 			obj.position.copy(separating_vec)
 			obj.position.add(pEObj.position)
@@ -167,10 +157,7 @@ function FlexiFaceEdgeMap()
 
 			s = HashPosition(obj.position)
 
-			if(!ObjectExists(Loc2Edge_Map[s]))
-				Loc2Edge_Map[s] = []
-
-			Loc2Edge_Map[s].push(e_n)
+			MapObject(obj, Loc2Edge_Map, obj.position)
 
 			obj.axis.applyAxisAngle(axis, rads)
 
@@ -261,15 +248,41 @@ function FlexiFaceEdgeMap()
 
 	this.GetEdgesAtLoc = function(position)
 	{
-		var l = HashPosition(position)
+		//var l = HashPosition(position)
 
-		return Loc2Edge_Map[l]
+		if(!Array.isArray(Loc2Edge_Map[position.x]))
+		{
+			return null
+		}
+		else if(!Array.isArray(Loc2Edge_Map[position.x][position.y]))
+		{
+			return null
+		}
+		else if(!Array.isArray(Loc2Edge_Map[position.x][position.y][position.z]))
+		{
+			return null
+		}
+
+		return Loc2Edge_Map[position.x][position.y][position.z]
 	}
 
-	this.GetFaceAtLoc = function(position)
+	this.GetFacesAtLoc = function(position)
 	{
-		var l = HashPosition(position)
-		return Loc2Face_Map[l]
+
+		if(!Array.isArray(Loc2Face_Map[position.x]))
+		{
+			return null
+		}
+		else if(!Array.isArray(Loc2Face_Map[position.x][position.y]))
+		{
+			return null
+		}
+		else if(!Array.isArray(Loc2Face_Map[position.x][position.y][position.z]))
+		{
+			return null
+		}
+
+		return Loc2Face_Map[position.x][position.y][position.z]
 	}
 
 	this.GetFaceFromEdge = function(edge_name)
@@ -305,5 +318,32 @@ function FlexiFaceEdgeMap()
 			Edge2FlexiData_Map[e].position.copy(Edge2Data_Map[e].position)
 			Edge2FlexiData_Map[e].axis.copy(Edge2Data_Map[e].axis)
 		}
+	}
+
+	function RemoveObjectFromMap(obj_name, map, position)
+	{
+		map[position.x][position.y][position.z].splice(map[position.x][position.y][position.z].indexOf(obj_name), 1)
+	}
+
+	function MapObject(obj_name, map, position)
+	{
+		if(!Array.isArray(map[position.x]))
+		{
+			map[position.x] = []
+			map[position.x][position.y] = []
+			map[position.x][position.y][position.z] = []
+		}
+		else if(!Array.isArray(map[position.x][position.y]))
+		{
+			map[position.x][position.y] = []
+			map[position.x][position.y] = []
+			map[position.x][position.y][position.z] = []
+		}
+		else if(!Array.isArray(map[position.x][position.y][position.z]))
+		{
+			map[position.x][position.y][position.z] = []
+		}
+
+		map[position.x][position.y][position.z].push(obj_name)
 	}
 }
