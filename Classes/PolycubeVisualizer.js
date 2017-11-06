@@ -12,8 +12,18 @@ function PolycubeDataVisualizer(cube_template)
 
 	this.Color2Poly = {}
 
-	var that = this
+	//Highlights
+	this.special_mouse_highlight = new THREE.Color(0xFFFF00)
+	this.regular_mouse_highlight = new THREE.Color(0x00FF00)
+	this.prime_highlight = new THREE.Color(0xFF0000)
+	this.second_highlight = new THREE.Color(0x0000FF)
+	this.cut_highlight = new THREE.Color(0xFF0000)
+	this.hinge_highlight = new THREE.Color(0x22EEDD)
 
+	var face_highlights_cache = {}
+	var edge_highlights_cache = {}
+
+	var that = this
 
 	this.ProcessPolycube = function(polycube)
 	{
@@ -150,6 +160,131 @@ function PolycubeDataVisualizer(cube_template)
 		var p_cube = this.rotate_polycubes[id]
 
 		p_cube.children[0].children[0].material.opacity = fade
+	}
+
+	this.HighlightObject = function(object_type, object_name, polycube_id, action)
+	{
+		if(object_type == "edge")
+		{
+			HighlightEdge(object_name, polycube_id, action)
+		}
+		else if(object_type == "face")
+		{
+			HighlightFace(object_name, polycube_id, action)
+		}
+	}
+
+	this.UnHighlightObject = function(object_type, object_name, action)
+	{
+		var highlight_name = object_name + action
+		var highlight = object_type == "edge" ? edge_highlights_cache[highlight_name] : face_highlights_cache[highlight_name]
+
+		if(ObjectExists(highlight))
+		{
+			highlight.visible = false
+		}
+	}
+
+	function HighlightEdge(name, polycube_id, action)
+	{
+		var highlight_name = name + action
+
+		var highlight = edge_highlights_cache[highlight_name]
+		
+		if(ObjectExists(highlight))
+		{
+			highlight.visible = true
+		}
+		else
+		{
+			highlight = Cube_Template.highlightEdge.clone()
+			highlight.material = new THREE.MeshBasicMaterial()
+
+
+			var color = null
+
+			if(action == "cut")
+			{
+				color = that.cut_highlight.clone()
+			}
+			else if(action == "hinge")
+			{
+				color = that.hinge_highlight.clone()
+			}
+			else if(action == "mouse_over_1")
+			{
+				color = that.regular_mouse_highlight.clone()
+			}
+			else if(action == "mouse_over_2")
+			{
+				color = that.special_mouse_highlight.clone()
+			}
+
+			highlight.material.color.copy(color)
+			highlight.material.transparent = true
+			highlight.material.opacity = .5
+
+			var obj = that.rotate_polycubes[polycube_id].getObjectByName(name)
+			highlight.position.copy(obj.getWorldPosition())
+			highlight.rotation.copy(obj.getWorldRotation())
+			obj.children.unshift(highlight)
+			highlight.visible = true
+
+			highlight.updateMatrix()
+
+			edge_highlights_cache[highlight_name] = highlight
+		}
+	}
+
+	function HighlightFace(name, polycube_id, action)
+	{
+		var highlight_name = name + action
+		var highlight = face_highlights_cache[highlight_name]
+
+		if(ObjectExists(highlight))
+		{
+			highlight.visible = true
+		}
+		else
+		{
+			highlight = Cube_Template.highlightFace.clone()
+			highlight.material = new THREE.MeshBasicMaterial()
+
+			var color = null
+			if(action == "mouse_over_1")
+			{
+				color = that.regular_mouse_highlight.clone()
+			}
+			else if(action == "mouse_over_2")
+			{
+				color = that.special_mouse_highlight.clone()
+			}
+			else if(action == "dual_half_1")
+			{
+				color = that.prime_highlight.clone()
+			}
+			else if(action == "dual_half_2")
+			{
+				color = that.second_highlight.clone()
+			}
+
+			highlight.material.color.copy(color)
+			highlight.material.transparent = true
+			highlight.material.opacity = .5
+
+			var obj = that.rotate_polycubes[polycube_id].getObjectByName(name)
+
+			highlight.position.copy(obj.getWorldPosition())
+			highlight.rotation.copy(obj.getWorldRotation())
+
+			obj.children.unshift(highlight)
+
+			highlight.visible = true
+
+			highlight.updateMatrix()
+
+			face_highlights_cache[highlight_name] = highlight
+		}
 	}
 
 	function ProcessCubeData(id, polycube, cube)

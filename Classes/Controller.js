@@ -1,7 +1,7 @@
 function Controller(){
 	this.scene_handler = new SceneHandler()
 	this.toolbar_handler = new Toolbar_Handler(this)
-	this.data_processor = new PolycubeDataVisualizer(Cube_Template.new_cube)
+	this.visualizer = new PolycubeDataVisualizer(Cube_Template.new_cube)
 	
 	//Some helper variables
 	this.Load_Polycube_Handler_List = []
@@ -11,7 +11,9 @@ function Controller(){
 	this.accum_mouse_delta = 0
 	this.hover_over_poly = null
 	this.hover_over_hinge = null
+	this.last_hover_over_hinge = null
 	this.hover_over_face = null
+	this.last_hover_over_face = null
 	this.last_hover_over_poly = null
 	this.subgraphs = []
 	this.active_subgraph = null
@@ -127,7 +129,7 @@ function Controller(){
 		PolyCube.SwitchToNewActive(new_p_cube)
 		PolyCube.Active_Polycube.Add_Cube(new THREE.Vector3(0, 0, 0))
 	
-		that.data_processor.ProcessPolycubeAfterNewCube(new_p_cube, new_p_cube.GetCubeAtPosition(new THREE.Vector3(0, 0, 0)))
+		that.visualizer.ProcessPolycubeAfterNewCube(new_p_cube, new_p_cube.GetCubeAtPosition(new THREE.Vector3(0, 0, 0)))
 	
 		VisualizePolycube(new_p_cube)
 	
@@ -150,7 +152,7 @@ function Controller(){
 		else
 		{
 			if(PolyCube.Active_Polycube.Add_Cube(args[0]))
-				that.data_processor.ProcessPolycubeAfterNewCube(PolyCube.Active_Polycube, PolyCube.Active_Polycube.GetCubeAtPosition(args[0]))
+				that.visualizer.ProcessPolycubeAfterNewCube(PolyCube.Active_Polycube, PolyCube.Active_Polycube.GetCubeAtPosition(args[0]))
 		}
 	}
 	
@@ -179,14 +181,14 @@ function Controller(){
 			that.arrows_out = false
 	
 	
-			that.data_processor.DestroyPolycube(p_cube)
+			that.visualizer.DestroyPolycube(p_cube)
 			PolyCube.DestroyPolyCube(p_cube)
 	
 		}
 	
 	
 	
-		this.Switch_Context('edit-context')
+		Switch_Context('edit-context')
 	}
 	
 	this.Alert_Funcs['SAVE_POLYCUBE'] = function(){
@@ -224,7 +226,7 @@ function Controller(){
 	
 			that.Load_Polycube_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
 	
-			that.data_processor.ProcessPolycube(p)
+			that.visualizer.ProcessPolycube(p)
 	
 			CreateTrashCollectors(p)
 	
@@ -301,24 +303,32 @@ function Controller(){
 	
 			that.Mouse_Hover_Funcs = [function(){
 
-				if(ObjectExists(that.last_hover_over_poly))
-					ClearJunk(that.face_junk[that.last_hover_over_poly.id], that.rotate_mode_scene)
-
 				if(that.hover_over_poly)
 				{
-					$('#poly_cube_name_only').show()
-					$('.tooltip_text').text("Edit " + that.hover_over_poly.name)
+					//$('#poly_cube_name_only').show()
+					//$('.tooltip_text').text("Edit " + that.hover_over_poly.name)
 
 					var faces = that.hover_over_poly.Get_Faces()
 
 					for(var fName in faces)
 					{
-						HighlightParts(that.rotate_mode_scene.getObjectByName(fName), that.prime_highlight, 'face', that.face_junk[that.hover_over_poly.id], that.rotate_mode_scene)
+						that.visualizer.HighlightObject("face", fName, that.hover_over_poly.id, "dual_half_1")
+						//HighlightParts(that.rotate_mode_scene.getObjectByName(fName), that.prime_highlight, 'face', that.face_junk[that.hover_over_poly.id], that.rotate_mode_scene)
 					}
 				}
 				else
 				{
-					$('#poly_cube_name_only').hide()
+					if(ObjectExists(that.last_hover_over_poly))
+					{
+						var faces = that.last_hover_over_poly.Get_Faces()
+
+						for(var fName in faces)
+						{
+							that.visualizer.UnHighlightObject("face", fName, "dual_half_1")
+						}
+					}
+
+					//$('#poly_cube_name_only').hide()
 				}
 	
 			}]
@@ -329,8 +339,6 @@ function Controller(){
 				{
 					if(that.hover_over_poly)
 					{
-						ClearJunk(that.face_junk[that.last_hover_over_poly.id], that.rotate_mode_scene)
-
 						PolyCube.SwitchToNewActive(that.hover_over_poly)
 	
 						that.toolbar_handler.ActivePolyCubeObjectView(that.hover_over_poly.name)
@@ -360,13 +368,24 @@ function Controller(){
 	
 			for(var key in PolyCube.ID2Poly)
 			{
-				ClearJunk(that.face_junk[PolyCube.ID2Poly.id], that.rotate_mode_scene)
+				var faces = PolyCube.ID2Poly[key].Get_Faces()
+
+				for(var fName in faces)
+				{
+					that.visualizer.UnHighlightObject("face", fName, "dual_half_1")
+				}
 			}
 			
 			that.Mouse_Hover_Funcs = [function(){
 	
 				if(!that.face_graphs_out)
-					ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+				{
+					if(ObjectExists(that.last_hover_over_face))
+					{
+						that.visualizer.UnHighlightObject("face", that.last_hover_over_face.name, "mouse_over_1")
+						that.visualizer.UnHighlightObject("face", that.last_hover_over_face.name, "mouse_over_2")
+					}
+				}
 
 				if(!that.hover_over_poly)
 					return
@@ -374,12 +393,22 @@ function Controller(){
 				if(PolyCube.Active_Polycube.name != that.hover_over_poly.name)
 					return
 
-				ClearJunk(that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+				if(ObjectExists(that.last_hover_over_hinge))
+				{
+					that.visualizer.UnHighlightObject("edge", that.last_hover_over_hinge.name, "mouse_over_1")
+					that.visualizer.UnHighlightObject("edge", that.last_hover_over_hinge.name, "mouse_over_2")
+
+					if(ObjectExists(that.last_hover_over_hinge.incidentEdge))
+					{
+						that.visualizer.UnHighlightObject("edge", that.last_hover_over_hinge.incidentEdge.name, "mouse_over_1")
+						that.visualizer.UnHighlightObject("edge", that.last_hover_over_hinge.incidentEdge.name, "mouse_over_2")
+					}
+				}		
 	
 				that.scene_handler.RequestSwitchToPickingScene(that.rotate_mode_edge_picking_scene)
 				var id = that.scene_handler.Pick(that.mouse_pos)
 	
-				var hinge_name = that.data_processor.Color2Hinge[PolyCube.Active_Polycube.id][id]
+				var hinge_name = that.visualizer.Color2Hinge[PolyCube.Active_Polycube.id][id]
 	
 				if(!ObjectExists(hinge_name))
 				{
@@ -389,7 +418,7 @@ function Controller(){
 					that.scene_handler.RequestSwitchToPickingScene(that.rotate_mode_face_picking_scene)
 					id = that.scene_handler.Pick(that.mouse_pos)
 	
-					var face_name = that.data_processor.Color2Face[PolyCube.Active_Polycube.id][id]
+					var face_name = that.visualizer.Color2Face[PolyCube.Active_Polycube.id][id]
 	
 					if(ObjectExists(face_name))
 					{
@@ -397,20 +426,12 @@ function Controller(){
 	
 						that.hovering_over_face = true
 						that.hover_over_face = face
+						that.last_hover_over_face = face
 	
 						if(!that.face_graphs_out)
 						{
-							if(that.holding_down_control)
-							{
-								for(var n in face.neighbors)
-								{
-									HighlightParts(that.rotate_mode_scene.getObjectByName(n), that.second_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
-								}
-
-								HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
-							}
-							else
-								HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+							that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, that.holding_down_shft ? "mouse_over_2" : "mouse_over_1")
+							//HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 						}
 					}
 					else
@@ -426,38 +447,16 @@ function Controller(){
 					if(ObjectExists(edge_data.incidentEdge))
 					{
 						var edge_2_data = edge_data.incidentEdge
-
-						if(that.holding_down_control)
-						{
-							for(var n in edge_2_data.neighbors)
-							{
-								HighlightParts(that.rotate_mode_scene.getObjectByName(n), that.second_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
-							}
-
-							HighlightParts(that.rotate_mode_scene.getObjectByName(edge_2_data.name), that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
-
-						}
-						else
-							HighlightParts(that.rotate_mode_scene.getObjectByName(edge_2_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+						
+						that.visualizer.HighlightObject("edge", edge_2_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
+						//HighlightParts(that.rotate_mode_scene.getObjectByName(edge_2_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 					}
 	
 					that.hovering_over_hinge = true
-					that.hover_over_hinge = that.rotate_mode_scene.getObjectByName(edge_data.name)
-
-					if(that.holding_down_control)
-					{
-						for(var n in edge_data.neighbors)
-						{
-							HighlightParts(that.rotate_mode_scene.getObjectByName(n), that.second_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
-						}
-
-						HighlightParts(that.rotate_mode_scene.getObjectByName(edge_data.name), that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
-
-					}
-					else
-						HighlightParts(that.rotate_mode_scene.getObjectByName(edge_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
-
-					HighlightParts(that.rotate_mode_scene.getObjectByName(edge_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+					that.hover_over_hinge = edge_data
+					that.last_hover_over_hinge = edge_data
+					that.visualizer.HighlightObject("edge", edge_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
+					//HighlightParts(that.rotate_mode_scene.getObjectByName(edge_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 				}
 	
 			}]
@@ -473,14 +472,14 @@ function Controller(){
 
 						if(color == 0xFF0000)
 						{
-							that.data_processor.RotateSubGraph(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, DEG2RAD(90), that)
+							that.visualizer.RotateSubGraph(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, DEG2RAD(90), that)
 
 							that.cuts_need_update = true
 							that.hinges_need_update = true
 						}
 						else if(color == 0x00FF00)
 						{
-							that.data_processor.RotateSubGraph(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, DEG2RAD(-90), that)
+							that.visualizer.RotateSubGraph(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, DEG2RAD(-90), that)
 							that.cuts_need_update = true
 							that.hinges_need_update = true
 						}
@@ -492,11 +491,19 @@ function Controller(){
 							}
 						}
 
-						ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+						var faces = PolyCube.Active_Polycube.Get_Faces()
+
+						for(var fName in faces)
+						{
+							that.visualizer.UnHighlightObject("face", fName, "dual_half_1")
+							that.visualizer.UnHighlightObject("face", fName, "dual_half_2")
+
+						}
+						//ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 						that.face_graphs_out = false
 						that.arrow_pair.visible = false
 						that.arrows_out = false
-						that.data_processor.FadeFaces(PolyCube.Active_Polycube.id, .5)
+						that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, .5)
 
 						return
 					}
@@ -513,7 +520,10 @@ function Controller(){
 						}
 						else if(that.holding_down_shift)
 						{
-							ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+							that.visualizer.UnHighlightObject("face", that.last_hover_over_face.name, "mouse_over_1")
+							that.visualizer.UnHighlightObject("face", that.last_hover_over_face.name, "mouse_over_2")
+
+							//ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 							var data = PolyCube.Active_Polycube.Get_Face_Graphs(that.hover_over_hinge.name)
 		
 							var subgraphs = data['subgraphs']
@@ -536,25 +546,26 @@ function Controller(){
 							for(var tindex in subgraphs[0])
 							{
 								var face = subgraphs[0][tindex]
-		
-								HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+								
+								that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, "dual_half_1")
+								//HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 							}
 		
 							for(var tindex in subgraphs[1])
 							{
 								var face = subgraphs[1][tindex]
-		
-								HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.second_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+								that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, "dual_half_2")
+								//HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.second_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 							}
 							
-							that.data_processor.FadeFaces(PolyCube.Active_Polycube.id, 0)
+							that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, 0)
 						}
 					}
 					else if(that.hovering_over_face)
 					{
 						if(that.face_graphs_out)
 						{
-							//var polycube = that.data_processor.rotate_polycubes[PolyCube.Active_Polycube.id]
+							//var polycube = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id]
 
 							var face_name = that.hover_over_face.name
 
@@ -566,7 +577,7 @@ function Controller(){
 
 							var face_data = PolyCube.Active_Polycube.Get_Face_Data(face_name)
 
-							var face_obj = that.data_processor.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
+							var face_obj = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
 
 							that.arrow_pair.position.copy(face_obj.getWorldPosition())
 							that.pick_arrow_pair.position.copy(face_obj.getWorldPosition())
@@ -646,15 +657,21 @@ function Controller(){
 					}
 					else
 					{
-						that.data_processor.FadeFaces(PolyCube.Active_Polycube.id, .5)
+						that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, .5)
 						if(!that.face_graphs_out)
 						{
 							that.Switch_Context('edit-context')
 						}
 						else
 						{
-							
-							ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+							var faces = PolyCube.Active_Polycube.Get_Faces()
+
+							for(var fName in faces)
+							{
+								that.visualizer.UnHighlightObject("face", fName, "dual_half_1")
+								that.visualizer.UnHighlightObject("face", fName, "dual_half_2")
+	
+							}
 						}
 
 						that.face_graphs_out = false
@@ -792,38 +809,49 @@ function Controller(){
 		function VisualizePolycube(polycube)
 		{
 	
-			that.rotate_mode_scene.add(that.data_processor.rotate_polycubes[polycube.id])
+			that.rotate_mode_scene.add(that.visualizer.rotate_polycubes[polycube.id])
 	
-			that.rotate_mode_poly_cube_picking_scene.add(that.data_processor.rotate_pick_polycubes[polycube.id])
+			that.rotate_mode_poly_cube_picking_scene.add(that.visualizer.rotate_pick_polycubes[polycube.id])
 	
-			that.rotate_mode_edge_picking_scene.add(that.data_processor.rotate_hinge_polycubes[polycube.id])
+			that.rotate_mode_edge_picking_scene.add(that.visualizer.rotate_hinge_polycubes[polycube.id])
 	
-			that.rotate_mode_face_picking_scene.add(that.data_processor.rotate_face_polycubes[polycube.id])
+			that.rotate_mode_face_picking_scene.add(that.visualizer.rotate_face_polycubes[polycube.id])
 		}
 	
 		function UpdateCuts(polycube, scene, junk_collector)
 		{
-			ClearJunk(junk_collector, scene)
+			//ClearJunk(junk_collector, scene)
 			
 			if(!ObjectExists(polycube))
 				return
 			
-			var cuts = polycube.Get_Cuts()
+			var edges = polycube.Get_Edges()
 	
-			for(var bindex in cuts)
+			for(var bindex in edges)
 			{
-				var edge = scene.getObjectByName(cuts[bindex].name)
-	
-				HighlightParts(edge, that.cut_highlight, 'hinge', junk_collector, scene)
+				if(edges[bindex].cut)
+					that.visualizer.HighlightObject("edge", edges[bindex].name, polycube.id, "cut")
+				else
+					that.visualizer.UnHighlightObject("edge", edges[bindex].name, polycube.id, "cut")
+				//HighlightParts(edge, that.cut_highlight, 'hinge', junk_collector, scene)
 			}
 		}
 	
 		function UpdateHinges(polycube, scene, junk_collector)
 		{
-			ClearJunk(junk_collector, scene)
+			//ClearJunk(junk_collector, scene)
 	
 			if(!ObjectExists(polycube))
 				return
+
+			var edges = polycube.Get_Edges()
+	
+			for(var bindex in edges)
+			{
+
+				that.visualizer.UnHighlightObject("edge", edges[bindex].name, polycube.id, "hinge")
+				//HighlightParts(edge, that.cut_highlight, 'hinge', junk_collector, scene)
+			}
 	
 			var l_hinges = polycube.Get_Rotation_Lines()
 	
@@ -832,12 +860,11 @@ function Controller(){
 				var line  = l_hinges[lindex]
 				for(var gindex in line)
 				{
-					var edge_1 = scene.getObjectByName(line[gindex].name)
-	
-					var edge_2 = scene.getObjectByName(line[gindex]['incidentEdge'].name)
-	
-					HighlightParts(edge_1, that.hinge_highlight, 'hinge', junk_collector, scene)
-					HighlightParts(edge_2, that.hinge_highlight, 'hinge', junk_collector, scene)
+					
+					that.visualizer.HighlightObject("edge", line[gindex].name, polycube.id, "hinge")
+					that.visualizer.HighlightObject("edge", line[gindex].incidentEdge.name, polycube.id, "hinge")
+					//HighlightParts(edge_1, that.hinge_highlight, 'hinge', junk_collector, scene)
+					//HighlightParts(edge_2, that.hinge_highlight, 'hinge', junk_collector, scene)
 				}
 			}
 		}
@@ -1003,7 +1030,7 @@ function Controller(){
 					that.Load_Polycube_Handler_List[c].Add_Another_Cube()
 	
 					if(ObjectExists(that.Load_Polycube_Handler_List[c].newest_cube))
-						that.data_processor.ProcessPolycubeAfterNewCube(that.Load_Polycube_Handler_List[c].my_polycube, that.Load_Polycube_Handler_List[c].newest_cube)
+						that.visualizer.ProcessPolycubeAfterNewCube(that.Load_Polycube_Handler_List[c].my_polycube, that.Load_Polycube_Handler_List[c].newest_cube)
 				}
 			}
 			
