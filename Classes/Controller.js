@@ -188,7 +188,7 @@ function Controller(){
 	
 	
 	
-		Switch_Context('edit-context')
+		that.Switch_Context('edit-context')
 	}
 	
 	this.Alert_Funcs['SAVE_POLYCUBE'] = function(){
@@ -387,12 +387,6 @@ function Controller(){
 					}
 				}
 
-				if(!that.hover_over_poly)
-					return
-
-				if(PolyCube.Active_Polycube.name != that.hover_over_poly.name)
-					return
-
 				if(ObjectExists(that.last_hover_over_hinge))
 				{
 					that.visualizer.UnHighlightObject("edge", that.last_hover_over_hinge.name, "mouse_over_1")
@@ -405,6 +399,14 @@ function Controller(){
 					}
 				}		
 	
+
+				if(!that.hover_over_poly)
+					return
+
+				if(PolyCube.Active_Polycube.name != that.hover_over_poly.name)
+					return
+
+
 				that.scene_handler.RequestSwitchToPickingScene(that.rotate_mode_edge_picking_scene)
 				var id = that.scene_handler.Pick(that.mouse_pos)
 	
@@ -430,7 +432,7 @@ function Controller(){
 	
 						if(!that.face_graphs_out)
 						{
-							that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, that.holding_down_shft ? "mouse_over_2" : "mouse_over_1")
+							that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
 							//HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 						}
 					}
@@ -832,7 +834,7 @@ function Controller(){
 				if(edges[bindex].cut)
 					that.visualizer.HighlightObject("edge", edges[bindex].name, polycube.id, "cut")
 				else
-					that.visualizer.UnHighlightObject("edge", edges[bindex].name, polycube.id, "cut")
+					that.visualizer.UnHighlightObject("edge", edges[bindex].name, "cut")
 				//HighlightParts(edge, that.cut_highlight, 'hinge', junk_collector, scene)
 			}
 		}
@@ -849,7 +851,7 @@ function Controller(){
 			for(var bindex in edges)
 			{
 
-				that.visualizer.UnHighlightObject("edge", edges[bindex].name, polycube.id, "hinge")
+				that.visualizer.UnHighlightObject("edge", edges[bindex].name, "hinge")
 				//HighlightParts(edge, that.cut_highlight, 'hinge', junk_collector, scene)
 			}
 	
@@ -1038,14 +1040,14 @@ function Controller(){
 			{
 				UpdateCuts(that.last_hover_over_poly, that.rotate_mode_scene, that.rotate_cut_junk[that.last_hover_over_poly.id])
 	
-				cuts_need_update = false			
+				that.cuts_need_update = false			
 			}
 	
 			if(that.hinges_need_update)
 			{
 				UpdateHinges(that.last_hover_over_poly, that.rotate_mode_scene, that.rotate_hinge_junk[that.last_hover_over_poly.id])
 	
-				hinges_need_update = false
+				that.hinges_need_update = false
 			}
 			
 			requestAnimationFrame(that.update)

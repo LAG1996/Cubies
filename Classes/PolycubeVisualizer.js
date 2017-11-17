@@ -227,7 +227,7 @@ function PolycubeDataVisualizer(cube_template)
 			var obj = that.rotate_polycubes[polycube_id].getObjectByName(name)
 			highlight.position.copy(obj.getWorldPosition())
 			highlight.rotation.copy(obj.getWorldRotation())
-			obj.children.unshift(highlight)
+			//obj.children.unshift(highlight)
 			highlight.visible = true
 
 			highlight.updateMatrix()
@@ -277,7 +277,7 @@ function PolycubeDataVisualizer(cube_template)
 			highlight.position.copy(obj.getWorldPosition())
 			highlight.rotation.copy(obj.getWorldRotation())
 
-			obj.children.unshift(highlight)
+			//obj.children.unshift(highlight)
 
 			highlight.visible = true
 

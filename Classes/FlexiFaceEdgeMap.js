@@ -130,7 +130,7 @@ function FlexiFaceEdgeMap()
 
 		obj.normal.normalize()
 
-		MapObject(obj, Loc2Face_Map, obj.position)
+		MapObject(obj.name, Loc2Face_Map, obj.position)
 
 		for(var e in Face2Edges[face_name])
 		{
@@ -157,7 +157,7 @@ function FlexiFaceEdgeMap()
 
 			s = HashPosition(obj.position)
 
-			MapObject(obj, Loc2Edge_Map, obj.position)
+			MapObject(obj.name, Loc2Edge_Map, obj.position)
 
 			obj.axis.applyAxisAngle(axis, rads)
 
