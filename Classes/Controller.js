@@ -324,7 +324,7 @@ function Controller(){
 
 						for(var fName in faces)
 						{
-							that.visualizer.UnHighlightObject("face", fName, "dual_half_1")
+							that.visualizer.UnHighlightObject(that.last_hover_over_poly.id, "face", fName, "dual_half_1")
 						}
 					}
 
@@ -372,7 +372,7 @@ function Controller(){
 
 				for(var fName in faces)
 				{
-					that.visualizer.UnHighlightObject("face", fName, "dual_half_1")
+					that.visualizer.UnHighlightObject(key, "face", fName, "dual_half_1")
 				}
 			}
 			
@@ -382,20 +382,20 @@ function Controller(){
 				{
 					if(ObjectExists(that.last_hover_over_face))
 					{
-						that.visualizer.UnHighlightObject("face", that.last_hover_over_face.name, "mouse_over_1")
-						that.visualizer.UnHighlightObject("face", that.last_hover_over_face.name, "mouse_over_2")
+						that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", that.last_hover_over_face.name, "mouse_over_1")
+						that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", that.last_hover_over_face.name, "mouse_over_2")
 					}
 				}
 
 				if(ObjectExists(that.last_hover_over_hinge))
 				{
-					that.visualizer.UnHighlightObject("edge", that.last_hover_over_hinge.name, "mouse_over_1")
-					that.visualizer.UnHighlightObject("edge", that.last_hover_over_hinge.name, "mouse_over_2")
+					that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "edge", that.last_hover_over_hinge.name, "mouse_over_1")
+					that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "edge", that.last_hover_over_hinge.name, "mouse_over_2")
 
 					if(ObjectExists(that.last_hover_over_hinge.incidentEdge))
 					{
-						that.visualizer.UnHighlightObject("edge", that.last_hover_over_hinge.incidentEdge.name, "mouse_over_1")
-						that.visualizer.UnHighlightObject("edge", that.last_hover_over_hinge.incidentEdge.name, "mouse_over_2")
+						that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "edge", that.last_hover_over_hinge.incidentEdge.name, "mouse_over_1")
+						that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "edge", that.last_hover_over_hinge.incidentEdge.name, "mouse_over_2")
 					}
 				}		
 	
@@ -497,8 +497,8 @@ function Controller(){
 
 						for(var fName in faces)
 						{
-							that.visualizer.UnHighlightObject("face", fName, "dual_half_1")
-							that.visualizer.UnHighlightObject("face", fName, "dual_half_2")
+							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", fName, "dual_half_1")
+							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", fName, "dual_half_2")
 
 						}
 						//ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
@@ -522,8 +522,8 @@ function Controller(){
 						}
 						else if(that.holding_down_shift)
 						{
-							that.visualizer.UnHighlightObject("face", that.last_hover_over_face.name, "mouse_over_1")
-							that.visualizer.UnHighlightObject("face", that.last_hover_over_face.name, "mouse_over_2")
+							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", that.last_hover_over_face.name, "mouse_over_1")
+							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", that.last_hover_over_face.name, "mouse_over_2")
 
 							//ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 							var data = PolyCube.Active_Polycube.Get_Face_Graphs(that.hover_over_hinge.name)
@@ -670,8 +670,8 @@ function Controller(){
 
 							for(var fName in faces)
 							{
-								that.visualizer.UnHighlightObject("face", fName, "dual_half_1")
-								that.visualizer.UnHighlightObject("face", fName, "dual_half_2")
+								that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", fName, "dual_half_1")
+								that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", fName, "dual_half_2")
 	
 							}
 						}
@@ -834,7 +834,7 @@ function Controller(){
 				if(edges[bindex].cut)
 					that.visualizer.HighlightObject("edge", edges[bindex].name, polycube.id, "cut")
 				else
-					that.visualizer.UnHighlightObject("edge", edges[bindex].name, "cut")
+					that.visualizer.UnHighlightObject(polycube.id, "edge", edges[bindex].name, "cut")
 				//HighlightParts(edge, that.cut_highlight, 'hinge', junk_collector, scene)
 			}
 		}
@@ -851,7 +851,7 @@ function Controller(){
 			for(var bindex in edges)
 			{
 
-				that.visualizer.UnHighlightObject("edge", edges[bindex].name, "hinge")
+				that.visualizer.UnHighlightObject(polycube.id, "edge", edges[bindex].name, "hinge")
 				//HighlightParts(edge, that.cut_highlight, 'hinge', junk_collector, scene)
 			}
 	

@@ -20,8 +20,7 @@ function PolycubeDataVisualizer(cube_template)
 	this.cut_highlight = new THREE.Color(0xFF0000)
 	this.hinge_highlight = new THREE.Color(0x22EEDD)
 
-	var face_highlights_cache = {}
-	var edge_highlights_cache = {}
+	var part_highlights_cache = []
 
 	var that = this
 
@@ -174,10 +173,12 @@ function PolycubeDataVisualizer(cube_template)
 		}
 	}
 
-	this.UnHighlightObject = function(object_type, object_name, action)
+	this.UnHighlightObject = function(polycube_id, object_type, object_name, action)
 	{
 		var highlight_name = object_name + action
-		var highlight = object_type == "edge" ? edge_highlights_cache[highlight_name] : face_highlights_cache[highlight_name]
+		var highlight_hash = HashObject(polycube_id, object_type, object_name, action)
+
+		var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
 
 		if(ObjectExists(highlight))
 		{
@@ -185,11 +186,131 @@ function PolycubeDataVisualizer(cube_template)
 		}
 	}
 
+	function HashObject(polycube_id, object_type, object_name, action)
+	{
+		var highlight_hash = undefined
+
+		if(object_type == "edge")
+		{
+			highlight_hash = HashEdge(polycube_id, object_name, action)
+		}
+		else if(object_type == "face")
+		{
+			highlight_hash = HashFace(polycube_id, object_name, action)
+		}
+
+		if(!Array.isArray(part_highlights_cache[highlight_hash[0]]))
+		{
+			part_highlights_cache[highlight_hash[0]] = []
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]] = []
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]] = []
+		}
+		else if(!Array.isArray(part_highlights_cache[highlight_hash[0]][highlight_hash[1]]))
+		{
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]] = []
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]] = []
+		}
+		else if(!Array.isArray(part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]]))
+		{
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]] = []
+		}
+
+		return highlight_hash
+	}
+
+	function HashEdge(polycube_id, object_name, action)
+	{
+		var index_1 = polycube_id
+
+		var index_2 = 0
+
+		var index_3 = that.rotate_hinge_polycubes[polycube_id].getObjectByName(object_name).material.color.getHex()
+
+		var index_4 = -1
+
+		if(action == "cut")
+		{
+			index_4 = 0
+		}
+		else if(action == "hinge")
+		{
+			index_4 = 1
+		}
+		else if(action == "mouse_over_1")
+		{
+			index_4 = 2
+		}
+		else if(action == "mouse_over_2")
+		{
+			index_4 = 3
+		}
+
+		return [index_1, index_2, index_3, index_4]
+	}
+
+	function HashFace(polycube_id, object_name, action)
+	{
+		var index_1 = polycube_id
+
+		var index_2 = 1
+
+		var index_3 = that.rotate_face_polycubes[polycube_id].getObjectByName(object_name).children[0].material.color.getHex()
+
+		var index_4 = -1
+
+		if(action == "mouse_over_1")
+		{
+			index_4 = 0
+		}
+		else if(action == "mouse_over_2")
+		{
+			index_4 = 1
+		}
+		else if(action == "dual_half_1")
+		{
+			index_4 = 2
+		}
+		else if(action == "dual_half_2")
+		{
+			index_4 = 3
+		}
+
+		return [index_1, index_2, index_3, index_4]
+	}
+
 	function HighlightEdge(name, polycube_id, action)
 	{
-		var highlight_name = name + action
+		var highlight_hash = HashObject(polycube_id, "edge", name, action)
 
-		var highlight = edge_highlights_cache[highlight_name]
+		var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+		/*
+		if(!Array.isArray(part_highlights_cache[highlight_hash[0]]))
+		{
+			part_highlights_cache[highlight_hash[0]] = []
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]] = []
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]] = []
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = []
+		}
+		else if(!Array.isArray(part_highlights_cache[highlight_hash[0]][highlight_hash[1]]))
+		{
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]] = []
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]] = []
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = []
+		}
+		else if(!Array.isArray(part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]]))
+		{
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]] = []
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = []
+		}
+		else if(!Array.isArray(part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]))
+		{
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = []
+		}
+		else
+		{
+			highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+		}*/
 		
 		if(ObjectExists(highlight))
 		{
@@ -227,19 +348,19 @@ function PolycubeDataVisualizer(cube_template)
 			var obj = that.rotate_polycubes[polycube_id].getObjectByName(name)
 			highlight.position.copy(obj.getWorldPosition())
 			highlight.rotation.copy(obj.getWorldRotation())
-			//obj.children.unshift(highlight)
+			obj.children.unshift(highlight)
 			highlight.visible = true
 
 			highlight.updateMatrix()
 
-			edge_highlights_cache[highlight_name] = highlight
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = highlight
 		}
 	}
 
 	function HighlightFace(name, polycube_id, action)
 	{
-		var highlight_name = name + action
-		var highlight = face_highlights_cache[highlight_name]
+		var highlight_hash = HashObject(polycube_id, "face", name, action)
+		var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
 
 		if(ObjectExists(highlight))
 		{
@@ -277,13 +398,13 @@ function PolycubeDataVisualizer(cube_template)
 			highlight.position.copy(obj.getWorldPosition())
 			highlight.rotation.copy(obj.getWorldRotation())
 
-			//obj.children.unshift(highlight)
+			obj.children.unshift(highlight)
 
 			highlight.visible = true
 
 			highlight.updateMatrix()
 
-			face_highlights_cache[highlight_name] = highlight
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = highlight
 		}
 	}
 
