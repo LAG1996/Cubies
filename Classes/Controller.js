@@ -207,7 +207,7 @@ function Controller(){
 	
 		//Instantiate a file reader that will read the file specified
 		var reader = new FileReader()
-		var that = this
+		//var that = this
 		
 		reader.onload = function(){
 			data = reader.result
@@ -232,7 +232,7 @@ function Controller(){
 	
 			VisualizePolycube(p)
 			
-			this.Switch_Context('poly-context')
+			that.Switch_Context('poly-context')
 	
 		}
 		reader.onerror = function(){
