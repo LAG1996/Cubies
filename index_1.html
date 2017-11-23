@@ -1,0 +1,133 @@
+<!doctype <!DOCTYPE html>
+<html>
+<head>
+	<title>The Cubies Project</title>
+	<meta name = "author" content = "Luis Angel Garcia">
+	<meta charset = "utf-8">
+	<meta name = "viewport" content = "width=device-width">
+	<!--<link rel = "stylesheet" href = "third_party_src/w3/w3css.css">-->
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="	sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="	sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+	s
+ 	<link rel="stylesheet" href = "index.css">
+</head>
+	
+<body>
+	<div id = "container"></div>
+	
+	<div id = "everything_else">
+		
+		<div class = "w3-bar w3-sand" id = 'toolbar'>
+			
+	
+			<div id ="mode_text" class = "w3-bar-item w3-right w3-red"></div>
+			<div id = "context_text" class = "w3-bar-item w3-right w3-blue"></div>
+	
+	
+			<div class = "w3-dropdown-click">
+				<button class = "w3-button w3-black w3-hover-white" id = "object_list_trigger">P</button>
+				<div class = "w3-dropdown-content w3-bar-block w3-sand" id = "object_list">
+					<div id = "object_data_list" class = "w3-sidebar w3-bar-block w3-sand" style = "width:25%; height:50%">
+						<div id = "object_template">
+							<button class = "w3-button w3-black obj_data_trigger" id = "active_toggle">objName</button>
+							<div id = "objName_data_edit" class ="w3-container obj_data_edit" style = "display:none">
+								<input id = "poly_obj_name_edit" class = "w3-input w3-border w3-light-grey" type = "text" value = "Change name">
+							</div>
+						</div>
+						<button class = "w3-button w3-red w3-hover-white" id = "dropdown_add_polycube">New Polycube</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class = 'mouse_tooltip w3-bar' id = 'poly_cube_name_only'>
+			<span class = 'tooltip_text w3-black w3-padding w3-bar-item'></span>
+			<span class = 'tooltip_text_1 w3-red w3-padding w3-bar-item' id = 'polycube_part' style = "display:none"></span>
+		</div>
+
+	</div>
+
+<!--
+	Some modals that will be used for adding content to the scene
+-->
+<div id = "add_poly_modal" class = "w3-modal">
+	<div class = "w3-modal-content w3-sand">
+		<div class = "w3-container">
+			<label id = "polycube_file_read_btn" class = "w3-button w3-black" for = "polycube_file_read">Open from file...</label>
+			<input type = "file" id = "polycube_file_read" style = "display:none"/>
+			<input type = "file" id = "polycube_file_read_clean" style = "display:none"/>
+			<form class = "w3-container w3-sand">
+			<label>New Polycube's Name</label>
+			<input id = "add_poly_modal_new_name" class = "w3-input w3-border w3-light-grey" type="text" value = "Name">
+			<label>X-Coordinate</label>
+			<input id = "add_poly_modal_x" class = "w3-input w3-border w3-light-grey" type="text" value = "0">
+			<label>Y-Coordinate</label>
+			<input id = "add_poly_modal_y" class = "w3-input w3-border w3-light-grey" type="text" value = "0">
+			<label>Z-Coordinate</label>
+			<input id = "add_poly_modal_z" class = "w3-input w3-border w3-light-grey" type="text" value = "0">
+			</form>
+			<button id = "add_poly_modal_submit" class="w3-button w3-black">Submit</button>
+			<button id = "add_poly_modal_close" class="w3-button w3-black">Cancel</button>
+		</div>
+	</div>
+</div>
+
+
+<div id = "add_cube_to_poly_modal" class = "w3-modal">
+	<div class = "w3-modal-content w3-sand">
+		<div class = "w3-container">
+			<form class = "w3-container w3-sand">
+			<label>X-Coordinate</label>
+			<input id = "add_cube_to_poly_modal_x" class = "w3-input w3-border w3-light-grey" type="text" value = "0">
+			<label>Y-Coordinate</label>
+			<input id = "add_cube_to_poly_modal_y" class = "w3-input w3-border w3-light-grey" type="text" value = "0">
+			<label>Z-Coordinate</label>
+			<input id = "add_cube_to_poly_modal_z" class = "w3-input w3-border w3-light-grey" type="text" value = "0">
+			</form>
+			<button id = "add_cube_to_poly_modal_submit" class="w3-button w3-black">Submit</button>
+			<button id = "add_cube_to_poly_modal_close" class="w3-button w3-black">Cancel</button>
+		</div>
+	</div>
+</div>
+
+
+
+<script src = "third_party_src/THREE/three.js"></script>
+<script src = "third_party_src/THREE/OBJLoader.js"></script>
+<script src = "third_party_src/THREE/OrbitControls.js"></script>
+<script src = "third_party_src/FileSaver/FileSaver.js"></script>
+<script src = "third_party_src/JQUERY/jquery-3.2.1.min.js"></script>
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<!--
+	Some dependencies written by me
+-->
+<script src = "Classes/Scene_v2.js"></script>
+<script src = "Classes/Window_Helpers/Toolbar_Handler_v2.js"></script>
+<script src = "Classes/Window_Helpers/Cube_Add_Handler_v2.js"></script>
+<script src = "Classes/SceneHandler_v2.js"></script>
+<script src = "Classes/Utils.js"></script>
+<script src = "Classes/Init_v2.js"></script>
+
+<!--
+	The real meat of the program
+-->
+<script src = "Classes/FlexiFaceEdgeMap.js"></script>
+<script src = "Classes/DualGraphs_v2.js"></script>
+<script src = "Classes/Cube_v2.js"></script>
+<script src = "Classes/Polycube_v2.js"></script>
+<script src = "Classes/PolycubeVisualizer.js"></script>
+<script src = "Classes/Controller.js"></script>
+
+<!--
+	The entry point for our program
+-->
+<script src = "Scenes/scene_3.js"></script>
+
+
+</body>
+</html>
