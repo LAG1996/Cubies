@@ -149,6 +149,56 @@ function PolycubeDataVisualizer(cube_template)
 			face_3.updateMatrix()
 			face_4.updateMatrix()
 
+			for(var e in face_1.children)
+			{
+				var part = face_1.children[e]
+
+				if(part.name == "body")
+				{
+					var highlight_hash = HashObject(polycube.id, "face", face_1.name, "dual_half_1")
+					var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+					if(ObjectExists(highlight))
+					{
+						highlight.position.copy(face_1.getWorldPosition())
+						highlight.rotation.copy(face_1.getWorldRotation())
+						highlight.updateMatrix()
+					}
+
+					var highlight_hash = HashObject(polycube.id, "face", face_1.name, "dual_half_2")
+					var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+					if(ObjectExists(highlight))
+					{
+						highlight.position.copy(face_1.getWorldPosition())
+						highlight.rotation.copy(face_1.getWorldRotation())
+						highlight.updateMatrix()
+					}
+				}
+				else
+				{
+					var highlight_hash = HashObject(polycube.id, "edge", part.name, "cut")
+					var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+					if(ObjectExists(highlight))
+					{
+						highlight.position.copy(part.getWorldPosition())
+						highlight.rotation.copy(part.getWorldRotation())
+						highlight.updateMatrix()
+					}
+
+					var highlight_hash = HashObject(polycube.id, "edge", part.name, "hinge")
+					var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+					if(ObjectExists(highlight))
+					{
+						highlight.position.copy(part.getWorldPosition())
+						highlight.rotation.copy(part.getWorldRotation())
+						highlight.updateMatrix()
+					}
+				}
+			}
+
 			controller.Alert('ROTATE_FACE_ROUND_EDGE', edge_object.name, face_1.name, rads, axis)
 		}
 
@@ -224,11 +274,19 @@ function PolycubeDataVisualizer(cube_template)
 
 		var index_2 = 0
 
-		var index_3 = that.rotate_hinge_polycubes[polycube_id].getObjectByName(object_name).material.color.getHex()
+		var index_3 = (action == "mouse_over_1" || action == "mouse_over_2") ?  0 : that.rotate_hinge_polycubes[polycube_id].getObjectByName(object_name).material.color.getHex()
 
 		var index_4 = -1
 
-		if(action == "cut")
+		if(action == "mouse_over_1")
+		{
+			index_4 = 0
+		}
+		else if(action == "mouse_over_2")
+		{
+			index_4 = 1
+		}
+		else if(action == "cut")
 		{
 			index_4 = 0
 		}
@@ -236,14 +294,7 @@ function PolycubeDataVisualizer(cube_template)
 		{
 			index_4 = 1
 		}
-		else if(action == "mouse_over_1")
-		{
-			index_4 = 2
-		}
-		else if(action == "mouse_over_2")
-		{
-			index_4 = 3
-		}
+
 
 		return [index_1, index_2, index_3, index_4]
 	}
@@ -254,7 +305,7 @@ function PolycubeDataVisualizer(cube_template)
 
 		var index_2 = 1
 
-		var index_3 = that.rotate_face_polycubes[polycube_id].getObjectByName(object_name).children[0].material.color.getHex()
+		var index_3 = (action == "mouse_over_1" || action == "mouse_over_2") ?  0 : that.rotate_face_polycubes[polycube_id].getObjectByName(object_name).children[0].material.color.getHex() + 2
 
 		var index_4 = -1
 
@@ -268,11 +319,11 @@ function PolycubeDataVisualizer(cube_template)
 		}
 		else if(action == "dual_half_1")
 		{
-			index_4 = 2
+			index_4 = 0
 		}
 		else if(action == "dual_half_2")
 		{
-			index_4 = 3
+			index_4 = 1
 		}
 
 		return [index_1, index_2, index_3, index_4]
@@ -283,44 +334,15 @@ function PolycubeDataVisualizer(cube_template)
 		var highlight_hash = HashObject(polycube_id, "edge", name, action)
 
 		var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
-
-		/*
-		if(!Array.isArray(part_highlights_cache[highlight_hash[0]]))
-		{
-			part_highlights_cache[highlight_hash[0]] = []
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]] = []
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]] = []
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = []
-		}
-		else if(!Array.isArray(part_highlights_cache[highlight_hash[0]][highlight_hash[1]]))
-		{
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]] = []
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]] = []
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = []
-		}
-		else if(!Array.isArray(part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]]))
-		{
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]] = []
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = []
-		}
-		else if(!Array.isArray(part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]))
-		{
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = []
-		}
-		else
-		{
-			highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
-		}*/
 		
 		if(ObjectExists(highlight))
 		{
-			highlight.visible = true
+			ShowHighlight(name, polycube_id, highlight, action)
 		}
 		else
 		{
 			highlight = Cube_Template.highlightEdge.clone()
 			highlight.material = new THREE.MeshBasicMaterial()
-
 
 			var color = null
 
@@ -335,25 +357,15 @@ function PolycubeDataVisualizer(cube_template)
 			else if(action == "mouse_over_1")
 			{
 				color = that.regular_mouse_highlight.clone()
+				highlight.scale.set(1.5, 1, 1.5)
 			}
 			else if(action == "mouse_over_2")
 			{
 				color = that.special_mouse_highlight.clone()
+				highlight.scale.set(1.5, 1, 1.5)
 			}
 
-			highlight.material.color.copy(color)
-			highlight.material.transparent = true
-			highlight.material.opacity = .5
-
-			var obj = that.rotate_polycubes[polycube_id].getObjectByName(name)
-			highlight.position.copy(obj.getWorldPosition())
-			highlight.rotation.copy(obj.getWorldRotation())
-			obj.children.unshift(highlight)
-			highlight.visible = true
-
-			highlight.updateMatrix()
-
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = highlight
+			CreateHighlight(name, polycube_id, color, highlight, highlight_hash)
 		}
 	}
 
@@ -364,7 +376,7 @@ function PolycubeDataVisualizer(cube_template)
 
 		if(ObjectExists(highlight))
 		{
-			highlight.visible = true
+			ShowHighlight(name, polycube_id, highlight, action)
 		}
 		else
 		{
@@ -389,23 +401,42 @@ function PolycubeDataVisualizer(cube_template)
 				color = that.second_highlight.clone()
 			}
 
-			highlight.material.color.copy(color)
-			highlight.material.transparent = true
-			highlight.material.opacity = .5
+			CreateHighlight(name, polycube_id, color, highlight, highlight_hash)
+		}
+	}
 
+	function CreateHighlight(name, polycube_id, color, highlight, highlight_hash)
+	{
+		highlight.material.color.copy(color)
+		highlight.material.transparent = true
+		highlight.material.opacity = .5
+
+		var p_cube = that.rotate_polycubes[polycube_id]
+		var obj = p_cube.getObjectByName(name)
+
+		highlight.position.copy(obj.getWorldPosition())
+		highlight.rotation.copy(obj.getWorldRotation())
+
+		p_cube.children.unshift(highlight)
+
+		highlight.visible = true
+
+		highlight.updateMatrix()
+
+		part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = highlight
+	}
+
+	function ShowHighlight(name, polycube_id, highlight, action)
+	{
+		if(action == "mouse_over_1" || action == "mouse_over_2")
+		{
 			var obj = that.rotate_polycubes[polycube_id].getObjectByName(name)
-
 			highlight.position.copy(obj.getWorldPosition())
 			highlight.rotation.copy(obj.getWorldRotation())
-
-			obj.children.unshift(highlight)
-
-			highlight.visible = true
-
 			highlight.updateMatrix()
-
-			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = highlight
 		}
+
+		highlight.visible = true
 	}
 
 	function ProcessCubeData(id, polycube, cube)

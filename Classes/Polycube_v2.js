@@ -286,9 +286,13 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		for(var e in edges)
 		{
 			var edge_1 = edges[e]
-			var edge_2_name = FaceEdgeLocations.GetEdgesAtLoc(edge_1.position)
-			edge_2_name = edge_2_name[0] == edge_1.name ? edge_2_name[1] : edge_2_name[0]
+			var edge_2_list = FaceEdgeLocations.GetEdgesAtLoc(edge_1.position)
+			var edge_2_name = edge_2_list[0] == edge_1.name ? edge_2_list[1] : edge_2_list[0]
+
 			var other_face = FaceEdgeLocations.GetFaceFromEdge(edge_2_name)
+
+			if(!ObjectExists(other_face))
+				continue
 
 			DualGraphs.AddNeighboringFaces(face_name, other_face.name)
 

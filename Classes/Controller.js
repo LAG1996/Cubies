@@ -505,7 +505,7 @@ function Controller(){
 						that.face_graphs_out = false
 						that.arrow_pair.visible = false
 						that.arrows_out = false
-						that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, .5)
+						//that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, .5)
 
 						return
 					}
@@ -560,7 +560,7 @@ function Controller(){
 								//HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.second_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 							}
 							
-							that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, 0)
+							//that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, 0)
 						}
 					}
 					else if(that.hovering_over_face)
@@ -659,7 +659,7 @@ function Controller(){
 					}
 					else
 					{
-						that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, .5)
+						//that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, .5)
 						if(!that.face_graphs_out)
 						{
 							that.Switch_Context('edit-context')
