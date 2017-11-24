@@ -13,8 +13,13 @@
 	display: inline-block;
 }
 
-#poly_view_nav{
-	visibility: hidden;
+#tutorial_part{
+	padding-right: 2rem;
+	text-align: right;
+}
+
+#tutorial_panel{
+	width: 20rem;
 }
 
 #poly_file_read{

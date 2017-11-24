@@ -1,0 +1,233 @@
+<!doctype <!DOCTYPE html>
+<html>
+	<head>
+		<title>The Cubies Project</title>
+		<meta name = "author" content = "Luis Angel Garcia">
+		<meta charset = "utf-8">
+		<meta name = "viewport" content = "width=device-width">
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+		
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="	sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+	 	<link rel="stylesheet" href = "index.css">
+	</head>
+
+	<body>
+		<div id = "container"></div>
+		<div id = "everything_else">
+
+			<nav class = "navbar navbar-expand navbar-dark bg-dark fixed-top" id = "world_view_nav">
+					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "navbar" aria-expanded = "false" aria-controls = "navbar"
+					aria-label = "Toggle Nav">
+						<span class = "navbar-toggler-icon"></span>
+					</button>
+					<a href = "#" class = "navbar-brand">The Polycube Project</a>
+					<div id = "navbar" class = "collapse navbar-collapse">
+						<ul class = "navbar-nav mr-auto">
+							<li class = "nav-item dropdown">
+								<button class = "dropdown-toggle btn btn-outline-danger" data-toggle = "dropdown" role = "button" aria-haspopup = "true" aria-expanded = "false">P<span class = "caret"></span></button>
+								<div class = "dropdown-menu">
+									<a href="#" class = "btn dropdown-item tutorial_new_poly">New Polycube</a>
+								</div>
+							</li>
+							<li class = "nav-item"><button class = "btn btn-outline-warning tutorial_new_poly">New Polycube</button></li>
+
+						</ul>
+
+						<ul class = "nav navbar-nav navbar-right">
+							<li class = "nav-item"><a href="./" class = "btn btn-outline-danger">Exit Tutorial</a></li>
+							<li class = "nav-item"><a href="#" class = "nav-link">World View</a></li>
+						</ul>
+					</div>
+			</nav>
+
+			<nav class = "navbar navbar-expand navbar-dark bg-dark fixed-top" id = "poly_view_nav">
+					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "navbar" aria-expanded = "false" aria-controls = "navbar"
+					aria-label = "Toggle Nav">
+						<span class = "navbar-toggler-icon"></span>
+					</button>
+					<a href = "#" class = "navbar-brand">The Polycube Project</a>
+					<div id = "navbar" class = "collapse navbar-collapse">
+						<ul class = "navbar-nav mr-auto">
+							<li class = "nav-item dropdown">
+								<button class = "dropdown-toggle btn btn-outline-danger" data-toggle = "dropdown" role = "button" aria-haspopup = "true" aria-expanded = "false">P<span class = "caret"></span></button>
+								<div class = "dropdown-menu">
+									<a href="#" class = "btn dropdown-item" data-toggle="modal" data-target = "#add_polycube_modal">New Polycube</a>
+								</div>
+							</li>
+							<li class = "nav-item"><button class = "btn btn-outline-warning" data-toggle="modal" data-target = "#add_cube_modal">Add Cube</button></li>
+							
+							<li class = "nav-item"><button class = "btn btn-outline-light" id = "delete_polycube">Delete Polycube</button></li>
+
+						</ul>
+
+						<ul class = "nav navbar-nav navbar-right">
+							<!--<li class = "nav-item"><button class = "btn btn-outline-light" id = "save_polycube">Save Polycube</button></li>-->
+							<li class = "nav-item"><a href="#" class = "nav-link">Polycube Name</a></li>
+							<li class = "nav-item"><a href="#" class = "nav-link">Poly View</a></li>
+						</ul>
+					</div>
+			</nav>
+			<div class = "mt-5 mr-5 card bg-dark" id = "tutorial_panel">
+				<div class = "card-head">
+					<div class = "row">
+						<div class = "col-2"></div>
+						<div class = "col-4"></div>
+						<div class = "col-6"><h2 class="text-info mr-2">Tutorial</h2></div>
+					</div>
+					<p class="lead text-white" id = "tutorial_part">Part goes here</p>
+				</div>
+				<div class = "card-body">
+					<p class="text-white" id = "tutorial_prompt">Tutorial prompts go here</p>
+				</div>
+				<div class = "card-footer">
+					<div class = "row">
+						<div class = "col-4"></div>
+						<div class = "col-4"><button class = "btn btn-outline-warning" id = "tutorial_prev">Previous</button></div>
+						<div class = "col-4"><button class = "btn btn-outline-success right" id = "tutorial_next">Next</button></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!--Add polycube_modal-->
+		<div id = "add_polycube_modal" class="modal" tabindex="-1" role="dialog">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title">Add a Polycube</h5>
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div class="modal-body">
+		      	<!--<label type = "button" for = "poly_file_read" class = "btn btn-dark">Load polycube from file...</label>
+		      	<input type = "file" id = "poly_file_read"></input>
+		      	<div class = "row">
+		      		<div class = "col-6">
+		        	</div>
+		        	 <div class = "col-2">
+		        		<p>-OR-</p>
+		        	</div>
+		        	<div class = "col-4"></div>
+		      	</div>-->
+		      	<p>Name the polycube and insert the polycube's origin:</p>
+		      	<div class = "card">
+		      		<div class = "card-head">
+		      			<h4 class = "text-info">Tutorial:</h4>
+		      		</div>
+		      		<div class = "card-body">
+		      			<p class = "text-info">Here, you can name your polycube, and then give it some coordinates where the very first cube will be placed. You can put nothing in these boxes, and we'll generate a polycube for you anyway.</p>
+		      		</div>
+		      	</div>
+		      	<form>
+  					<div class="form-group">
+  					  <label for="name">Name</label>
+  					  <input type="text" class="form-control" id="poly_name" aria-describedby="poly_name" placeholder="Enter polycube name">
+  					</div>
+  					<div class="form-group">
+  					  <label for="x">X</label>
+  					  <input type="text" class="form-control" id="poly_x" aria-describedby="x_coord" placeholder="Enter x-coordinate">
+  					</div>
+  					<div class="form-group">
+  					  <label for="x">Y</label>
+  					  <input type="text" class="form-control" id="poly_y" aria-describedby="y_coord" placeholder="Enter y-coordinate">
+  					</div>
+  					<div class="form-group">
+  					  <label for="z">Z</label>
+  					  <input type="text" class="form-control" id="poly_z" aria-describedby="z_coord" placeholder="Enter z-coordinate">
+  					</div>
+
+  					<button class="btn btn-outline-success" type = "button" id = "submit_poly_coords" data-dismiss="modal">Submit</button>
+				</form>
+
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
+		<!--Add cube modal-->
+		<div id = "add_cube_modal" class="modal" tabindex="-1" role="dialog">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title">Add a Cube!</h5>
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div class="modal-body">
+		      	<p>Insert the cube's position:</p>
+		      	<form>
+  					<div class="form-group">
+  					  <label for="x">X</label>
+  					  <input type="text" class="form-control" id="cube_x" aria-describedby="x_coord" placeholder="Enter x-coordinate">
+  					</div>
+  					<div class="form-group">
+  					  <label for="x">Y</label>
+  					  <input type="text" class="form-control" id="cube_y" aria-describedby="y_coord" placeholder="Enter y-coordinate">
+  					</div>
+  					<div class="form-group">
+  					  <label for="z">Z</label>
+  					  <input type="text" class="form-control" id="cube_z" aria-describedby="z_coord" placeholder="Enter z-coordinate">
+  					</div>
+
+  					<button class="btn btn-outline-success" type="button" id = "submit_cube_coords">Submit</button>
+				</form>
+
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
+
+
+		<!--Scripts!!!-->
+		<script src = "third_party_src/THREE/three.js"></script>
+		<script src = "third_party_src/THREE/OBJLoader.js"></script>
+		<script src = "third_party_src/THREE/OrbitControls.js"></script>
+		<script src = "third_party_src/FileSaver/FileSaver.js"></script>
+		<!--<script src = "third_party_src/JQUERY/jquery-3.2.1.min.js"></script>-->
+		<!-- Latest compiled and minified JavaScript -->
+		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="		sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="		sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+
+
+		<!--
+			Some dependencies written by me
+		-->
+		<script src = "Classes/Scene_v2.js"></script>
+		<script src = "Classes/Window_Helpers/Tutorial_Toolbar_Handler_v3.js"></script>
+		<script src = "Classes/Window_Helpers/Tutorial_Prompts.js"></script>
+		<script src = "Classes/Window_Helpers/Cube_Add_Handler_v2.js"></script>
+		<script src = "Classes/SceneHandler_v2.js"></script>
+		<script src = "Classes/Utils.js"></script>
+		<script src = "Classes/Init_v2.js"></script>
+
+		<!--
+			The real meat of the program
+		-->
+		<script src = "Classes/FlexiFaceEdgeMap.js"></script>
+		<script src = "Classes/DualGraphs_v2.js"></script>
+		<script src = "Classes/Cube_v2.js"></script>
+		<script src = "Classes/Polycube_v2.js"></script>
+		<script src = "Classes/PolycubeVisualizer.js"></script>
+		<script src = "Classes/Controller.js"></script>
+
+		<!--
+			The entry point for our program
+		-->
+		<script src = "Scenes/scene_3.js"></script>
+
+
+	</body>
+</html>

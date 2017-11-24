@@ -104,14 +104,14 @@ function Controller(){
 		this.Alert_Funcs[alert_word](arguments)
 	}
 
-	this.Context_Funcs = {'edit-context' : function(){Switch_To_Edit()}, 'poly-context' : function(){Switch_To_Poly()}}
+	this.Context_Funcs = {'world' : function(){Switch_To_Edit()}, 'poly' : function(){Switch_To_Poly()}}
 
 	var that = this
 
 	this.Switch_Context = function(context_name)
 	{
 	
-		that.toolbar_handler.Switch_Context_H(context_name)
+		that.toolbar_handler.Switch_Context(context_name)
 	
 		that.Context_Funcs[context_name]()
 	
@@ -124,7 +124,7 @@ function Controller(){
 		var args = Array.prototype.slice.call(arguments[0], 1)
 	
 		var new_p_cube = PolyCube.GenerateNewPolyCube(args[0], args[1])
-		that.toolbar_handler.AddPolyCubeToObjectView(args[1])
+		//that.toolbar_handler.AddPolyCubeToObjectView(args[1])
 		
 		PolyCube.SwitchToNewActive(new_p_cube)
 		PolyCube.Active_Polycube.Add_Cube(new THREE.Vector3(0, 0, 0))
@@ -133,11 +133,11 @@ function Controller(){
 	
 		VisualizePolycube(new_p_cube)
 	
-		that.toolbar_handler.ActivePolyCubeObjectView(new_p_cube.name)
+		//that.toolbar_handler.ActivePolyCubeObjectView(new_p_cube.name)
 	
 		CreateTrashCollectors(new_p_cube)
 	
-		that.Switch_Context('poly-context')
+		that.Switch_Context('poly')
 	}
 	
 	
@@ -188,7 +188,7 @@ function Controller(){
 	
 	
 	
-		that.Switch_Context('edit-context')
+		that.Switch_Context('world')
 	}
 	
 	this.Alert_Funcs['SAVE_POLYCUBE'] = function(){
@@ -221,8 +221,8 @@ function Controller(){
 	
 			PolyCube.SwitchToNewActive(p)
 	
-			that.toolbar_handler.AddPolyCubeToObjectView(p.name)
-			that.toolbar_handler.ActivePolyCubeObjectView(p.name)
+			//that.toolbar_handler.AddPolyCubeToObjectView(p.name)
+			//that.toolbar_handler.ActivePolyCubeObjectView(p.name)
 	
 			that.Load_Polycube_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
 	
@@ -232,7 +232,7 @@ function Controller(){
 	
 			VisualizePolycube(p)
 			
-			that.Switch_Context('poly-context')
+			that.Switch_Context('poly')
 	
 		}
 		reader.onerror = function(){
@@ -273,9 +273,9 @@ function Controller(){
 		PolyCube.SwitchToNewActive(typeof args[0] == 'string' ? PolyCube.Name2Poly[args[0]] : null)
 		
 		if(ObjectExists(PolyCube.Active_Polycube))
-			this.Switch_Context('poly-context')
+			this.Switch_Context('poly')
 		else
-			this.Switch_Context('edit-context')
+			this.Switch_Context('world')
 	
 	}
 
@@ -297,9 +297,9 @@ function Controller(){
 	
 			PolyCube.SwitchToNewActive(null)
 	
-			that.toolbar_handler.ActivePolyCubeObjectView(null)
+			//that.toolbar_handler.ActivePolyCubeObjectView(null)
 	
-			that.context = 'edit'
+			that.context = 'world'
 	
 			that.Mouse_Hover_Funcs = [function(){
 
@@ -341,7 +341,7 @@ function Controller(){
 					{
 						PolyCube.SwitchToNewActive(that.hover_over_poly)
 	
-						that.toolbar_handler.ActivePolyCubeObjectView(that.hover_over_poly.name)
+						//that.toolbar_handler.ActivePolyCubeObjectView(that.hover_over_poly.name)
 	
 						that.Switch_Context('poly-context')
 	
@@ -489,7 +489,7 @@ function Controller(){
 						{
 							if(!that.face_graphs_out)
 							{
-								that.Switch_Context('edit-context')
+								that.Switch_Context('world')
 							}
 						}
 
@@ -662,7 +662,7 @@ function Controller(){
 						//that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, .5)
 						if(!that.face_graphs_out)
 						{
-							that.Switch_Context('edit-context')
+							that.Switch_Context('world')
 						}
 						else
 						{

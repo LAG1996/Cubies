@@ -29,7 +29,7 @@ $(document).ready(function(){
 			PolyCube.Active_Polycube = polycube
 		}
 		
-		CONTROL.Switch_Context('edit-context')
+		CONTROL.Switch_Context('world')
 		CONTROL.update()
 	}
 })
