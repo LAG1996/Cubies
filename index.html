@@ -6,7 +6,7 @@
 		<meta charset = "utf-8">
 		<meta name = "viewport" content = "width=device-width">
 		<!-- Latest compiled and minified CSS -->
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="	sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 		
 		<!-- Optional theme -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="	sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
@@ -17,60 +17,141 @@
 		<div id = "container"></div>
 		<div id = "everything_else">
 
-			<nav class = "navbar navbar-inverse navbar-default" id = "world_view_nav">
-
-					<div class = "navbar-header">
-						<button type = "button" class = "navbar-toggle collapsed" data-toggle = "collapse" data-target = "#navbar" aria-expanded = "false" aria-controls = "navbar">
-							<span class = "sr-only">Toggle Navigation</span>
-						</button>
-						<p class = "navbar-brand">The Polycube Project</button></p>
-					</div>
+			<nav class = "navbar navbar-expand navbar-dark bg-dark fixed-top" id = "world_view_nav">
+					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "navbar" aria-expanded = "false" aria-controls = "navbar"
+					aria-label = "Toggle Nav">
+						<span class = "navbar-toggler-icon"></span>
+					</button>
+					<a href = "#" class = "navbar-brand">The Polycube Project</a>
 					<div id = "navbar" class = "collapse navbar-collapse">
-						<ul class = "nav navbar-nav">
-							<li class = "dropdown">
-								<a href = "#" class = "dropdown-toggle" data-toggle = "dropdown" role = "button" aria-haspopup = "true" aria-expanded = "false">P<span class = "caret"></span></a>
-								<ul class = "dropdown-menu">
-									<li><button class = "btn">New Polycube</button>
-								</ul>
+						<ul class = "navbar-nav mr-auto">
+							<li class = "nav-item dropdown">
+								<button class = "dropdown-toggle btn btn-outline-danger" data-toggle = "dropdown" role = "button" aria-haspopup = "true" aria-expanded = "false">P<span class = "caret"></span></button>
+								<div class = "dropdown-menu">
+									<a href="#" class = "btn dropdown-item" data-toggle="modal" data-target = "#add_polycube_modal">New Polycube</a>
+								</div>
 							</li>
-							<li><a href = "#">New Polycube</a></li>
+							<li class = "nav-item"><button class = "btn btn-outline-warning" data-toggle="modal" data-target = "#add_polycube_modal">New Polycube</button></li>
+
 						</ul>
 
 						<ul class = "nav navbar-nav navbar-right">
-							<li><p class = "navbar-text">World View</a></li>
+							<li class = "nav-item"><a href="#" class = "nav-link">World View</a></li>
 						</ul>
 					</div>
 			</nav>
 
-			<nav class = "navbar navbar-inverse navbar-default" id = "poly_view_nav">
-
-					<div class = "navbar-header">
-						<button type = "button" class = "navbar-toggle collapsed" data-toggle = "collapse" data-target = "#navbar" aria-expanded = "false" aria-controls = "navbar">
-							<span class = "sr-only">Toggle Navigation</span>
-						</button>
-						<p class = "navbar-brand">The Polycube Project</button></p>
-					</div>
+			<nav class = "navbar navbar-expand navbar-dark bg-dark fixed-top" id = "poly_view_nav">
+					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "navbar" aria-expanded = "false" aria-controls = "navbar"
+					aria-label = "Toggle Nav">
+						<span class = "navbar-toggler-icon"></span>
+					</button>
+					<a href = "#" class = "navbar-brand">The Polycube Project</a>
 					<div id = "navbar" class = "collapse navbar-collapse">
-						<ul class = "nav navbar-nav">
-							<li class = "dropdown">
-								<a href = "#" class = "dropdown-toggle" data-toggle = "dropdown" role = "button" aria-haspopup = "true" aria-expanded = "false">P<span class = "caret"></span></a>
-								<ul class = "dropdown-menu">
-									<li><button class = "btn">New Polycube</button>
-								</ul>
+						<ul class = "navbar-nav mr-auto">
+							<li class = "nav-item dropdown">
+								<button class = "dropdown-toggle btn btn-outline-danger" data-toggle = "dropdown" role = "button" aria-haspopup = "true" aria-expanded = "false">P<span class = "caret"></span></button>
+								<div class = "dropdown-menu">
+									<a href="#" class = "btn dropdown-item" data-toggle="modal" data-target = "#add_polycube_modal">New Polycube</a>
+								</div>
 							</li>
-							<li><a href = "#">Add Cube</a></li>
-							<li><a href = "#">Save Polycube</a></li>
-							<li><a href = "#">Delete Polycube</a></li>
+							<li class = "nav-item"><button class = "btn btn-outline-warning" data-toggle="modal" data-target = "#add_cube_modal">Add Cube</button></li>
+							<li class = "nav-item"><button class = "btn btn-outline-light">Save Polycube</button></li>
+							<li class = "nav-item"><button class = "btn btn-outline-light">Delete Cube</button></li>
+
 						</ul>
 
 						<ul class = "nav navbar-nav navbar-right">
-							<li><p class = "navbar-text">Polycube Name</p></li>
-							<li><p class = "navbar-text">Polycube View</a></li>
+							<li class = "nav-item"><a href="#" class = "nav-link">Polycube Name</a></li>
+							<li class = "nav-item"><a href="#" class = "nav-link">Poly View</a></li>
 						</ul>
 					</div>
 			</nav>
 		</div>
 
+		<!--Add polycube_modal-->
+		<div id = "add_polycube_modal" class="modal" tabindex="-1" role="dialog">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title">Add a Polycube</h5>
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div class="modal-body">
+		      	<label type = "button" for = "poly_file_read" class = "btn btn-dark">Load polycube from file...</label>
+		      	<input type = "file" id = "poly_file_read"></input>
+		      	<div class = "row">
+		      		<div class = "col-6">
+		        	</div>
+		        	 <div class = "col-2">
+		        		<p>-OR-</p>
+		        	</div>
+		        	<div class = "col-4"></div>
+		      	</div>
+		      	<p>Insert the polycube's origin:</p>
+		      	<form>
+  					<div class="form-group">
+  					  <label for="x">X</label>
+  					  <input type="text" class="form-control" id="poly_x" aria-describedby="x_coord" placeholder="Enter x-coordinate">
+  					</div>
+  					<div class="form-group">
+  					  <label for="x">Y</label>
+  					  <input type="text" class="form-control" id="poly_y" aria-describedby="y_coord" placeholder="Enter y-coordinate">
+  					</div>
+  					<div class="form-group">
+  					  <label for="z">Z</label>
+  					  <input type="text" class="form-control" id="poly_z" aria-describedby="z_coord" placeholder="Enter z-coordinate">
+  					</div>
+
+  					<button class="btn btn-outline-success" id = "submit_poly_coords">Submit</button>
+				</form>
+
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
+		<!--Add cube modal-->
+		<div id = "add_cube_modal" class="modal" tabindex="-1" role="dialog">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title">Add a Cube!</h5>
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div class="modal-body">
+		      	<p>Insert the cube's position:</p>
+		      	<form>
+  					<div class="form-group">
+  					  <label for="x">X</label>
+  					  <input type="text" class="form-control" id="cube_x" aria-describedby="x_coord" placeholder="Enter x-coordinate">
+  					</div>
+  					<div class="form-group">
+  					  <label for="x">Y</label>
+  					  <input type="text" class="form-control" id="cube_y" aria-describedby="y_coord" placeholder="Enter y-coordinate">
+  					</div>
+  					<div class="form-group">
+  					  <label for="z">Z</label>
+  					  <input type="text" class="form-control" id="cube_z" aria-describedby="z_coord" placeholder="Enter z-coordinate">
+  					</div>
+
+  					<button class="btn btn-outline-success" id = "submit_cube_coords">Submit</button>
+				</form>
+
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
 
 
 
@@ -79,9 +160,13 @@
 		<script src = "third_party_src/THREE/OBJLoader.js"></script>
 		<script src = "third_party_src/THREE/OrbitControls.js"></script>
 		<script src = "third_party_src/FileSaver/FileSaver.js"></script>
-		<script src = "third_party_src/JQUERY/jquery-3.2.1.min.js"></script>
+		<!--<script src = "third_party_src/JQUERY/jquery-3.2.1.min.js"></script>-->
 		<!-- Latest compiled and minified JavaScript -->
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="		sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="		sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+
 
 		<!--
 			Some dependencies written by me

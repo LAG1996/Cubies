@@ -314,32 +314,5 @@ function Toolbar_Handler(controller){
 
 				$(this).val("Change name")
 			})
-
-/*
-			//Set up what happens when the field containing the polycube's x-coordinate is changed
-			$(object_data_space).find("#poly_obj_x_edit").blur(function(){
-				var name = $(this).parent().parent().find("#active_toggle").text()
-
-				PolyCube.Active_Polycube.Set_PosX(parseInt($(this).val()))
-			})
-
-			//Set up what happens when the field containing the polycube's y-coordinate is changed
-			$(object_data_space).find("#poly_obj_y_edit").blur(function(){
-				var name = $(this).parent().parent().find("#active_toggle").text()
-
-				PolyCube.Active_Polycube.Set_PosY(parseInt($(this).val()))
-			})
-
-			//Set up what happens when the field containing the polycube's z-coordinate is changed
-			$(object_data_space).find("#poly_obj_z_edit").blur(function(){
-				var name = $(this).parent().parent().find("#active_toggle").text()
-
-				PolyCube.Active_Polycube.Set_PosZ(parseInt($(this).val()))
-			})
-
-			//PostUrgentMessage(['ADD_TO_SCENE', scene_handler, p_cube.Obj, null])
-			//PostUrgentMessage(['ADD_TO_PICK_SCENE', scene_handler, p_cube.picking_polycube, null])
-			
-			$("#add_poly_modal_new_name").val("Polycube_"+PolyCube.ID)*/
 	}
 }
