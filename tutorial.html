@@ -16,6 +16,30 @@
 	<body>
 		<div id = "container"></div>
 		<div id = "everything_else">
+						<div class = "row fixed-top" id = "tutorial_panel_row">
+				<div class = "col-12">
+					<div class = "mt-5 mr-5 card bg-dark" id = "tutorial_panel">
+						<div class = "card-head">
+							<div class = "row">
+								<div class = "col-2"></div>
+								<div class = "col-4"></div>
+								<div class = "col-6"><h2 class="text-info mr-2">Tutorial</h2></div>
+							</div>
+							<p class="lead text-white" id = "tutorial_part">Part goes here</p>
+						</div>
+						<div class = "card-body">
+							<p class="text-white" id = "tutorial_prompt">Tutorial prompts go here</p>
+						</div>
+						<div class = "card-footer">
+							<div class = "row">
+								<div class = "col-4"></div>
+								<!--<div class = "col-4"><button class = "btn btn-outline-warning" id = "tutorial_prev">Previous</button></div>-->
+								<div class = "col-4"><button class = "btn btn-outline-success right" id = "tutorial_next">Next</button></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 
 			<nav class = "navbar navbar-expand navbar-dark bg-dark fixed-top" id = "world_view_nav">
 					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "navbar" aria-expanded = "false" aria-controls = "navbar"
@@ -63,32 +87,13 @@
 						</ul>
 
 						<ul class = "nav navbar-nav navbar-right">
+							<li class = "nav-item"><a href="./" class = "btn btn-outline-danger">Exit Tutorial</a></li>
 							<!--<li class = "nav-item"><button class = "btn btn-outline-light" id = "save_polycube">Save Polycube</button></li>-->
 							<li class = "nav-item"><a href="#" class = "nav-link">Polycube Name</a></li>
 							<li class = "nav-item"><a href="#" class = "nav-link">Poly View</a></li>
 						</ul>
 					</div>
 			</nav>
-			<div class = "mt-5 mr-5 card bg-dark" id = "tutorial_panel">
-				<div class = "card-head">
-					<div class = "row">
-						<div class = "col-2"></div>
-						<div class = "col-4"></div>
-						<div class = "col-6"><h2 class="text-info mr-2">Tutorial</h2></div>
-					</div>
-					<p class="lead text-white" id = "tutorial_part">Part goes here</p>
-				</div>
-				<div class = "card-body">
-					<p class="text-white" id = "tutorial_prompt">Tutorial prompts go here</p>
-				</div>
-				<div class = "card-footer">
-					<div class = "row">
-						<div class = "col-4"></div>
-						<div class = "col-4"><button class = "btn btn-outline-warning" id = "tutorial_prev">Previous</button></div>
-						<div class = "col-4"><button class = "btn btn-outline-success right" id = "tutorial_next">Next</button></div>
-					</div>
-				</div>
-			</div>
 		</div>
 
 		<!--Add polycube_modal-->
@@ -162,6 +167,14 @@
 		      </div>
 		      <div class="modal-body">
 		      	<p>Insert the cube's position:</p>
+		      	<div class = "card">
+		      		<div class = "card-head">
+		      			<h4 class = "text-info">Tutorial:</h4>
+		      		</div>
+		      		<div class = "card-body">
+		      			<p class = "text-info">Here, you can specify the cube's position relative to the first cube that was created. You can't put two cubes in the same space, so nothing will happen if you don't specify a position. Also, a new cube needs to be next to some cube that was already put down. We're working on making that a little less confusing. For now, just put a <span class = "text-danger">1</span> in any of the boxes, and then press Submit.</p>
+		      		</div>
+		      	</div>
 		      	<form>
   					<div class="form-group">
   					  <label for="x">X</label>

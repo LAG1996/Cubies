@@ -1,5 +1,6 @@
 function Toolbar_Handler(controller){
 	this.controller = controller
+	this.tutorial_mode = false
 
 	var that = this
 

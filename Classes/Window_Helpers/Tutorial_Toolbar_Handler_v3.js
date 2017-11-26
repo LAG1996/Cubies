@@ -6,9 +6,11 @@ function Toolbar_Handler(controller){
 
 	this.tutorial_data = new Tutorial_Prompts()
 
-	var current_tutorial_part = 0
+	this.tutorial_mode = true
 
-	GoToTutorialPart(current_tutorial_part)
+	this.current_tutorial_part = 0
+
+	GoToTutorialPart(this.current_tutorial_part)
 
 	this.Switch_Context = function(context){
 		
@@ -52,6 +54,7 @@ function Toolbar_Handler(controller){
 		}
 
 
+		/*
 		if(part == 0)
 		{
 			//Hide the previous button, since there's no previous tutorial option
@@ -60,9 +63,9 @@ function Toolbar_Handler(controller){
 		else
 		{
 			$("#tutorial_prev").show()
-		}
+		}*/
 
-		if(part == that.tutorial_data.tutorial_prompts.length - 1 || part == that.tutorial_data.create_new_poly_index)
+		if(part == that.tutorial_data.tutorial_prompts.length - 1 || part == that.tutorial_data.create_new_poly_index || part == that.tutorial_data.add_cube_index || (part >= that.tutorial_data.add_cuts_index && part != that.tutorial_data.unfold_index))
 		{
 			$("#tutorial_next").hide()
 		}
@@ -79,8 +82,8 @@ function Toolbar_Handler(controller){
 	//$("#save_polycube").on("click", function(){HandleSavePolycube()})
 	//$("#delete_polycube").on("click", function(){HandleDeletePolycube()})
 
-	$("#tutorial_next").on("click", function(){HandleNextTutorialPart()})
-	$("#tutorial_prev").on("click", function(){HandlePrevTutorialPart()})
+	$("#tutorial_next").on("click", function(){that.HandleNextTutorialPart()})
+	//$("#tutorial_prev").on("click", function(){HandlePrevTutorialPart()})
 
 
 	//Functions for events
@@ -94,9 +97,6 @@ function Toolbar_Handler(controller){
 
 		var coord = new THREE.Vector3(x, y, z)
 		that.controller.Alert('NEW_POLYCUBE', coord, name)
-
-		current_tutorial_part+=1
-		GoToTutorialPart(current_tutorial_part)
 
 		//$("#add_polycube_modal").hide()
 	}
@@ -120,14 +120,21 @@ function Toolbar_Handler(controller){
 		that.controller.Alert('DESTROY_POLYCUBE')
 	}
 
-	function HandleNextTutorialPart(){
-		current_tutorial_part+=1
-		GoToTutorialPart(current_tutorial_part)
+	this.HandleNextTutorialPart = function(){
+		that.current_tutorial_part+=1
+		GoToTutorialPart(that.current_tutorial_part)
 	}
 
 	function HandlePrevTutorialPart(){
-		current_tutorial_part-=1
-		GoToTutorialPart(current_tutorial_part)
+
+		that.current_tutorial_part-=1
+
+
+		if(that.current_tutorial_part == that.tutorial_data.create_new_poly_index)
+			HandleDeletePolycube()
+
+
+		GoToTutorialPart(that.current_tutorial_part)
 	}
 
 }

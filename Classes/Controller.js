@@ -50,6 +50,8 @@ function Controller(){
 	//An object for a pair of arrows
 	this.arrow_pair = new THREE.Group()
 	this.arrow_1 = Arrow_Template.arrow.clone()
+	this.white_arrow_pick_color = 0xFF0000
+	this.black_arrow_pick_color = 0x00FF00
 
 	this.arrow_2 = Arrow_Template.arrow.clone()
 	this.arrow_2.children[0].material = new THREE.MeshBasicMaterial({'color':0x000000})
@@ -138,6 +140,11 @@ function Controller(){
 		CreateTrashCollectors(new_p_cube)
 	
 		that.Switch_Context('poly')
+
+		if(that.toolbar_handler.tutorial_mode)
+		{
+			that.toolbar_handler.HandleNextTutorialPart()
+		}
 	}
 	
 	
@@ -152,7 +159,14 @@ function Controller(){
 		else
 		{
 			if(PolyCube.Active_Polycube.Add_Cube(args[0]))
+			{
+				if(that.toolbar_handler.tutorial_mode)
+				{
+					that.toolbar_handler.HandleNextTutorialPart()
+				}
+
 				that.visualizer.ProcessPolycubeAfterNewCube(PolyCube.Active_Polycube, PolyCube.Active_Polycube.GetCubeAtPosition(args[0]))
+			}
 		}
 	}
 	
@@ -343,7 +357,7 @@ function Controller(){
 	
 						//that.toolbar_handler.ActivePolyCubeObjectView(that.hover_over_poly.name)
 	
-						that.Switch_Context('poly-context')
+						that.Switch_Context('poly')
 	
 					}
 				}
@@ -470,23 +484,36 @@ function Controller(){
 					if(that.arrows_out)
 					{
 						that.scene_handler.RequestSwitchToPickingScene(that.arrow_pick_scene)
-						var color = that.scene_handler.Pick(that.mouse_pos)
-
-						if(color == 0xFF0000)
+						var color = that.scene_handler.Pick(that.mouse_pos)	
+						
+						if(color == that.white_arrow_pick_color)
 						{
+							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
+								return
+							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow)
+								that.toolbar_handler.HandleNextTutorialPart()
+
 							that.visualizer.RotateSubGraph(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, DEG2RAD(90), that)
 
 							that.cuts_need_update = true
 							that.hinges_need_update = true
 						}
-						else if(color == 0x00FF00)
+						else if(color == that.black_arrow_pick_color)
 						{
+							if((that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow) || that.toolbar_handler.tutorial_data.face_graph_clicked_1 != that.toolbar_handler.tutorial_data.face_graph_clicked_2)
+								return
+							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
+								that.toolbar_handler.HandleNextTutorialPart()
+
 							that.visualizer.RotateSubGraph(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, DEG2RAD(-90), that)
 							that.cuts_need_update = true
 							that.hinges_need_update = true
 						}
 						else
 						{
+							if(that.toolbar_handler.tutorial_mode)
+								return
+
 							if(!that.face_graphs_out)
 							{
 								that.Switch_Context('world')
@@ -514,6 +541,15 @@ function Controller(){
 					{
 						if(!that.holding_down_shift)
 						{
+							if(that.toolbar_handler.tutorial_mode)
+							{
+								if(that.toolbar_handler.current_tutorial_part < that.toolbar_handler.tutorial_data.add_cuts_index || that.toolbar_handler.current_tutorial_part >= that.toolbar_handler.tutorial_data.unfold_index)
+									return
+								else if(that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.add_cuts_index)
+									that.toolbar_handler.HandleNextTutorialPart()
+							}
+
+
 							if(!PolyCube.Active_Polycube.Is_Cut(that.hover_over_hinge.name))
 								PolyCube.Active_Polycube.Cut_Edge(that.hover_over_hinge.name)
 		
@@ -524,6 +560,18 @@ function Controller(){
 						{
 							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", that.last_hover_over_face.name, "mouse_over_1")
 							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", that.last_hover_over_face.name, "mouse_over_2")
+
+							if(that.toolbar_handler.tutorial_mode)
+							{
+								if(that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.unfold_index + 1)
+								{
+									that.toolbar_handler.HandleNextTutorialPart()
+								}
+								else if(that.toolbar_handler.current_tutorial_part != that.toolbar_handler.tutorial_data.click_black_arrow)
+								{
+									return
+								}
+							}
 
 							//ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 							var data = PolyCube.Active_Polycube.Get_Face_Graphs(that.hover_over_hinge.name)
@@ -567,11 +615,19 @@ function Controller(){
 					{
 						if(that.face_graphs_out)
 						{
+							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part < that.toolbar_handler.tutorial_data.click_black_arrow)
+								that.toolbar_handler.HandleNextTutorialPart()
 							//var polycube = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id]
 
 							var face_name = that.hover_over_face.name
 
 							var subgraph_index = that.face2graph_map[face_name]
+
+							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow)
+								that.toolbar_handler.tutorial_data.face_graph_clicked_1 = subgraph_index
+							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
+								that.toolbar_handler.tutorial_data.face_graph_clicked_2 = subgraph_index
+
 
 							that.active_subgraph = that.subgraphs[subgraph_index]
 
@@ -649,6 +705,8 @@ function Controller(){
 
 										that.cuts_need_update = true
 										that.hinges_need_update = true
+
+										that.toolbar_handler.HandleNextTutorialPart()
 									}
 								}
 
@@ -659,6 +717,9 @@ function Controller(){
 					}
 					else
 					{
+						if(that.toolbar_handler.tutorial_mode)
+							return
+
 						//that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, .5)
 						if(!that.face_graphs_out)
 						{
@@ -676,9 +737,11 @@ function Controller(){
 							}
 						}
 
-						that.face_graphs_out = false
-						that.arrow_pair.visible = false
-						that.arrows_out = false
+
+							that.face_graphs_out = false
+							that.arrow_pair.visible = false
+							that.arrows_out = false
+
 						
 					}
 				}
@@ -856,6 +919,11 @@ function Controller(){
 			}
 	
 			var l_hinges = polycube.Get_Rotation_Lines()
+
+			if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part < that.toolbar_handler.tutorial_data.unfold_index && l_hinges.length > 0)
+			{
+				that.toolbar_handler.HandleNextTutorialPart()
+			}
 	
 			for(var lindex in l_hinges)
 			{
