@@ -2,6 +2,10 @@ function Toolbar_Handler(controller){
 	this.controller = controller
 	this.tutorial_mode = false
 
+
+	$("#add_cube_inactive").hide()
+
+	var current_cursor = "default"
 	var that = this
 
 	this.Switch_Context = function(context){
@@ -28,12 +32,38 @@ function Toolbar_Handler(controller){
 		$("#poly_view_nav").show()
 	}
 
+	this.Switch_Cursor = function(cursor)
+	{
+		if(cursor == "cell")
+			$("#container").css('cursor', 'cell')
+		else if(cursor == "crosshair")
+			$("#container").css('cursor', 'crosshair')
+		else
+			$("#container").css('cursor', 'default')
+
+		current_cursor = cursor
+	}
+
+	this.ActivateAddCube = function()
+	{
+		$("#add_cube_active").show()
+		$("#add_cube_inactive").hide()
+	}
+
+	this.DeactivateAddCube = function()
+	{
+		$("#add_cube_active").hide()
+		$("#add_cube_inactive").show()
+	}
+
 	//Add events
 	$("#submit_poly_coords").on("click", function(){HandleSubmitPolyCoords()})
 	$("#submit_cube_coords").on("click", function(){HandleSubmitCubeCoords()})
 
 	//$("#save_polycube").on("click", function(){HandleSavePolycube()})
 	$("#delete_polycube").on("click", function(){HandleDeletePolycube()})
+
+	$("#add_cube_active").on("click", function(){HandleAddCube()})
 
 
 	//Functions for events
@@ -60,6 +90,10 @@ function Toolbar_Handler(controller){
 		that.controller.Alert('ADD_CUBE', coord)
 
 		//$("#add_polycube_modal").hide()
+	}
+
+	function HandleAddCube(){
+		that.controller.Alert('ADD_CUBE')
 	}
 
 	function HandleSavePolycube(){

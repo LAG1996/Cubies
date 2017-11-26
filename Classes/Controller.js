@@ -18,6 +18,7 @@ function Controller(){
 	this.subgraphs = []
 	this.active_subgraph = null
 	this.face2graph_map = null
+	this.add_cube_mode = false
 
 	//Keyboard commands
 	this.holding_down_shift = false
@@ -135,8 +136,15 @@ function Controller(){
 			that.toolbar_handler.HandleNextTutorialPart()
 		}
 	}
+
+	this.Alert_Funcs['ADD_CUBE'] = function(){
+
+		that.toolbar_handler.Switch_Cursor("cell")
+		that.add_cube_mode = true
 	
+	}
 	
+	/*
 	this.Alert_Funcs['ADD_CUBE'] = function(){
 	
 		var args = Array.prototype.slice.call(arguments[0], 1)
@@ -157,7 +165,7 @@ function Controller(){
 				that.visualizer.ProcessPolycubeAfterNewCube(PolyCube.Active_Polycube, PolyCube.Active_Polycube.GetCubeAtPosition(args[0]))
 			}
 		}
-	}
+	}*/
 	
 	this.Alert_Funcs['DESTROY_POLYCUBE'] = function(){
 	
@@ -177,10 +185,7 @@ function Controller(){
 	
 			that.visualizer.DestroyPolycube(p_cube)
 			PolyCube.DestroyPolyCube(p_cube)
-	
 		}
-	
-	
 	
 		that.Switch_Context('world')
 	}
@@ -357,6 +362,15 @@ function Controller(){
 	
 			that.scene_handler.RequestSwitchToScene(that.rotate_mode_scene)
 			that.scene_handler.SwitchToDefaultPickingScene(that.rotate_mode_poly_cube_picking_scene)
+
+			if(Object.keys(PolyCube.Active_Polycube.Get_Cuts()).length > 0)
+			{
+				that.toolbar_handler.DeactivateAddCube()
+			}
+			else
+			{
+				that.toolbar_handler.ActivateAddCube()
+			}
 	
 			for(var key in PolyCube.ID2Poly)
 			{
@@ -452,6 +466,10 @@ function Controller(){
 					that.visualizer.HighlightObject("edge", edge_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
 					//HighlightParts(that.rotate_mode_scene.getObjectByName(edge_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 				}
+				
+				if(!that.add_cube_mode)
+					that.toolbar_handler.Switch_Cursor("crosshair")
+
 	
 			}]
 	
@@ -478,10 +496,14 @@ function Controller(){
 						}
 						else if(color == that.black_arrow_pick_color)
 						{
-							if((that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow) || that.toolbar_handler.tutorial_data.face_graph_clicked_1 != that.toolbar_handler.tutorial_data.face_graph_clicked_2)
-								return
-							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
-								that.toolbar_handler.HandleNextTutorialPart()
+							if(that.toolbar_handler.tutorial_mode)
+							{
+								if((that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow) || that.toolbar_handler.tutorial_data.face_graph_clicked_1 != that.toolbar_handler.tutorial_data.face_graph_clicked_2)
+									return
+								else if(that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
+									that.toolbar_handler.HandleNextTutorialPart()
+							} 
+
 
 							that.visualizer.RotateSubGraph(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, DEG2RAD(-90), that)
 							that.cuts_need_update = true
@@ -530,7 +552,7 @@ function Controller(){
 
 							if(!PolyCube.Active_Polycube.Is_Cut(that.hover_over_hinge.name))
 								PolyCube.Active_Polycube.Cut_Edge(that.hover_over_hinge.name)
-		
+
 							that.cuts_need_update = true
 							that.hinges_need_update = true
 						}
@@ -590,7 +612,34 @@ function Controller(){
 					}
 					else if(that.hovering_over_face)
 					{
-						if(that.face_graphs_out)
+						if(that.add_cube_mode)
+						{
+							that.add_cube_mode = false
+
+							var face_name = that.hover_over_face.name
+
+							var face_dir = Cube.FaceNameToDirection(face_name)
+
+							var vec = PolyCube.words2directions[face_dir]
+							var real_face = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
+							var pos = new THREE.Vector3().addVectors(real_face.position, vec)
+
+							pos.multiplyScalar(.5)
+
+							if(PolyCube.Active_Polycube.Add_Cube(pos))
+							{
+								if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.add_cube_index)
+								{
+									that.toolbar_handler.HandleNextTutorialPart()
+								}
+
+								that.visualizer.ProcessPolycubeAfterNewCube(PolyCube.Active_Polycube, PolyCube.Active_Polycube.GetCubeAtPosition(pos))
+							}
+
+							that.toolbar_handler.Switch_Cursor('pointer')
+
+						}
+						else if(that.face_graphs_out)
 						{
 							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part < that.toolbar_handler.tutorial_data.click_black_arrow)
 								that.toolbar_handler.HandleNextTutorialPart()
@@ -682,7 +731,8 @@ function Controller(){
 										that.cuts_need_update = true
 										that.hinges_need_update = true
 
-										that.toolbar_handler.HandleNextTutorialPart()
+										if(that.toolbar_handler.tutorial_mode)
+											that.toolbar_handler.HandleNextTutorialPart()
 									}
 								}
 
@@ -714,9 +764,10 @@ function Controller(){
 						}
 
 
-							that.face_graphs_out = false
-							that.arrow_pair.visible = false
-							that.arrows_out = false
+						that.add_cube_mode = true
+						that.face_graphs_out = false
+						that.arrow_pair.visible = false
+						that.arrows_out = false
 
 						
 					}
@@ -761,6 +812,9 @@ function Controller(){
 			}
 			else
 			{
+
+				if(!that.add_cube_mode)
+					that.toolbar_handler.Switch_Cursor('default')
 
 				that.hover_over_poly = null
 				
@@ -855,19 +909,28 @@ function Controller(){
 	
 		function UpdateCuts(polycube, scene)
 		{
-			
 			if(!ObjectExists(polycube))
 				return
 			
 			var edges = polycube.Get_Edges()
+
+			var cut_exists = false
 	
 			for(var bindex in edges)
 			{
 				if(edges[bindex].cut)
+				{
 					that.visualizer.HighlightObject("edge", edges[bindex].name, polycube.id, "cut")
+					cut_exists = true
+				}
 				else
 					that.visualizer.UnHighlightObject(polycube.id, "edge", edges[bindex].name, "cut")
 			}
+
+			if(cut_exists)
+				that.toolbar_handler.DeactivateAddCube()
+			else
+				that.toolbar_handler.ActivateAddCube()
 		}
 	
 		function UpdateHinges(polycube, scene)
@@ -903,114 +966,6 @@ function Controller(){
 			}
 		}
 	
-	
-		function HighlightParts(package, color, context, junk_collector, scenes = null)
-		{	
-			if(!ObjectExists(package) || !ObjectExists(color) || !ObjectExists(context) || !ObjectExists(junk_collector))
-				return
-		
-			var highlight = context == 'hinge' ? Cube_Template.highlightEdge.clone() : Cube_Template.highlightFace.clone()
-		
-			highlight.material = new THREE.MeshBasicMaterial()
-			highlight.material.color.copy(color)
-			highlight.material.transparent = true
-			highlight.material.opacity = .5
-		
-			if(Array.isArray(package))
-			{
-				for(var index = 0; index < package.length; index++)
-				{
-					var part = ObjectExists(package[index].face) ? package[index].face : package[index].edge
-	
-					if(!ObjectExists(part))
-					{
-						part = package[index]
-					}
-	
-					if(Array.isArray(scenes))
-					{
-						for(var windex in scenes)
-						{
-							if(!ObjectExists(scenes[windex]))
-							{
-								highlight.position.copy(part.getWorldPosition())
-								highlight.rotation.copy(part.getWorldRotation())
-							}
-							else
-							{
-								highlight.position.copy(scenes[windex].getObjectByName(part.name).getWorldPosition())
-								highlight.rotation.copy(scenes[windex].getObjectByName(part.name).getWorldRotation())
-							}
-							
-							var h = highlight.clone()
-							h.updateMatrix()
-							scenes[windex].add(h)
-	
-							junk_collector.push(h)
-						}
-					}
-					else if(ObjectExists(scenes))
-					{
-						highlight.position.copy(part.getWorldPosition())
-						highlight.rotation.copy(part.getWorldRotation())
-						var h = highlight.clone()
-						h.updateMatrix()
-						scenes.add(h)
-	
-						junk_collector.push(h)
-					}
-				}
-			}
-			else
-			{
-				var part = ObjectExists(package.face) ? package.face : package.edge
-		
-				if(!ObjectExists(part))
-				{
-					part = package
-				}
-		
-				highlight.position.copy(part.getWorldPosition())
-				highlight.rotation.copy(part.getWorldRotation())
-	
-				if(Array.isArray(scenes))
-				{
-					for(var windex in scenes)
-					{
-						if(!ObjectExists(scenes[windex]))
-						{
-							that.scene_handler.SwitchToDefaultScene()
-	
-							highlight.position.copy(part.getWorldPosition())
-							highlight.rotation.copy(part.getWorldRotation())
-						}
-						else
-						{
-							highlight.position.copy(scenes[windex].getObjectByName(part.name).getWorldPosition())
-							highlight.rotation.copy(scenes[windex].getObjectByName(part.name).getWorldRotation())
-						}
-	
-						var h = highlight.clone()
-						h.updateMatrix()
-						scenes[windex].add(h)
-					}
-	
-					junk_collector.push(h)
-				}
-				else if(ObjectExists(scenes))
-				{
-					highlight.position.copy(part.getWorldPosition())
-					highlight.rotation.copy(part.getWorldRotation())
-	
-					var h = highlight.clone()
-
-					h.updateMatrix()
-					scenes.add(h)
-	
-					junk_collector.push(h)
-				}		
-			}
-		}
 	
 		$('canvas').on('mousemove', onMouseMove)
 		$('canvas').on('mousedown', onMouseDown)

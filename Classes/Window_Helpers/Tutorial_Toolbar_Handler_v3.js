@@ -10,6 +10,8 @@ function Toolbar_Handler(controller){
 
 	this.current_tutorial_part = 0
 
+	$("#add_cube_inactive").hide()
+
 	GoToTutorialPart(this.current_tutorial_part)
 
 	this.Switch_Context = function(context){
@@ -36,6 +38,30 @@ function Toolbar_Handler(controller){
 		$("#poly_view_nav").show()
 	}
 
+	this.Switch_Cursor = function(cursor)
+	{
+		if(cursor == "cell")
+			$("#container").css('cursor', 'cell')
+		else if(cursor == "pointer")
+			$("#container").css('cursor', 'pointer')
+		else
+			$("#container").css('cursor', 'default')
+
+		current_cursor = cursor
+	}
+
+	this.ActivateAddCube = function()
+	{
+		$("#add_cube_active").show()
+		$("#add_cube_inactive").hide()
+	}
+
+	this.DeactivateAddCube = function()
+	{
+		$("#add_cube_active").hide()
+		$("#add_cube_inactive").show()
+	}
+
 
 	function GoToTutorialPart(part)
 	{
@@ -52,7 +78,6 @@ function Toolbar_Handler(controller){
 			$(".tutorial_new_poly").attr("data-toggle", "")
 			$(".tutorial_new_poly").attr("data-target", "")
 		}
-
 
 		/*
 		if(part == 0)
@@ -78,6 +103,8 @@ function Toolbar_Handler(controller){
 	//Add events
 	$("#submit_poly_coords").on("click", function(){HandleSubmitPolyCoords()})
 	$("#submit_cube_coords").on("click", function(){HandleSubmitCubeCoords()})
+
+	$("#add_cube_active").on("click", function(){HandleAddCube()})
 
 	//$("#save_polycube").on("click", function(){HandleSavePolycube()})
 	//$("#delete_polycube").on("click", function(){HandleDeletePolycube()})
@@ -119,6 +146,11 @@ function Toolbar_Handler(controller){
 	function HandleDeletePolycube(){
 		that.controller.Alert('DESTROY_POLYCUBE')
 	}
+
+	function HandleAddCube(){
+		that.controller.Alert('ADD_CUBE')
+	}
+
 
 	this.HandleNextTutorialPart = function(){
 		that.current_tutorial_part+=1

@@ -22,7 +22,7 @@ function Tutorial_Prompts()
 	this.tutorial_prompts.push("Okay. Let's start. Go ahead and create a New Polycube by pressing the button labeled New Polycube.")
 	this.create_new_poly_index = this.tutorial_prompts.length-1
 
-	this.tutorial_prompts.push("Nice! The first polycube's been created. Well, actually, a single cube isn't really a polycube. Let's make it one. Add a New Cube by pressing the button labeled Add Cube.")
+	this.tutorial_prompts.push("Nice! The first polycube's been created. Well, actually, a single cube isn't really a polycube. Let's make it one. Add a New Cube by pressing the button labeled Add Cube, and then click on a face to add a cube there.")
 	this.add_cube_index = this.tutorial_prompts.length-1
 
 	this.tutorial_prompts.push("Add more cubes if you'd like. Press Next when you're done.")
@@ -30,7 +30,7 @@ function Tutorial_Prompts()
 	this.tutorial_prompts.push("Alright. Now we have a polycube. Let's start cutting. Hover over one of the edges and cut by clicking on the edge.")
 	this.add_cuts_index = this.tutorial_prompts.length-1
 
-	this.tutorial_prompts.push("Nice. A red highlight means that the edge is cut. Now try to make a square of cuts.")
+	this.tutorial_prompts.push("Nice. A red highlight means that the edge is cut. Note that you can't add anymore cubes when you have a cut. Now try to make a square of cuts.")
 
 	this.tutorial_prompts.push("A new blue highlight appeared. You can't cut that part, but you can unfold around it.")
 	this.unfold_index = this.tutorial_prompts.length-1
