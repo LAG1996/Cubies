@@ -75,15 +75,6 @@ function Controller(){
 	this.pick_arrow_pair.visible = true
 	this.arrow_pick_scene.add(this.pick_arrow_pair)
 	
-	//this.rotate_arrow_scene.add(this.arrow_1.clone())
-	
-	//Junk collectors
-	this.face_junk = [[]]
-	this.edge_junk = [[]]
-	
-	this.rotate_cut_junk = [[]]
-	this.rotate_hinge_junk = [[]]
-	
 	//Some delegate functions
 	this.Mouse_Hover_Funcs = []
 	this.Mouse_Up_Funcs = []
@@ -137,8 +128,6 @@ function Controller(){
 	
 		//that.toolbar_handler.ActivePolyCubeObjectView(new_p_cube.name)
 	
-		CreateTrashCollectors(new_p_cube)
-	
 		that.Switch_Context('poly')
 
 		if(that.toolbar_handler.tutorial_mode)
@@ -179,15 +168,6 @@ function Controller(){
 		if(ObjectExists(p_cube))
 		{
 			$("#" + p_cube.name + "_data").remove()
-	
-			ClearJunk(that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
-			ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
-	
-	
-			UpdateCuts(null, that.rotate_mode_scene, that.rotate_cut_junk[PolyCube.Active_Polycube.id])
-	
-			UpdateHinges(null, that.rotate_mode_scene, that.rotate_hinge_junk[PolyCube.Active_Polycube.id])
-	
 	
 			that.last_hover_over_poly = null
 			that.face_graphs_out = false
@@ -241,8 +221,6 @@ function Controller(){
 			that.Load_Polycube_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
 	
 			that.visualizer.ProcessPolycube(p)
-	
-			CreateTrashCollectors(p)
 	
 			VisualizePolycube(p)
 			
@@ -528,7 +506,7 @@ function Controller(){
 							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", fName, "dual_half_2")
 
 						}
-						//ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+
 						that.face_graphs_out = false
 						that.arrow_pair.visible = false
 						that.arrows_out = false
@@ -573,7 +551,6 @@ function Controller(){
 								}
 							}
 
-							//ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 							var data = PolyCube.Active_Polycube.Get_Face_Graphs(that.hover_over_hinge.name)
 		
 							var subgraphs = data['subgraphs']
@@ -675,7 +652,6 @@ function Controller(){
 
 							that.arrows_out = true
 
-							//ClearJunk(that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
 						}
 						else if(that.holding_down_shift)
 						{
@@ -786,12 +762,6 @@ function Controller(){
 			else
 			{
 
-				if(ObjectExists(that.hover_over_poly))
-				{
-					ClearJunk(that.edge_junk[that.hover_over_poly.id], that.rotate_mode_scene)
-					ClearJunk(that.face_junk[that.hover_over_poly.id], that.rotate_mode_scene)
-				}
-
 				that.hover_over_poly = null
 				
 				that.hovering_over_hinge = false
@@ -883,9 +853,8 @@ function Controller(){
 			that.rotate_mode_face_picking_scene.add(that.visualizer.rotate_face_polycubes[polycube.id])
 		}
 	
-		function UpdateCuts(polycube, scene, junk_collector)
+		function UpdateCuts(polycube, scene)
 		{
-			//ClearJunk(junk_collector, scene)
 			
 			if(!ObjectExists(polycube))
 				return
@@ -898,13 +867,11 @@ function Controller(){
 					that.visualizer.HighlightObject("edge", edges[bindex].name, polycube.id, "cut")
 				else
 					that.visualizer.UnHighlightObject(polycube.id, "edge", edges[bindex].name, "cut")
-				//HighlightParts(edge, that.cut_highlight, 'hinge', junk_collector, scene)
 			}
 		}
 	
-		function UpdateHinges(polycube, scene, junk_collector)
+		function UpdateHinges(polycube, scene)
 		{
-			//ClearJunk(junk_collector, scene)
 	
 			if(!ObjectExists(polycube))
 				return
@@ -915,7 +882,6 @@ function Controller(){
 			{
 
 				that.visualizer.UnHighlightObject(polycube.id, "edge", edges[bindex].name, "hinge")
-				//HighlightParts(edge, that.cut_highlight, 'hinge', junk_collector, scene)
 			}
 	
 			var l_hinges = polycube.Get_Rotation_Lines()
@@ -933,32 +899,10 @@ function Controller(){
 					
 					that.visualizer.HighlightObject("edge", line[gindex].name, polycube.id, "hinge")
 					that.visualizer.HighlightObject("edge", line[gindex].incidentEdge.name, polycube.id, "hinge")
-					//HighlightParts(edge_1, that.hinge_highlight, 'hinge', junk_collector, scene)
-					//HighlightParts(edge_2, that.hinge_highlight, 'hinge', junk_collector, scene)
 				}
 			}
 		}
 	
-		function ClearJunk(junk_collector, scenes)
-		{
-			for(var jindex in junk_collector)
-			{
-				if(Array.isArray(scenes))
-				{
-					for(var windex in scenes)
-					{
-						scenes[windex].remove(scenes[windex].getObjectById(junk_collector[jindex].id))
-					}
-				}
-				else if(ObjectExists(scenes))
-				{
-					scenes.remove(scenes.getObjectById(junk_collector[jindex].id))
-				}
-	
-			}
-	
-			junk_collector = []
-		}
 	
 		function HighlightParts(package, color, context, junk_collector, scenes = null)
 		{	
@@ -1068,17 +1012,6 @@ function Controller(){
 			}
 		}
 	
-		function CreateTrashCollectors(polycube)
-		{
-			that.face_junk[polycube.id] = []
-	
-			that.rotate_hinge_junk[polycube.id] = []
-	
-			that.rotate_cut_junk[polycube.id] = []
-	
-			that.edge_junk[polycube.id] = []
-		}
-	
 		$('canvas').on('mousemove', onMouseMove)
 		$('canvas').on('mousedown', onMouseDown)
 		$('canvas').on('mouseup', onMouseUp)
@@ -1106,14 +1039,14 @@ function Controller(){
 			
 			if(that.cuts_need_update)
 			{
-				UpdateCuts(that.last_hover_over_poly, that.rotate_mode_scene, that.rotate_cut_junk[that.last_hover_over_poly.id])
+				UpdateCuts(that.last_hover_over_poly, that.rotate_mode_scene)
 	
 				that.cuts_need_update = false			
 			}
 	
 			if(that.hinges_need_update)
 			{
-				UpdateHinges(that.last_hover_over_poly, that.rotate_mode_scene, that.rotate_hinge_junk[that.last_hover_over_poly.id])
+				UpdateHinges(that.last_hover_over_poly, that.rotate_mode_scene)
 	
 				that.hinges_need_update = false
 			}

@@ -42,12 +42,12 @@ function Tutorial_Prompts()
 	this.tutorial_prompts.push("Now you're ready to unfold! Click on the White Arrow.")
 	this.click_white_arrow = this.tutorial_prompts.length-1
 
-	this.tutorial_prompts.push("This is the core of this application. You cut and unfold. Now, what if you made a mistake and didn't want to unfold that face? Well, try reversing what you just did. Select the crease, select the same color that you picked last time, and then fold!")
+	this.tutorial_prompts.push("This is the core of this application. You cut and unfold. Now, what if you made a mistake and didn't want to unfold that face? Well, try reversing what you just did. Select the crease, select the same color that you picked last time, and then fold! Hint: Remember that you need to hold shift over a crease to fold.")
 	this.click_black_arrow = this.tutorial_prompts.length-1
 
-	this.tutorial_prompts.push("The polycube should look just the way it did before you did any unfolding. Let's tape the faces back together. Hover over a face and press Shift. It turns yellow. Keep Shift pressed and click on the face. Then, while still holding Shift, press on another face that shares a cut (a red edge with it). If you let go of Shift at any point, you'll have to press it, and then click the first face.")
+	this.tutorial_prompts.push("The polycube should look just the way it did before you did any unfolding. Let's tape the faces back together. Follow these steps: 1. Hover over a face and press Shift. It turns yellow. Keep Shift pressed and click on the face. 2. Then, while still holding Shift, press on another face that shares a cut (a red edge with it). 3. If you let go of Shift at any point, just start from step 1.")
 
-	this.tutorial_prompts.push("Alright. Those are the basics for this project. You'll learn the rest by experimenting. Press Exit Tutorial to go back to the main application. Happy folding!")
+	this.tutorial_prompts.push("Now those two faces have been taped back together. Those are the basics for this project. You'll learn the rest by experimenting. Press Exit Tutorial to go back to the main application. Happy folding!")
 
 	//Create tutorial parts
 	this.tutorial_parts.push("Hello")
