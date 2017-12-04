@@ -539,7 +539,9 @@ function Controller(){
 
 					if(that.hovering_over_hinge)
 					{
-						if(!that.holding_down_shift)
+						if(that.add_cube_mode)
+						{}
+						else if(!that.holding_down_shift)
 						{
 							if(that.toolbar_handler.tutorial_mode)
 							{
@@ -764,7 +766,7 @@ function Controller(){
 						}
 
 
-						that.add_cube_mode = true
+						that.add_cube_mode = false
 						that.face_graphs_out = false
 						that.arrow_pair.visible = false
 						that.arrows_out = false

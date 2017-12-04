@@ -131,7 +131,8 @@ Cube.EdgeWordToFaceDirection = function(edge_word)
 Cube.FaceNameToDirection = function(face_name)
 {
 	var re = new RegExp("\\d")
-	var word = face_name.split(re)[2]
+	var split_name = face_name.split(re)
+	var word = split_name[split_name.length - 1]
 
 	return word
 }
