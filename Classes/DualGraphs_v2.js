@@ -8,13 +8,13 @@ function FaceEdgeDualGraph(){
 	var Visited_Faces = []
 	var Visited_Edges = []
 
-	var Edge2CutPath = {} //An object that maps each edge to a path
+	var Edge2CutTree = {} //An object that maps each edge to a tree of cuts
 	var Edge2RotationLine = {} //An object that maps each edge to a rotation line
 	var RotationLine2SubGraph = {} //An object that maps each rotation line index to two subgraphs
 	var RotationLine2ParentEdge = {} //An object that maps each rotation line index to a pair of parent edges
 	var Face2SubGraph = {} //An object that maps each face to a subgraph
 
-	var L_CutPaths = []
+	var L_CutTrees = []
 	var L_RotationLines = []
 
 	var PerpendicularCuts = {}//An object that maps each edge to perpendicular edges
@@ -298,7 +298,7 @@ function FaceEdgeDualGraph(){
 			}
 		}
 
-		BuildCutPaths()
+		BuildCutTrees()
 		BuildHingePaths()
 
 		return true
@@ -408,7 +408,7 @@ function FaceEdgeDualGraph(){
 	}
 
 	this.GetCutPaths = function(){
-		return L_CutPaths
+		return L_CutTrees
 	}
 
 	this.GetRotationLines = function(){
@@ -437,7 +437,7 @@ function FaceEdgeDualGraph(){
 
 	this.UpdateCutPaths = function()
 	{
-		BuildCutPaths()
+		BuildCutTrees()
 	}
 
 	this.UpdateHingePaths = function()
@@ -445,87 +445,91 @@ function FaceEdgeDualGraph(){
 		BuildHingePaths()
 	}
 
-	function BuildCutPaths(){
+	function BuildCutTrees(){
 		var start_cut
-		var path_num = 0
-		//Clear the cut path list
+		var tree_index = 0
+		//Clear the cut tree list
 		//MEMO: This is a slow grow. I'm pretty sure I can do this faster with some preprocessing. We'll come back to this later.
-		Edge2CutPath = {}
-		L_CutPaths = []
+		Edge2CutTree = {}
+		L_CutTrees = []
 
-		//Get the first edge in the cut list. Start growing greedily, getting all cuts in the path
+		//For each edge in the list of cut edges
 		for(var E in Cut_Edges)
 		{
-			var new_cut_path = []
+			//Generate a new tree of cuts
+			var new_cut_tree = []
 			start_cut = Cut_Edges[E]
 			
+			//If this cut was already visited, skip. Other wise, ...
 			if(!start_cut['visited'])
 			{
-				start_cut = Cut_Edges[E]
+				//...mark it as visited and save it to the queue of visited edges 
 				start_cut['visited'] = true
 				
-
 				Visited_Edges.push(start_cut)
 						
-
-				Edge2CutPath[start_cut['name']] = path_num
-				
+				//Map this edge's name to the index of the tree that it is on
+				Edge2CutTree[start_cut['name']] = tree_index
+				new_cut_tree.push(start_cut) //Add it to the new tree of cuts
 
 				if(Object.keys(start_cut['neighbors']).length > 0)
-				{
-					new_cut_path.push(start_cut)
-					GreedyPathGrow(start_cut)
+				{	
+					GreedyTreeGrow(start_cut) //Start finding other cuts connected to it, adding them to the tree as we go
 				}
 
+				//Do the same as above, but with this cut's incident edge if it has one
 				if(ObjectExists(start_cut['incidentEdge']))
 				{
-					Edge2CutPath[start_cut['incidentEdge']['name']] = path_num
+					Edge2CutTree[start_cut['incidentEdge']['name']] = tree_index
 					start_cut['incidentEdge']['visited'] = true
 					Visited_Edges.push(start_cut['incidentEdge'])
 
+					new_cut_tree.push(start_cut['incidentEdge'])
+
 					if(Object.keys(start_cut['incidentEdge']['neighbors']).length > 0)
 					{
-						new_cut_path.push(start_cut['incidentEdge'])
-						GreedyPathGrow(start_cut['incidentEdge'])
+						GreedyTreeGrow(start_cut['incidentEdge'])
 					}
 				}
 				
+				//Map this tree's index to the new cut tree
+				L_CutTrees[tree_index] = new_cut_tree
 
-				L_CutPaths[path_num] = new_cut_path
-
-				path_num+=1
+				tree_index+=1
 			}
 		}
 
 		ClearVisitedEdges()
 
-		function GreedyPathGrow(cut){
+
+		//Simple breadth-first search on neighbors that only visits each neighbor if it is a cut.
+		function GreedyTreeGrow(cut){
 			for(var N in cut['neighbors'])
 			{
 				var neighbor = cut['neighbors'][N]
 				
 				if(!neighbor['visited'] && neighbor['cut'])
 				{
-					Edge2CutPath[neighbor['name']] = path_num
+					Edge2CutTree[neighbor['name']] = tree_index
 					neighbor['visited'] = true
 					Visited_Edges.push(neighbor)
 
 					if(Object.keys(neighbor['neighbors']).length > 0)
 					{
-						new_cut_path.push(neighbor)
-						GreedyPathGrow(neighbor)
+						new_cut_tree.push(neighbor)
+						GreedyTreeGrow(neighbor)
 					}
 
 					if(ObjectExists(neighbor['incidentEdge']))
 					{
-						Edge2CutPath[neighbor['incidentEdge']['name']] = path_num
+						Edge2CutTree[neighbor['incidentEdge']['name']] = tree_index
 						neighbor['incidentEdge']['visited'] = true
 						Visited_Edges.push(neighbor['incidentEdge'])
 
 						if(Object.keys(neighbor['incidentEdge']['neighbors']).length > 0)
 						{
-							new_cut_path.push(neighbor['incidentEdge'])
-							GreedyPathGrow(neighbor['incidentEdge'])
+							new_cut_tree.push(neighbor['incidentEdge'])
+							GreedyTreeGrow(neighbor['incidentEdge'])
 						}
 					}
 				}
@@ -608,7 +612,7 @@ function FaceEdgeDualGraph(){
 			MarkAsVisited(edge)
 			
 			//This check should never be valid
-			if(edge['cut'] && Edge2CutPath[origin['name']] == Edge2CutPath[edge['name']])
+			if(edge['cut'] && Edge2CutTree[origin['name']] == Edge2CutTree[edge['name']])
 			{
 				console.log("uh oh")
 
@@ -647,11 +651,11 @@ function FaceEdgeDualGraph(){
 					{
 						continue //If this neighbor's incident edge is neighbors with the origin, do not consider it
 					}
-					else if(Edge2CutPath[n_neighbor['name']] != Edge2CutPath[origin['name']])
+					else if(Edge2CutTree[n_neighbor['name']] != Edge2CutTree[origin['name']])
 					{
 						continue //If this neighbor is actually the origin, do not consider it
 					}
-					else if(ObjectExists(n_neighbor['incidentEdge']) && Edge2CutPath[n_neighbor['incidentEdge']['name']] != Edge2CutPath[origin['name']])
+					else if(ObjectExists(n_neighbor['incidentEdge']) && Edge2CutTree[n_neighbor['incidentEdge']['name']] != Edge2CutTree[origin['name']])
 					{
 						continue //If this neighbor is actually the origin's incident edge, do not consider it
 					}

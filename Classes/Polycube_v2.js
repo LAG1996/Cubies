@@ -192,10 +192,18 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		j_obj.name = this.name
 		j_obj.position = [this.position.x, this.position.y, this.position.z]
 
-		for(var val in this.Cube_Map)
+		for(var i_1 in this.Cube_Map)
 		{
-			var cube = this.Cube_Map[val]
-			j_obj.cubes.push([cube.position.x, cube.position.y, cube.position.z])
+			for(var i_2 in this.Cube_Map[i_1])
+			{
+				for(var i_3 in this.Cube_Map[i_1][i_2])
+				{
+					var cube = this.Cube_Map[i_1][i_2][i_3]
+
+					if(cube)
+						j_obj.cubes.push([cube.position.x, cube.position.y, cube.position.z])
+				}
+			}
 		}
 
 		return j_obj

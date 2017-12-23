@@ -8,7 +8,7 @@ function Toolbar_Handler(controller){
 	var current_cursor = "default"
 	var that = this
 
-	this.Switch_Context = function(context){
+	this.Switch_Context = function(context, poly_cube_name = "Noname"){
 		
 		if(context == "world")
 		{
@@ -16,7 +16,7 @@ function Toolbar_Handler(controller){
 		}
 		else if(context == "poly")
 		{
-			_Switch_To_Poly_Context()
+			_Switch_To_Poly_Context(poly_cube_name)
 		}
 	}
 
@@ -26,10 +26,11 @@ function Toolbar_Handler(controller){
 		$("#poly_view_nav").hide()
 	}
 
-	function _Switch_To_Poly_Context()
+	function _Switch_To_Poly_Context(poly_cube_name)
 	{
 		$("#world_view_nav").hide()
 		$("#poly_view_nav").show()
+		$("#poly_cube_name").text(poly_cube_name)
 	}
 
 	this.Switch_Cursor = function(cursor)
@@ -60,7 +61,8 @@ function Toolbar_Handler(controller){
 	$("#submit_poly_coords").on("click", function(){HandleSubmitPolyCoords()})
 	$("#submit_cube_coords").on("click", function(){HandleSubmitCubeCoords()})
 
-	//$("#save_polycube").on("click", function(){HandleSavePolycube()})
+	$("#save_polycube").on("click", function(){HandleSavePolycube()})
+	$("#load_polycube").on("change", function(){HandleLoadPolycube()})
 	$("#delete_polycube").on("click", function(){HandleDeletePolycube()})
 
 	$("#add_cube_active").on("click", function(){HandleAddCube()})
@@ -98,6 +100,15 @@ function Toolbar_Handler(controller){
 
 	function HandleSavePolycube(){
 		that.controller.Alert('SAVE_POLYCUBE')
+	}
+
+	function HandleLoadPolycube(dom_element){
+
+		that.controller.Alert('LOAD_POLYCUBE')
+
+		$("#load_polycube").val("")
+		$("#add_polycube_modal").modal("hide")
+
 	}
 
 	function HandleDeletePolycube(){

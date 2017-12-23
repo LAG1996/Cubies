@@ -105,7 +105,7 @@ function Controller(){
 	this.Switch_Context = function(context_name)
 	{
 	
-		that.toolbar_handler.Switch_Context(context_name)
+		that.toolbar_handler.Switch_Context(context_name, PolyCube.Active_Polycube ? name : "")
 	
 		that.Context_Funcs[context_name]()
 	
@@ -207,7 +207,6 @@ function Controller(){
 		//Instantiate a file reader that will read the file specified
 		var reader = new FileReader()
 		//var that = this
-		
 		reader.onload = function(){
 			data = reader.result
 			var obj = JSON.parse(data)
@@ -229,7 +228,7 @@ function Controller(){
 	
 			VisualizePolycube(p)
 			
-			that.Switch_Context('poly')
+			that.Switch_Context('poly', p.name)
 	
 		}
 		reader.onerror = function(){
