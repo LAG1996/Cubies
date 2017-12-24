@@ -102,9 +102,9 @@ function Toolbar_Handler(controller){
 		that.controller.Alert('SAVE_POLYCUBE')
 	}
 
-	function HandleLoadPolycube(dom_element){
+	function HandleLoadPolycube(){
 
-		that.controller.Alert('LOAD_POLYCUBE')
+		that.controller.Alert('LOAD_POLYCUBE', event.target.files[0], false)
 
 		$("#load_polycube").val("")
 		$("#add_polycube_modal").modal("hide")

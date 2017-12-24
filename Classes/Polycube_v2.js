@@ -415,12 +415,19 @@ PolyCube.direction_words_to_opposites = {
 }
 
 PolyCube.Name2Poly = {}
-PolyCube.ID2Poly = {}	
+PolyCube.ID2Poly = {}
 
 //Generate new polycube, record it into the polycube dictionaries, and then return a reference to the
 //new polycube
-PolyCube.GenerateNewPolyCube = function(position = new Vector3(0, 0, 0), name = "PolyCube_" + PolyCube.Next_ID)
+PolyCube.GenerateNewPolyCube = function(position = new Vector3(0, 0, 0), name = "")
 {
+
+	//If the user just submitted a blank name, that won't do! Change it to a generic name (i.e. Polycube_0)
+	if(!/\S/.test(name))
+	{
+		name = "PolyCube_" + PolyCube.Next_ID
+	}
+
 	var new_pcube = new PolyCube(position, name)
 	PolyCube.Name2Poly[name] = new_pcube
 	PolyCube.ID2Poly[new_pcube.id] = new_pcube

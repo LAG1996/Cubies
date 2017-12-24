@@ -2,7 +2,8 @@ function Controller(){
 	this.scene_handler = new SceneHandler()
 	this.toolbar_handler = new Toolbar_Handler(this)
 	this.visualizer = new PolycubeDataVisualizer(Cube_Template.new_cube)
-	
+	this.template_loader = new PolyCubePreview(this)
+
 	//Some helper variables
 	this.Load_Polycube_Handler_List = []
 	this.mouse_pos = new THREE.Vector2()
@@ -144,29 +145,6 @@ function Controller(){
 	
 	}
 	
-	/*
-	this.Alert_Funcs['ADD_CUBE'] = function(){
-	
-		var args = Array.prototype.slice.call(arguments[0], 1)
-	
-		if(!ObjectExists(PolyCube.Active_Polycube))
-		{
-			throw "Critical error: tried to add cube without an active polycube"
-		}
-		else
-		{
-			if(PolyCube.Active_Polycube.Add_Cube(args[0]))
-			{
-				if(that.toolbar_handler.tutorial_mode)
-				{
-					that.toolbar_handler.HandleNextTutorialPart()
-				}
-
-				that.visualizer.ProcessPolycubeAfterNewCube(PolyCube.Active_Polycube, PolyCube.Active_Polycube.GetCubeAtPosition(args[0]))
-			}
-		}
-	}*/
-	
 	this.Alert_Funcs['DESTROY_POLYCUBE'] = function(){
 	
 		var args = Array.prototype.slice.call(arguments[0], 1)
@@ -204,47 +182,28 @@ function Controller(){
 	
 	this.Alert_Funcs['LOAD_POLYCUBE'] = function(){
 	
-		//Instantiate a file reader that will read the file specified
-		var reader = new FileReader()
-		//var that = this
-		reader.onload = function(){
-			data = reader.result
-			var obj = JSON.parse(data)
-	
-			//TODO: Verify the file
-	
-			//The file has been verified. Create a new polycube with all of the specified cubes
-	
-			var p = PolyCube.GenerateNewPolyCube(new THREE.Vector3(obj.position[0], obj.position[1], obj.position[2]), obj.name)
-	
-			PolyCube.SwitchToNewActive(p)
-	
-			//that.toolbar_handler.AddPolyCubeToObjectView(p.name)
-			//that.toolbar_handler.ActivePolyCubeObjectView(p.name)
-	
-			that.Load_Polycube_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
-	
-			that.visualizer.ProcessPolycube(p)
-	
-			VisualizePolycube(p)
-			
-			that.Switch_Context('poly', p.name)
-	
-		}
-		reader.onerror = function(){
-			data = ""
-		}
-		reader.onabort = function(){
-			data = ""
-		}
-	
-		if(event.target.files[0])
+		var args = Array.prototype.slice.call(arguments[0], 1)
+		var file = args[0]
+		var from_server = args[1]
+		var to_preview = args[2]
+		
+		if(!from_server)
 		{
-			reader.readAsText(event.target.files[0])
+			LoadFile(file)
 		}
 		else
 		{
-			reader.abort()
+			//The file is from the server, so we already have the JSON.
+			//Decide what to do with it.
+			if(to_preview)
+			{
+				//Generate the polycube preview card
+			}
+			else
+			{
+				//Generate the polycube, process it with the visualizer, add it to the scene
+
+			}
 		}
 	
 	}
@@ -282,6 +241,65 @@ function Controller(){
 
 		PolyCube.Active_Polycube.Rotate_Data(args[0], args[1], args[2], args[3])
 
+	}
+
+	function LoadFile(file){
+		//Instantiate a file reader that will read the file specified
+		var reader = new FileReader()
+		reader.file_to_load = file
+		reader.send_to_preview = to_preview
+		//var that = this
+		reader.onload = function(){
+			let data = reader.result
+
+			GeneratePolycube(data, reader.send_to_preview)
+		}
+		reader.onerror = function(){
+			data = ""
+		}
+		reader.onabort = function(){
+			data = ""
+		}
+	
+		if(reader.file_to_load)
+		{
+			reader.readAsText(reader.file_to_load)
+		}
+		else
+		{
+			reader.abort()
+		}
+	}
+
+	function GeneratePolycube(data, send_to_preview)
+	{
+		let obj = JSON.parse(data)
+	
+		//TODO: Verify the file
+	
+		//The file has been verified. Create a new polycube with all of the specified cubes
+		let p = PolyCube.GenerateNewPolyCube(new THREE.Vector3(obj.position[0], obj.position[1], obj.position[2]), obj.name)
+		
+		if(send_to_preview)
+		{
+			//Generate a preview card with a new scene
+
+			//Process the polycube
+
+			//Add the preview card to the bottom of the modal
+		}
+		else
+		{
+			PolyCube.SwitchToNewActive(p)
+		
+			that.Load_Polycube_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
+		
+			that.visualizer.ProcessPolycube(p)
+		
+			VisualizePolycube(p)
+			
+			that.Switch_Context('poly')
+		}
 	}
 
 	function Switch_To_Edit(){
