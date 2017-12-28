@@ -1,4 +1,4 @@
-function SceneHandler(bg_color = 0xFFFFE6){
+function SceneHandler(bg_color = 0xFFFFE6, is_preview = false, viewport = window, container_id = "#container", default_cam_pos = new THREE.Vector3(-10, 10, 10)){
 
 	this.background_color = new THREE.Color(bg_color)
 	this.defaultScene
@@ -124,16 +124,16 @@ function SceneHandler(bg_color = 0xFFFFE6){
 	}
 
 	function initScene(){
-		WIDTH = window.innerWidth;
-		HEIGHT = window.innerHeight;
-		picking_texture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight)
+		WIDTH = viewport.innerWidth;
+		HEIGHT = viewport.innerHeight;
+		picking_texture = new THREE.WebGLRenderTarget(viewport.innerWidth, viewport.innerHeight)
 		picking_texture.texture.minFilter = THREE.LinearFilter 
 
 		//Flags
 		CLOCK = new THREE.Clock(true)
 
 		//Get some DOM elements that we're going to need to use
-		container = $("#container")
+		container = $(container_id)
 
 		//Create a renderer
 		renderer = new THREE.WebGLRenderer()
@@ -166,11 +166,14 @@ function SceneHandler(bg_color = 0xFFFFE6){
 		FAR = 10000 //The far clipping plane
 
 		that.CAMERA = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR)
-		that.CAMERA.position.z = 10
-		that.CAMERA.position.y = 10
-		that.CAMERA.position.x = -10
+		that.CAMERA.position.x = default_cam_pos.x
+		that.CAMERA.position.y = default_cam_pos.y
+		that.CAMERA.position.z = default_cam_pos.z
 
 		Controls = new THREE.OrbitControls(that.CAMERA, renderer.domElement)
+
+		if(is_preview)
+			Controls.autoRotate = true
 
 		//Events
 		$(window).on('resize', onWindowResize)

@@ -47,6 +47,23 @@ function PolycubeDataVisualizer(cube_template)
 		ProcessCubeData(polycube.id, polycube, cube)
 	}
 
+	this.GeneratePreviewPolycube = function(cube_positions)
+	{
+		let p_cube = new THREE.Group()
+
+		for(var i in cube_positions)
+		{
+			let new_cube = this.cube_template.clone()
+			new_cube.matrixAutoUpdate = false
+
+			p_cube.add(new_cube)
+
+			new_cube.position.copy(cube_positions[i])
+		}
+
+		return p_cube
+	}
+
 	this.DestroyPolycube = function(polycube)
 	{
 

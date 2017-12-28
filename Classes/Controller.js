@@ -189,20 +189,31 @@ function Controller(){
 		
 		if(!from_server)
 		{
-			LoadFile(file)
+			//Load the file from the client
+			LoadFile(file, to_preview)
 		}
 		else
 		{
-			//The file is from the server, so we already have the JSON.
+			//The file is from the server, so we already have the JSON object.
 			//Decide what to do with it.
 			if(to_preview)
 			{
-				//Generate the polycube preview card
+				//Generate a polycube, process it with the visualizer, create a scene for it, send it to the toolbar to load
+				//as a card
+				console.log("Generating preview polycube")
+				console.log(file)
+				let cube_positions = file
+
+				let p_cube = that.visualizer.GeneratePreviewPolycube(cube_positions)
+
+				console.log("Created polycube")
+				console.log(p_cube)
+
+
 			}
 			else
 			{
 				//Generate the polycube, process it with the visualizer, add it to the scene
-
 			}
 		}
 	
@@ -243,7 +254,7 @@ function Controller(){
 
 	}
 
-	function LoadFile(file){
+	function LoadFile(file, to_preview){
 		//Instantiate a file reader that will read the file specified
 		var reader = new FileReader()
 		reader.file_to_load = file
