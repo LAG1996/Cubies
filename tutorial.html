@@ -157,53 +157,6 @@
 		  </div>
 		</div>
 
-		<!--Add cube modal-->
-		<div id = "add_cube_modal" class="modal" tabindex="-1" role="dialog">
-		  <div class="modal-dialog" role="document">
-		    <div class="modal-content">
-		      <div class="modal-header">
-		        <h5 class="modal-title">Add a Cube!</h5>
-		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-		          <span aria-hidden="true">&times;</span>
-		        </button>
-		      </div>
-		      <div class="modal-body">
-		      	<p>Insert the cube's position:</p>
-		      	<div class = "card">
-		      		<div class = "card-head">
-		      			<h4 class = "text-info">Tutorial:</h4>
-		      		</div>
-		      		<div class = "card-body">
-		      			<p class = "text-info">Here, you can specify the cube's position relative to the first cube that was created. You can't put two cubes in the same space, so nothing will happen if you don't specify a position. Also, a new cube needs to be next to some cube that was already put down. We're working on making that a little less confusing. For now, just put a <span class = "text-danger">1</span> in any of the boxes, and then press Submit.</p>
-		      		</div>
-		      	</div>
-		      	<form>
-  					<div class="form-group">
-  					  <label for="x">X</label>
-  					  <input type="text" class="form-control" id="cube_x" aria-describedby="x_coord" placeholder="Enter x-coordinate">
-  					</div>
-  					<div class="form-group">
-  					  <label for="x">Y</label>
-  					  <input type="text" class="form-control" id="cube_y" aria-describedby="y_coord" placeholder="Enter y-coordinate">
-  					</div>
-  					<div class="form-group">
-  					  <label for="z">Z</label>
-  					  <input type="text" class="form-control" id="cube_z" aria-describedby="z_coord" placeholder="Enter z-coordinate">
-  					</div>
-
-  					<button class="btn btn-outline-success" type="button" id = "submit_cube_coords">Submit</button>
-				</form>
-
-		      </div>
-		      <div class="modal-footer">
-		        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
-		      </div>
-		    </div>
-		  </div>
-		</div>
-
-
-
 		<!--Scripts!!!-->
 		<script src = "third_party_src/THREE/three.js"></script>
 		<script src = "third_party_src/THREE/OBJLoader.js"></script>

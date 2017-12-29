@@ -16,13 +16,8 @@ $(document).ready(function(){
 
 	function FinishInitialization(){
 		CONTROL = new Controller()
-		//Add a grid to the default scene
-		var grid = GenerateGrid(100, 2, 0x000000)
-		grid.position.y = -1
-		grid.add(new THREE.AxisHelper(50))
-		CONTROL.rotate_mode_scene.add(grid)
 		
-		//Create some variables and functions for the polycube class	PolyCube.Rotation_Scene = new Scene()
+		//Create some variables and functions for the polycube class
 		PolyCube.Active_Polycube = null
 		PolyCube.SwitchToNewActive = function(polycube)
 		{

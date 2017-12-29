@@ -73,9 +73,41 @@
 			</nav>
 		</div>
 
+		<div class = "row" id = "card_prev_row_template">
+			<div class = "col-3">
+				<div class = "card">
+					<div class = "card-body">
+						<p>I am a card</p>
+					</div>
+				</div>
+			</div>
+			<div class = "col-3">
+				<div class = "card">
+					<div class = "card-body">
+						<p>I am a card</p>
+					</div>
+				</div>
+			</div>
+			<div class = "col-3">
+				<div class = "card">
+					<div class = "card-body">
+						<p>I am a card</p>
+					</div>
+				</div>
+			</div>
+			<div class = "col-3">
+				<div class = "card">
+					<div class = "card-body">
+						<p>I am a card</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
 		<!--Add polycube_modal-->
 		<div id = "add_polycube_modal" class="modal" tabindex="-1" role="dialog">
-		  <div class="modal-dialog" role="document">
+		  <div class="modal-dialog modal-lg" role="document">
 		    <div class="modal-content">
 		      <div class="modal-header">
 		        <h5 class="modal-title">Add a Polycube</h5>
@@ -116,14 +148,6 @@
 
   					<button class="btn btn-outline-success" type = "button" id = "submit_poly_coords" data-dismiss="modal">Submit</button>
 				</form>
-
-				<div class = "prev_container card" id = "test_container">
-
-					<div class = "card-body">
-						<h4>Some polycube</h4>
-					</div>
-				</div>
-
 		      </div>
 		      <div class="modal-footer">
 		        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
@@ -131,45 +155,6 @@
 		    </div>
 		  </div>
 		</div>
-
-		<!--Add cube modal-->
-		<div id = "add_cube_modal" class="modal" tabindex="-1" role="dialog">
-		  <div class="modal-dialog" role="document">
-		    <div class="modal-content">
-		      <div class="modal-header">
-		        <h5 class="modal-title">Add a Cube!</h5>
-		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-		          <span aria-hidden="true">&times;</span>
-		        </button>
-		      </div>
-		      <div class="modal-body">
-		      	<p>Insert the cube's position:</p>
-		      	<form>
-  					<div class="form-group">
-  					  <label for="x">X</label>
-  					  <input type="text" class="form-control" id="cube_x" aria-describedby="x_coord" placeholder="Enter x-coordinate">
-  					</div>
-  					<div class="form-group">
-  					  <label for="x">Y</label>
-  					  <input type="text" class="form-control" id="cube_y" aria-describedby="y_coord" placeholder="Enter y-coordinate">
-  					</div>
-  					<div class="form-group">
-  					  <label for="z">Z</label>
-  					  <input type="text" class="form-control" id="cube_z" aria-describedby="z_coord" placeholder="Enter z-coordinate">
-  					</div>
-
-  					<button class="btn btn-outline-success" type="button" id = "submit_cube_coords">Submit</button>
-				</form>
-
-		      </div>
-		      <div class="modal-footer">
-		        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
-		      </div>
-		    </div>
-		  </div>
-		</div>
-
-
 
 		<!--Scripts!!!-->
 		<script src = "third_party_src/THREE/three.js"></script>

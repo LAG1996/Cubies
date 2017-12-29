@@ -1,4 +1,4 @@
-function SceneHandler(bg_color = 0xFFFFE6, is_preview = false, viewport = window, container_id = "#container", default_cam_pos = new THREE.Vector3(-10, 10, 10)){
+function SceneHandler(bg_color = 0xFFFFE6){
 
 	this.background_color = new THREE.Color(bg_color)
 	this.defaultScene
@@ -7,23 +7,10 @@ function SceneHandler(bg_color = 0xFFFFE6, is_preview = false, viewport = window
 	this.active_picking_scene
 	this.CAMERA
 
-	var active = true
+	this.view_scenes = {}
+	this.picking_scenes = {}
 
-	var update_functions = {}
-
-	var viewportOffset_x = 0
-	var viewportOffset_y = 0
-
-	var WIDTH, HEIGHT, INIT, CLOCK
-	var container, renderer, picking_texture
-
-	var mouse_pos = new THREE.Vector2()
-
-	var VIEW_ANGLE, ASPECT, NEAR, FAR
-
-	var DIR_LIGHT
-
-	var mouse_x, mouse_y
+	var renderer
 
 	var Controls
 
@@ -33,77 +20,10 @@ function SceneHandler(bg_color = 0xFFFFE6, is_preview = false, viewport = window
 
 	initScene()
 
-	this.RequestAddToScene = function(object){
-
-		if(ObjectExists(object) && object.isObject3D){
-			this.active_scene.add(object)
-			return true
-		}
-		
-		return false
-	}
-
-	this.RequestRemoveFromScene = function(object){
-		if(ObjectExists(object) && object.isObject3D){
-			this.active_scene.remove(object)
-			return true
-		}
-		return false
-	}
-
-	this.RequestAddToPickingScene = function(object){
-		if(ObjectExists(object) && object.isObject3D){
-			this.active_picking_scene.add(object)
-			return true
-		}
-		return false
-	}
-
-	this.RequestSwitchToScene = function(scene)
-	{
-		if(ObjectExists(scene))
-		{
-			this.active_scene = scene
-			return true
-		}
-
-		return false
-	}
-
-	this.RequestSwitchToPickingScene = function(scene)
-	{
-		if(ObjectExists(scene))
-		{
-			this.active_picking_scene = scene
-			return true
-		}
-
-		return false
-	}
-
-	this.MakeDefaultSceneToPickingScene = function()
-	{
-		this.RequestSwitchToPickingScene(this.active_scene)
-	}
-
-	this.SwitchToDefaultScene = function()
-	{
-		this.active_scene = this.defaultScene
-	}
-
-	this.SwitchToDefaultPickingScene = function()
-	{
-		this.active_picking_scene = this.defaultPickingScene
-	}
-
-	this.GetMousePos = function(){
-		return mouse_pos
-	}
-
-	this.Pick = function(mouse_position, color_container = null){
+	this.Pick = function(scene_name, mouse_position, color_container = null){
 
 		//console.log("Drawing the picking scene: " + this.active_picking_scene.name)
-		renderer.render(this.active_picking_scene, this.CAMERA, picking_texture)
+		renderer.render(this.picking_scenes[scene_name], this.CAMERA, picking_texture)
 		return GetPixelColor(mouse_position, color_container)
 	}
 
@@ -115,35 +35,30 @@ function SceneHandler(bg_color = 0xFFFFE6, is_preview = false, viewport = window
 		picking_texture.setSize(window.innerWidth, window.innerHeight)
 	}
 
-	this.ToggleActive = function(){
-		active = !active
-	}
-
 	this.ClearDepthBuffer = function(){
 		renderer.clearDepth()
 	}
 
+
+	this.Draw = function(scene_name) {
+		renderer.render(this.view_scenes[scene_name], that.CAMERA)
+	}
+
+
 	function initScene(){
-		WIDTH = viewport.innerWidth;
-		HEIGHT = viewport.innerHeight;
-		picking_texture = new THREE.WebGLRenderTarget(viewport.innerWidth, viewport.innerHeight)
+		let WIDTH = window.innerWidth;
+		let HEIGHT = window.innerHeight;
+		picking_texture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight)
 		picking_texture.texture.minFilter = THREE.LinearFilter 
 
 		//Flags
-		CLOCK = new THREE.Clock(true)
+		let CLOCK = new THREE.Clock(true)
 
 		//Get some DOM elements that we're going to need to use
-		container = $(container_id)
+		let container = $("#container")
 
 		//Create a renderer
 		renderer = new THREE.WebGLRenderer()
-
-		//Create a scene
-		that.defaultScene = new THREE.Scene()
-		that.defaultPickingScene = new THREE.Scene()
-
-		that.active_scene = that.defaultScene
-		that.active_picking_scene = that.defaultPickingScene
 
 		//Start up that renderer
 		renderer.setSize(WIDTH, HEIGHT)
@@ -154,26 +69,18 @@ function SceneHandler(bg_color = 0xFFFFE6, is_preview = false, viewport = window
 
 		container.append(renderer.domElement)
 
-		//Set up a directional light and add it to the scene
-		DIR_LIGHT = new THREE.DirectionalLight(0xFFFFFF, 0.5)
-
-		that.defaultScene.add(DIR_LIGHT)
-
 		//Create a camera and add it to the scene
-		VIEW_ANGLE = 45 //Viewing angle for the perspective camera
-		ASPECT = WIDTH / HEIGHT //Aspect ratio dimensions for the camera
-		NEAR = 0.1 //The near clipping plane
-		FAR = 10000 //The far clipping plane
+		let VIEW_ANGLE = 45 //Viewing angle for the perspective camera
+		let ASPECT = WIDTH / HEIGHT //Aspect ratio dimensions for the camera
+		let NEAR = 0.1 //The near clipping plane
+		let FAR = 10000 //The far clipping plane
 
 		that.CAMERA = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR)
-		that.CAMERA.position.x = default_cam_pos.x
-		that.CAMERA.position.y = default_cam_pos.y
-		that.CAMERA.position.z = default_cam_pos.z
+		that.CAMERA.position.z = 10
+		that.CAMERA.position.y = 10
+		that.CAMERA.position.x = -10
 
-		Controls = new THREE.OrbitControls(that.CAMERA, renderer.domElement)
-
-		if(is_preview)
-			Controls.autoRotate = true
+		let Controls = new THREE.OrbitControls(that.CAMERA, renderer.domElement)
 
 		//Events
 		$(window).on('resize', onWindowResize)
@@ -188,19 +95,12 @@ function SceneHandler(bg_color = 0xFFFFE6, is_preview = false, viewport = window
 		picking_texture.setSize(window.innerWidth, window.innerHeight)
 	}
 
-	this.Draw = function() {
-		//console.log("Drawing the scene: " + this.active_scene.name)
-		deltaTime = CLOCK.getDelta();
-
-		renderer.render(this.active_scene, that.CAMERA)
-	}
-
 	//Uses a simple color buffer draw trick to decide where the client is clicking
 	function GetPixelColor(mouse_position, color_container = null){
 		var pixelBuffer = new Uint8Array(4)
 
-		renderer.readRenderTargetPixels(picking_texture, mouse_position.x + viewportOffset_x, 
-			picking_texture.height - (mouse_position.y + viewportOffset_y), 1, 1, pixelBuffer)
+		renderer.readRenderTargetPixels(picking_texture, mouse_position.x + 0, 
+			picking_texture.height - (mouse_position.y + 0), 1, 1, pixelBuffer)
 
 		var id = (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | (pixelBuffer[2])
 
@@ -211,4 +111,10 @@ function SceneHandler(bg_color = 0xFFFFE6, is_preview = false, viewport = window
 		//Return the id
 		return id
 	}
+}
+
+function PreviewSceneHandler(bg_color = 0xFFFFE6){
+
+	
+	
 }

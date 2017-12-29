@@ -20,19 +20,6 @@ function Toolbar_Handler(controller){
 		}
 	}
 
-	function _Switch_To_World_Context()
-	{
-		$("#world_view_nav").show()
-		$("#poly_view_nav").hide()
-	}
-
-	function _Switch_To_Poly_Context(poly_cube_name)
-	{
-		$("#world_view_nav").hide()
-		$("#poly_view_nav").show()
-		$("#poly_cube_name").text(poly_cube_name)
-	}
-
 	this.Switch_Cursor = function(cursor)
 	{
 		if(cursor == "cell")
@@ -57,6 +44,18 @@ function Toolbar_Handler(controller){
 		$("#add_cube_inactive").show()
 	}
 
+	this.MakePreviewCard = function(id)
+	{
+		//let card = $("#prev_card_template").clone()
+
+		//card.attr("id", id)
+
+
+		//$("#prev_card_container").append(card)
+
+
+	}
+
 	//Add events
 	$("#submit_poly_coords").on("click", function(){HandleSubmitPolyCoords()})
 	$("#submit_cube_coords").on("click", function(){HandleSubmitCubeCoords()})
@@ -67,6 +66,18 @@ function Toolbar_Handler(controller){
 
 	$("#add_cube_active").on("click", function(){HandleAddCube()})
 
+	function _Switch_To_World_Context()
+	{
+		$("#world_view_nav").show()
+		$("#poly_view_nav").hide()
+	}
+
+	function _Switch_To_Poly_Context(poly_cube_name)
+	{
+		$("#world_view_nav").hide()
+		$("#poly_view_nav").show()
+		$("#poly_cube_name").text(poly_cube_name)
+	}
 
 	//Functions for events
 	function HandleSubmitPolyCoords(){

@@ -1,8 +1,10 @@
 function Controller(){
 	this.scene_handler = new SceneHandler()
 	this.toolbar_handler = new Toolbar_Handler(this)
-	this.visualizer = new PolycubeDataVisualizer(Cube_Template.new_cube)
-	this.template_loader = new PolyCubePreview(this)
+	this.visualizer = new PolycubeDataVisualizer(Cube_Template.new_cube, Arrow_Template.arrow)
+	
+	if(!this.toolbar_handler.tutorial_mode)
+		this.template_loader = new PolyCubePreview(this)
 
 	//Some helper variables
 	this.Load_Polycube_Handler_List = []
@@ -20,6 +22,7 @@ function Controller(){
 	this.active_subgraph = null
 	this.face2graph_map = null
 	this.add_cube_mode = false
+	this.prev_poly_enums = []
 
 	//Keyboard commands
 	this.holding_down_shift = false
@@ -33,49 +36,25 @@ function Controller(){
 	this.second_highlight = new THREE.Color(0x0000FF)
 	this.cut_highlight = new THREE.Color(0x22EEDD)
 	this.hinge_highlight = new THREE.Color(0xAA380F)
-	
-	//The scenes that the viewer will see
-	this.rotate_mode_scene = new THREE.Scene()
-	this.rotate_mode_scene.name = "rotate_view"
+
+	//Create the main viewing scene that the user will see
+	this.scene_handler.view_scenes["main"] = new THREE.Scene()
+
+	//Add a grid to the default scene
+	var grid = GenerateGrid(100, 2, 0x000000)
+	grid.position.y = -1
+	grid.add(new THREE.AxisHelper(50))
+	this.scene_handler.view_scenes["main"].add(grid)
 	
 	//Some picking scenes that we're going to use
-	this.rotate_mode_poly_cube_picking_scene = new THREE.Scene()
-	this.rotate_mode_poly_cube_picking_scene.name = "rotate_poly_pick"
-	this.rotate_mode_edge_picking_scene = new THREE.Scene()
-	this.rotate_mode_edge_picking_scene.name = "rotate_edge_pick"
-	this.rotate_mode_face_picking_scene = new THREE.Scene()
-	this.rotate_mode_face_picking_scene.name = "rotate_face_pick"
-
-	this.arrow_pick_scene = new THREE.Scene()
-	this.arrow_pick_scene.name = "arrow_pick"
+	this.scene_handler.picking_scenes["poly_pick"] = new THREE.Scene()
+	this.scene_handler.picking_scenes["edge_pick"] = new THREE.Scene()
+	this.scene_handler.picking_scenes["face_pick"] = new THREE.Scene()
+	this.scene_handler.picking_scenes["arrow_pick"] = new THREE.Scene()
 	
-	//An object for a pair of arrows
-	this.arrow_pair = new THREE.Group()
-	this.arrow_1 = Arrow_Template.arrow.clone()
-	this.white_arrow_pick_color = 0xFF0000
-	this.black_arrow_pick_color = 0x00FF00
+	this.scene_handler.view_scenes["main"].add(this.visualizer.arrow_pair)
 
-	this.arrow_2 = Arrow_Template.arrow.clone()
-	this.arrow_2.children[0].material = new THREE.MeshBasicMaterial({'color':0x000000})
-	this.arrow_2.children[1].material = new THREE.MeshBasicMaterial({'color':0xFFFFFF})
-	this.arrow_2.children[1].material.side = THREE.BackSide
-	this.arrow_2.rotateY(DEG2RAD(180))
-
-	this.arrow_1.position.x += 1.25
-	this.arrow_2.position.x -= 1.25
-
-	this.arrow_pair.add(this.arrow_1)
-	this.arrow_pair.add(this.arrow_2)
-	this.arrow_pair.visible = false
-	this.rotate_mode_scene.add(this.arrow_pair)
-
-	this.pick_arrow_pair = this.arrow_pair.clone()
-	this.pick_arrow_pair.children[0].children[1].material = new THREE.MeshBasicMaterial({'color' : 0xFF0000})
-	this.pick_arrow_pair.children[1].children[1].material = new THREE.MeshBasicMaterial({'color' : 0x00FF00})
-	this.pick_arrow_pair.children[0].remove(this.pick_arrow_pair.children[0].children[0])
-	this.pick_arrow_pair.children[1].remove(this.pick_arrow_pair.children[1].children[0])
-	this.pick_arrow_pair.visible = true
-	this.arrow_pick_scene.add(this.pick_arrow_pair)
+	this.scene_handler.picking_scenes["arrow_pick"].add(this.visualizer.pick_arrow_pair)
 	
 	//Some delegate functions
 	this.Mouse_Hover_Funcs = []
@@ -112,8 +91,7 @@ function Controller(){
 	
 	}
 	
-	//Alert functions for the control
-	
+	//Alert functions for the control to be used by other modules
 	this.Alert_Funcs['NEW_POLYCUBE'] = function(){
 	
 		var args = Array.prototype.slice.call(arguments[0], 1)
@@ -157,7 +135,7 @@ function Controller(){
 	
 			that.last_hover_over_poly = null
 			that.face_graphs_out = false
-			that.arrow_pair.visible = false
+			that.visualizer.arrow_pair.visible = false
 			that.arrows_out = false
 	
 	
@@ -200,16 +178,9 @@ function Controller(){
 			{
 				//Generate a polycube, process it with the visualizer, create a scene for it, send it to the toolbar to load
 				//as a card
-				console.log("Generating preview polycube")
-				console.log(file)
+				//console.log("Generating preview polycube")
+				//console.log(file)
 				let cube_positions = file
-
-				let p_cube = that.visualizer.GeneratePreviewPolycube(cube_positions)
-
-				console.log("Created polycube")
-				console.log(p_cube)
-
-
 			}
 			else
 			{
@@ -251,6 +222,14 @@ function Controller(){
 
 
 		PolyCube.Active_Polycube.Rotate_Data(args[0], args[1], args[2], args[3])
+
+	}
+
+	this.Alert_Funcs["SAVE_ENUM"] = function(){
+
+		var args = Array.prototype.slice.call(arguments[0], 1)
+
+		console.log("saving the polycube enumeration #" + (args[0] + 2))
 
 	}
 
@@ -317,12 +296,9 @@ function Controller(){
 	
 			$('#poly_cube_name_only').hide()
 	
-			that.scene_handler.RequestSwitchToScene(that.rotate_mode_scene)
-			that.scene_handler.RequestSwitchToPickingScene(that.rotate_mode_poly_cube_picking_scene)
 	
 			PolyCube.SwitchToNewActive(null)
 	
-			//that.toolbar_handler.ActivePolyCubeObjectView(null)
 	
 			that.context = 'world'
 	
@@ -330,15 +306,12 @@ function Controller(){
 
 				if(that.hover_over_poly)
 				{
-					//$('#poly_cube_name_only').show()
-					//$('.tooltip_text').text("Edit " + that.hover_over_poly.name)
 
 					var faces = that.hover_over_poly.Get_Faces()
 
 					for(var fName in faces)
 					{
 						that.visualizer.HighlightObject("face", fName, that.hover_over_poly.id, "dual_half_1")
-						//HighlightParts(that.rotate_mode_scene.getObjectByName(fName), that.prime_highlight, 'face', that.face_junk[that.hover_over_poly.id], that.rotate_mode_scene)
 					}
 				}
 				else
@@ -388,9 +361,6 @@ function Controller(){
 	
 			$('#poly_cube_name_only').hide()
 	
-			that.scene_handler.RequestSwitchToScene(that.rotate_mode_scene)
-			that.scene_handler.SwitchToDefaultPickingScene(that.rotate_mode_poly_cube_picking_scene)
-
 			if(Object.keys(PolyCube.Active_Polycube.Get_Cuts()).length > 0)
 			{
 				that.toolbar_handler.DeactivateAddCube()
@@ -440,9 +410,7 @@ function Controller(){
 				if(PolyCube.Active_Polycube.name != that.hover_over_poly.name)
 					return
 
-
-				that.scene_handler.RequestSwitchToPickingScene(that.rotate_mode_edge_picking_scene)
-				var id = that.scene_handler.Pick(that.mouse_pos)
+				var id = that.scene_handler.Pick("edge_pick", that.mouse_pos)
 	
 				var hinge_name = that.visualizer.Color2Hinge[PolyCube.Active_Polycube.id][id]
 	
@@ -450,9 +418,8 @@ function Controller(){
 				{
 					that.hovering_over_hinge = false
 					that.hover_over_hinge = null
-	
-					that.scene_handler.RequestSwitchToPickingScene(that.rotate_mode_face_picking_scene)
-					id = that.scene_handler.Pick(that.mouse_pos)
+					
+					id = that.scene_handler.Pick("face_pick", that.mouse_pos)
 	
 					var face_name = that.visualizer.Color2Face[PolyCube.Active_Polycube.id][id]
 	
@@ -467,7 +434,7 @@ function Controller(){
 						if(!that.face_graphs_out)
 						{
 							that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
-							//HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+							//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(face.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
 						}
 					}
 					else
@@ -485,14 +452,14 @@ function Controller(){
 						var edge_2_data = edge_data.incidentEdge
 						
 						that.visualizer.HighlightObject("edge", edge_2_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
-						//HighlightParts(that.rotate_mode_scene.getObjectByName(edge_2_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+						//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(edge_2_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
 					}
 	
 					that.hovering_over_hinge = true
 					that.hover_over_hinge = edge_data
 					that.last_hover_over_hinge = edge_data
 					that.visualizer.HighlightObject("edge", edge_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
-					//HighlightParts(that.rotate_mode_scene.getObjectByName(edge_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+					//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(edge_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
 				}
 				
 				if(!that.add_cube_mode)
@@ -507,10 +474,9 @@ function Controller(){
 				{
 					if(that.arrows_out)
 					{
-						that.scene_handler.RequestSwitchToPickingScene(that.arrow_pick_scene)
-						var color = that.scene_handler.Pick(that.mouse_pos)	
+						var color = that.scene_handler.Pick("arrow_pick", that.mouse_pos)	
 						
-						if(color == that.white_arrow_pick_color)
+						if(color == that.visualizer.white_arrow_pick_color)
 						{
 							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
 								return
@@ -522,7 +488,7 @@ function Controller(){
 							that.cuts_need_update = true
 							that.hinges_need_update = true
 						}
-						else if(color == that.black_arrow_pick_color)
+						else if(color == that.visualizer.black_arrow_pick_color)
 						{
 							if(that.toolbar_handler.tutorial_mode)
 							{
@@ -558,7 +524,7 @@ function Controller(){
 						}
 
 						that.face_graphs_out = false
-						that.arrow_pair.visible = false
+						that.visualizer.arrow_pair.visible = false
 						that.arrows_out = false
 						//that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, .5)
 
@@ -619,22 +585,22 @@ function Controller(){
 							that.hinge_to_rotate_around = that.hover_over_hinge
 							that.face2graph_map = data['face2graph_map']
 
-							var obj_1 = that.rotate_mode_scene.getObjectByName(subgraphs[0][0].name)
-							var obj_2 = that.rotate_mode_scene.getObjectByName(subgraphs[1][0].name)
+							var obj_1 = that.scene_handler.view_scenes["main"].getObjectByName(subgraphs[0][0].name)
+							var obj_2 = that.scene_handler.view_scenes["main"].getObjectByName(subgraphs[1][0].name)
 		
 							for(var tindex in subgraphs[0])
 							{
 								var face = subgraphs[0][tindex]
 								
 								that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, "dual_half_1")
-								//HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+								//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(face.name), that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
 							}
 		
 							for(var tindex in subgraphs[1])
 							{
 								var face = subgraphs[1][tindex]
 								that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, "dual_half_2")
-								//HighlightParts(that.rotate_mode_scene.getObjectByName(face.name), that.second_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.rotate_mode_scene)
+								//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(face.name), that.second_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
 							}
 							
 							//that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, 0)
@@ -687,46 +653,46 @@ function Controller(){
 
 							that.active_subgraph = that.subgraphs[subgraph_index]
 
-							that.arrow_pair.visible = true
+							that.visualizer.arrow_pair.visible = true
 
 							var face_data = PolyCube.Active_Polycube.Get_Face_Data(face_name)
 
 							var face_obj = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
 
-							that.arrow_pair.position.copy(face_obj.getWorldPosition())
-							that.pick_arrow_pair.position.copy(face_obj.getWorldPosition())
+							that.visualizer.arrow_pair.position.copy(face_obj.getWorldPosition())
+							that.visualizer.pick_arrow_pair.position.copy(face_obj.getWorldPosition())
 
 							var normal = face_data.normal.clone()
 
 							if(normal.equals(new THREE.Vector3(-1, 0, 0)))
 							{
-								that.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
-								that.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
+								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
+								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
 							}
 							else if(normal.equals(new THREE.Vector3(0, 1, 0)))
 							{
-								that.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
-								that.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
+								that.visualizer.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
+								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
 							}
 							else if(normal.equals(new THREE.Vector3(0, -1, 0)))
 							{
-								that.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
-								that.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
+								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
+								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
 							}
 							else if(normal.equals(new THREE.Vector3(0, 0, 1)))
 							{
-								that.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
-								that.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
+								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
+								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
 							}
 							else if(normal.equals(new THREE.Vector3(0, 0, -1)))
 							{
-								that.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
-								that.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
+								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
+								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
 							}
 							else
 							{
-								that.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(1, 0, 0), DEG2RAD(90))
-								that.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(1, 0, 0), DEG2RAD(90))
+								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(1, 0, 0), DEG2RAD(90))
+								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(1, 0, 0), DEG2RAD(90))
 							}
 
 							that.arrows_out = true
@@ -796,7 +762,7 @@ function Controller(){
 
 						that.add_cube_mode = false
 						that.face_graphs_out = false
-						that.arrow_pair.visible = false
+						that.visualizer.arrow_pair.visible = false
 						that.arrows_out = false
 
 						
@@ -830,8 +796,7 @@ function Controller(){
 			$('#poly_cube_name_only').css("top", "" + that.mouse_pos.y + "px")
 			$('#poly_cube_name_only').css("left", "" + (that.mouse_pos.x + 10) + "px")
 	
-			that.scene_handler.RequestSwitchToPickingScene(that.rotate_mode_poly_cube_picking_scene)
-			var id = that.scene_handler.Pick(that.mouse_pos)
+			var id = that.scene_handler.Pick("poly_pick", that.mouse_pos)
 	
 			var p_cube = PolyCube.ID2Poly[id]
 
@@ -928,13 +893,13 @@ function Controller(){
 		function VisualizePolycube(polycube)
 		{
 	
-			that.rotate_mode_scene.add(that.visualizer.rotate_polycubes[polycube.id])
+			that.scene_handler.view_scenes["main"].add(that.visualizer.rotate_polycubes[polycube.id])
 	
-			that.rotate_mode_poly_cube_picking_scene.add(that.visualizer.rotate_pick_polycubes[polycube.id])
+			that.scene_handler.picking_scenes["poly_pick"].add(that.visualizer.rotate_pick_polycubes[polycube.id])
 	
-			that.rotate_mode_edge_picking_scene.add(that.visualizer.rotate_hinge_polycubes[polycube.id])
+			that.scene_handler.picking_scenes["edge_pick"].add(that.visualizer.rotate_hinge_polycubes[polycube.id])
 	
-			that.rotate_mode_face_picking_scene.add(that.visualizer.rotate_face_polycubes[polycube.id])
+			that.scene_handler.picking_scenes["face_pick"].add(that.visualizer.rotate_face_polycubes[polycube.id])
 		}
 	
 		function UpdateCuts(polycube, scene)
@@ -1004,7 +969,7 @@ function Controller(){
 		//The update function
 		this.update = function(){
 	
-			that.scene_handler.Draw()
+			that.scene_handler.Draw("main")
 	
 			//Load up cubes from any opened files
 			for(var c in that.Load_Polycube_Handler_List)
@@ -1024,14 +989,14 @@ function Controller(){
 			
 			if(that.cuts_need_update)
 			{
-				UpdateCuts(that.last_hover_over_poly, that.rotate_mode_scene)
+				UpdateCuts(that.last_hover_over_poly, that.scene_handler.view_scenes["main"])
 	
 				that.cuts_need_update = false			
 			}
 	
 			if(that.hinges_need_update)
 			{
-				UpdateHinges(that.last_hover_over_poly, that.rotate_mode_scene)
+				UpdateHinges(that.last_hover_over_poly, that.scene_handler.view_scenes["main"])
 	
 				that.hinges_need_update = false
 			}

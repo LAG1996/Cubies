@@ -1,6 +1,7 @@
-function PolycubeDataVisualizer(cube_template)
+function PolycubeDataVisualizer(cube_temp, arrow_temp)
 {
-	this.cube_template = cube_template
+	var cube_template = cube_temp
+	var arrow_template = arrow_temp
 
 	this.rotate_polycubes = {}
 	this.rotate_hinge_polycubes = {}
@@ -19,6 +20,34 @@ function PolycubeDataVisualizer(cube_template)
 	this.second_highlight = new THREE.Color(0x0000FF)
 	this.cut_highlight = new THREE.Color(0xFF0000)
 	this.hinge_highlight = new THREE.Color(0x22EEDD)
+
+	//An object for a pair of arrows
+	this.arrow_pair = new THREE.Group()
+	let arrow_1 = arrow_template.clone()
+
+	//TODO: The following variables need to be private
+	this.white_arrow_pick_color = 0xFF0000
+	this.black_arrow_pick_color = 0x00FF00
+
+	let arrow_2 = arrow_template.clone()
+	arrow_2.children[0].material = new THREE.MeshBasicMaterial({'color':0x000000})
+	arrow_2.children[1].material = new THREE.MeshBasicMaterial({'color':0xFFFFFF})
+	arrow_2.children[1].material.side = THREE.BackSide
+	arrow_2.rotateY(DEG2RAD(180))
+
+	arrow_1.position.x += 1.25
+	arrow_2.position.x -= 1.25
+
+	this.arrow_pair.add(arrow_1)
+	this.arrow_pair.add(arrow_2)
+	this.arrow_pair.visible = false
+
+	this.pick_arrow_pair = this.arrow_pair.clone()
+	this.pick_arrow_pair.children[0].children[1].material = new THREE.MeshBasicMaterial({'color' : 0xFF0000})
+	this.pick_arrow_pair.children[1].children[1].material = new THREE.MeshBasicMaterial({'color' : 0x00FF00})
+	this.pick_arrow_pair.children[0].remove(this.pick_arrow_pair.children[0].children[0])
+	this.pick_arrow_pair.children[1].remove(this.pick_arrow_pair.children[1].children[0])
+	this.pick_arrow_pair.visible = true
 
 	var part_highlights_cache = []
 
@@ -53,7 +82,7 @@ function PolycubeDataVisualizer(cube_template)
 
 		for(var i in cube_positions)
 		{
-			let new_cube = this.cube_template.clone()
+			let new_cube = cube_template.clone()
 			new_cube.matrixAutoUpdate = false
 
 			p_cube.add(new_cube)
@@ -458,7 +487,7 @@ function PolycubeDataVisualizer(cube_template)
 
 	function ProcessCubeData(id, polycube, cube)
 	{
-		var v_cube = that.cube_template.clone()
+		var v_cube = cube_template.clone()
 		v_cube.position.copy(cube.position).multiplyScalar(2)
 	
 		for(var dir in cube.has_faces)
