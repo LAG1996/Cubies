@@ -14,8 +14,6 @@ function SceneHandler(bg_color = 0xFFFFE6){
 
 	var Controls
 
-	var deltaTime = 0
-
 	var that = this
 
 	initScene()
@@ -113,8 +111,107 @@ function SceneHandler(bg_color = 0xFFFFE6){
 	}
 }
 
-function PreviewSceneHandler(bg_color = 0xFFFFE6){
+function PreviewHandler(bg_color = 0xFFFFE6, container, polycube){
 
-	
-	
+	var myScene = null
+	var background_color = bg_color
+	var myContainer = container
+	var renderer = null
+	var orbiter = null
+	var camera = null
+	var myPolycube = polycube
+	var current_context = null
+
+	var that = this
+
+	initScene()
+
+	function initScene(){
+		//Get some DOM elements that we're going to need to use
+		WIDTH = 0
+		HEIGHT = 0
+
+		//Create a renderer
+		renderer = new THREE.WebGLRenderer()
+
+		//Create a scene
+		defaultScene = new THREE.Scene()
+
+		//Start up that renderer
+		renderer.setSize(WIDTH, HEIGHT)
+		renderer.domElement.id = polycube.name + "_renderer"
+		renderer.setClearColor(background_color.getHex(), 1)
+		renderer.setPixelRatio(window.devicePixelRatio)
+		renderer.sortObjects = true
+
+		//$("#container").append(renderer.domElement)
+
+		//Create a camera and add it to the scene
+		VIEW_ANGLE = 45 //Viewing angle for the perspective camera
+		ASPECT = WIDTH / HEIGHT //Aspect ratio dimensions for the camera
+		NEAR = 0.1 //The near clipping plane
+		FAR = 10000 //The far clipping plane
+
+		camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR)
+		camera.position.z = 10
+		camera.position.y = 10
+		camera.position.x = -10
+
+		orbiter = new THREE.OrbitControls(camera, renderer.domElement)
+		orbiter.autoRotate = true
+
+		//Create the scene, add a grid, add the polycube
+		myScene = new THREE.Scene()
+
+		let grid = GenerateGrid(20, 2, 0x000000)
+		grid.position.y = -1
+		grid.add(new THREE.AxisHelper(50))
+
+		myScene.add(grid)
+		myScene.add(myPolycube)
+
+		console.log("my scene")
+		console.log(myScene)
+
+	}
+
+	function CalculateCameraPosition(polycube){
+
+		
+
+	}
+
+	this.Draw = function(){
+		
+		orbiter.update()
+		renderer.render(myScene, camera)
+
+	}
+
+	this.AttachToContext = function(context){
+
+		current_context = context
+
+		camera.aspect = current_context.parent().width()/ (current_context.parent().height() * 2)
+		camera.updateProjectionMatrix()
+
+		renderer.setSize(current_context.parent().width(), current_context.parent().height() * 2)
+
+		context.append(renderer.domElement)
+
+
+		this.Draw()
+	}
+
+	this.GetRenderer = function(){
+
+		return renderer
+
+	}
+
+	this.GetPolyCube = function(){
+
+		return myScene.children[1]
+
+	}
 }

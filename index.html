@@ -73,37 +73,17 @@
 			</nav>
 		</div>
 
-		<div class = "row" id = "card_prev_row_template">
-			<div class = "col-3">
-				<div class = "card">
-					<div class = "card-body">
-						<p>I am a card</p>
+						<div id = "poly_prev"></div>
+				
+				<div class = "row" id = "prev_row_template"></div>
+				<div class = "col-4" id = "prev_card_template" style = "display: none">
+					<div class = "card">
+						<div id = "prev_container"></div>
+						<div class = "card-body">
+							<p id = "name">I am a card</p>
+						</div>
 					</div>
 				</div>
-			</div>
-			<div class = "col-3">
-				<div class = "card">
-					<div class = "card-body">
-						<p>I am a card</p>
-					</div>
-				</div>
-			</div>
-			<div class = "col-3">
-				<div class = "card">
-					<div class = "card-body">
-						<p>I am a card</p>
-					</div>
-				</div>
-			</div>
-			<div class = "col-3">
-				<div class = "card">
-					<div class = "card-body">
-						<p>I am a card</p>
-					</div>
-				</div>
-			</div>
-		</div>
-
 
 		<!--Add polycube_modal-->
 		<div id = "add_polycube_modal" class="modal" tabindex="-1" role="dialog">
@@ -148,7 +128,8 @@
 
   					<button class="btn btn-outline-success" type = "button" id = "submit_poly_coords" data-dismiss="modal">Submit</button>
 				</form>
-		      </div>
+
+
 		      <div class="modal-footer">
 		        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
 		      </div>

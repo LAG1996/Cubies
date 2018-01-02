@@ -178,9 +178,23 @@ function Controller(){
 			{
 				//Generate a polycube, process it with the visualizer, create a scene for it, send it to the toolbar to load
 				//as a card
-				//console.log("Generating preview polycube")
-				//console.log(file)
-				let cube_positions = file
+				console.log("Generating preview polycube")
+				console.log(file)
+				let p_cube_data = file
+				console.log("Generating polycube...")
+				let p_cube = that.visualizer.GeneratePreviewPolycube(p_cube_data.cubes)
+				p_cube.name = p_cube_data.name
+				console.log(p_cube)
+				//This approach can be very bad if there is a large amount of preview polycubes
+				console.log("Generating preview card...")
+				let container_data = that.toolbar_handler.GeneratePreviewCard(p_cube_data.name)
+				console.log(container_data)
+				console.log("Generating a renderer for the new card...")
+				let prev_render = new PreviewHandler(that.scene_handler.background_color, container_data.container, p_cube)
+				console.log(prev_render.GetPolyCube())
+				console.log(prev_render.GetRenderer())
+
+				prev_render.AttachToContext(container_data.container)
 			}
 			else
 			{

@@ -87,7 +87,8 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 
 			p_cube.add(new_cube)
 
-			new_cube.position.copy(cube_positions[i])
+			new_cube.position.copy(new THREE.Vector3(cube_positions[i][0]*2, cube_positions[i][1]*2, cube_positions[i][2]*2))
+			new_cube.updateMatrix()
 		}
 
 		return p_cube

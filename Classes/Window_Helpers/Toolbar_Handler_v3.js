@@ -5,6 +5,7 @@ function Toolbar_Handler(controller){
 
 	$("#add_cube_inactive").hide()
 
+	var prev_id = 0
 	var current_cursor = "default"
 	var that = this
 
@@ -44,15 +45,32 @@ function Toolbar_Handler(controller){
 		$("#add_cube_inactive").show()
 	}
 
-	this.MakePreviewCard = function(id)
+	this.GeneratePreviewCard = function(polycube_name)
 	{
-		//let card = $("#prev_card_template").clone()
+		let card = $("#prev_card_template").clone()
 
-		//card.attr("id", id)
+		card.attr("id", prev_id)
 
+		card.find("#name").text(polycube_name)
 
-		//$("#prev_card_container").append(card)
+		card.show()
 
+		console.log(card)
+
+		//If we have three cards in the row, make a new row.
+		if(prev_id % 3 == 0)
+		{
+			let new_row = $("#prev_row_template").clone()
+			console.log(new_row)
+			$("#newest_prev_row").attr("id", "")
+			new_row.attr("id", "newest_prev_row")
+			console.log(new_row)
+			$("#poly_prev").append(new_row)
+		}
+
+		$("#newest_prev_row").append(card)
+
+		return {id: prev_id++, container: card.find("#prev_container")}
 
 	}
 
