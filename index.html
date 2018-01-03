@@ -73,18 +73,6 @@
 			</nav>
 		</div>
 
-						<div id = "poly_prev"></div>
-				
-				<div class = "row" id = "prev_row_template"></div>
-				<div class = "col-4" id = "prev_card_template" style = "display: none">
-					<div class = "card">
-						<div id = "prev_container"></div>
-						<div class = "card-body">
-							<p id = "name">I am a card</p>
-						</div>
-					</div>
-				</div>
-
 		<!--Add polycube_modal-->
 		<div id = "add_polycube_modal" class="modal" tabindex="-1" role="dialog">
 		  <div class="modal-dialog modal-lg" role="document">
@@ -125,7 +113,17 @@
   					  <label for="z">Z</label>
   					  <input type="text" class="form-control" id="poly_z" aria-describedby="z_coord" placeholder="Enter z-coordinate">
   					</div>
-
+  					<div id = "poly_prev"></div>
+				
+					<div class = "row" id = "prev_row_template"></div>
+					<div class = "col-4" id = "prev_card_template" style = "display: none">
+						<div class = "card">
+							<div id = "prev_container"></div>
+							<div class = "card-body">
+								<p id = "name">I am a card</p>
+							</div>
+						</div>
+					</div>
   					<button class="btn btn-outline-success" type = "button" id = "submit_poly_coords" data-dismiss="modal">Submit</button>
 				</form>
 

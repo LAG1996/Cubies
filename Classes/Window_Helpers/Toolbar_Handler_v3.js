@@ -55,22 +55,18 @@ function Toolbar_Handler(controller){
 
 		card.show()
 
-		console.log(card)
-
 		//If we have three cards in the row, make a new row.
 		if(prev_id % 3 == 0)
 		{
 			let new_row = $("#prev_row_template").clone()
-			console.log(new_row)
 			$("#newest_prev_row").attr("id", "")
 			new_row.attr("id", "newest_prev_row")
-			console.log(new_row)
 			$("#poly_prev").append(new_row)
 		}
 
 		$("#newest_prev_row").append(card)
 
-		return {id: prev_id++, container: card.find("#prev_container")}
+		return {id: prev_id++, "card": card.find("#prev_container")}
 
 	}
 

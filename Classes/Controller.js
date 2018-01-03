@@ -162,44 +162,45 @@ function Controller(){
 	
 		var args = Array.prototype.slice.call(arguments[0], 1)
 		var file = args[0]
-		var from_server = args[1]
-		var to_preview = args[2]
 		
-		if(!from_server)
+		//Instantiate a file reader that will read the file specified
+		var reader = new FileReader()
+
+		//var that = this
+		reader.onload = function(){
+			let data = reader.result
+
+			let obj = JSON.parse(data)
+		
+			//TODO: Verify the file
+		
+			//The file has been verified. Create a new polycube with all of the specified cubes
+			let p = PolyCube.GenerateNewPolyCube(new THREE.Vector3(obj.position[0], obj.position[1], obj.position[2]), obj.name)
+		
+			that.Load_Polycube_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
+		
+			that.visualizer.ProcessPolycube(p)
+		
+			VisualizePolycube(p)
+
+			PolyCube.SwitchToNewActive(p)
+			
+			that.Switch_Context('poly')
+		}
+		reader.onerror = function(){
+			data = ""
+		}
+		reader.onabort = function(){
+			data = ""
+		}
+	
+		if(file)
 		{
-			//Load the file from the client
-			LoadFile(file, to_preview)
+			reader.readAsText(file)
 		}
 		else
 		{
-			//The file is from the server, so we already have the JSON object.
-			//Decide what to do with it.
-			if(to_preview)
-			{
-				//Generate a polycube, process it with the visualizer, create a scene for it, send it to the toolbar to load
-				//as a card
-				console.log("Generating preview polycube")
-				console.log(file)
-				let p_cube_data = file
-				console.log("Generating polycube...")
-				let p_cube = that.visualizer.GeneratePreviewPolycube(p_cube_data.cubes)
-				p_cube.name = p_cube_data.name
-				console.log(p_cube)
-				//This approach can be very bad if there is a large amount of preview polycubes
-				console.log("Generating preview card...")
-				let container_data = that.toolbar_handler.GeneratePreviewCard(p_cube_data.name)
-				console.log(container_data)
-				console.log("Generating a renderer for the new card...")
-				let prev_render = new PreviewHandler(that.scene_handler.background_color, container_data.container, p_cube)
-				console.log(prev_render.GetPolyCube())
-				console.log(prev_render.GetRenderer())
-
-				prev_render.AttachToContext(container_data.container)
-			}
-			else
-			{
-				//Generate the polycube, process it with the visualizer, add it to the scene
-			}
+			reader.abort()
 		}
 	
 	}
@@ -245,65 +246,6 @@ function Controller(){
 
 		console.log("saving the polycube enumeration #" + (args[0] + 2))
 
-	}
-
-	function LoadFile(file, to_preview){
-		//Instantiate a file reader that will read the file specified
-		var reader = new FileReader()
-		reader.file_to_load = file
-		reader.send_to_preview = to_preview
-		//var that = this
-		reader.onload = function(){
-			let data = reader.result
-
-			GeneratePolycube(data, reader.send_to_preview)
-		}
-		reader.onerror = function(){
-			data = ""
-		}
-		reader.onabort = function(){
-			data = ""
-		}
-	
-		if(reader.file_to_load)
-		{
-			reader.readAsText(reader.file_to_load)
-		}
-		else
-		{
-			reader.abort()
-		}
-	}
-
-	function GeneratePolycube(data, send_to_preview)
-	{
-		let obj = JSON.parse(data)
-	
-		//TODO: Verify the file
-	
-		//The file has been verified. Create a new polycube with all of the specified cubes
-		let p = PolyCube.GenerateNewPolyCube(new THREE.Vector3(obj.position[0], obj.position[1], obj.position[2]), obj.name)
-		
-		if(send_to_preview)
-		{
-			//Generate a preview card with a new scene
-
-			//Process the polycube
-
-			//Add the preview card to the bottom of the modal
-		}
-		else
-		{
-			PolyCube.SwitchToNewActive(p)
-		
-			that.Load_Polycube_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
-		
-			that.visualizer.ProcessPolycube(p)
-		
-			VisualizePolycube(p)
-			
-			that.Switch_Context('poly')
-		}
 	}
 
 	function Switch_To_Edit(){
