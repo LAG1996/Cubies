@@ -648,7 +648,7 @@ function Controller(){
 							}
 							else if(normal.equals(new THREE.Vector3(0, 1, 0)))
 							{
-								that.visualizer.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
+								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
 								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
 							}
 							else if(normal.equals(new THREE.Vector3(0, -1, 0)))
