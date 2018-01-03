@@ -31,13 +31,17 @@ function PolyCubePreview(controller){
 	//Array of asynchronous loops
 	var asyncs = []
 
+	var prev_id = 0
+
 	var preview_open = false
 
 	//Load up the following text files and give them each index
-	LoadTemplate("donut", 0)
-	LoadTemplate("dali cross", 1)
-	LoadTemplate("rubix cube", 2)
-	LoadTemplate("2x2x2", 3)
+	LoadTemplate("donut")
+	LoadTemplate("dali cross")
+	LoadTemplate("rubix cube")
+	LoadTemplate("2x2x2")
+	LoadTemplate("super plus")
+	LoadTemplate("hat")
 
 	//Listen in on the modal. When it opens, attach the renderers to cards.
 	$("#add_polycube_modal").on("show.bs.modal", function(){
@@ -53,6 +57,11 @@ function PolyCubePreview(controller){
 
 		preview_open = false
 
+	})
+
+	//Add an event for the preview selector button
+	$(".select_prev_btn").on("click", function(){
+		console.log("Picked!")
 	})
 
 /*
@@ -96,8 +105,38 @@ function PolyCubePreview(controller){
 		}
 	 }))*/
 
+	function GeneratePreviewCard(polycube_name)
+	{
+		let card = $("#prev_card_template").clone()
+
+		card.attr("id", prev_id)
+
+		card.find("#select_prev_btn").text(polycube_name)
+		card.find("#select_prev_btn").on("click", function(){
+			console.log("Picked " + $(this).text())
+
+			myController.Alert("LOAD_POLYCUBE", polycube_templates[$(this).parent().parent().parent().attr("id")], true)
+		})
+
+		card.show()
+
+		//If we have three cards in the row, make a new row.
+		if(prev_id % 3 == 0)
+		{
+			let new_row = $("#prev_row_template").clone()
+			$("#newest_prev_row").attr("id", "")
+			new_row.attr("id", "newest_prev_row")
+			$("#poly_prev").append(new_row)
+		}
+
+		$("#newest_prev_row").append(card)
+
+		return {id: prev_id++, "card": card.find("#prev_container")}
+
+	}
+
 	//Read files and parse them into arrays of cube positions.
-	function LoadTemplate(template_name, template_index){
+	function LoadTemplate(template_name){
 
 		var xhttp = new XMLHttpRequest()
 
@@ -105,17 +144,17 @@ function PolyCubePreview(controller){
 			if(this.readyState == 4 && this.status == 200){
 
 				let data = JSON.parse(this.responseText)
-				
+				data.position = new THREE.Vector3()
 				//Get the polycube template
 				let p_cube = myController.visualizer.GeneratePreviewPolycube(data.cubes)
 				p_cube.name = data.name
 
-				polycube_templates.push(p_cube)
+				polycube_templates.push(data)
 
 				//If we have not exceeded our renderer count, make a new card and renderer.
 				if(prev_cards.length < max_renderers)
 				{
-					let context_data = myController.toolbar_handler.GeneratePreviewCard(p_cube.name)
+					let context_data = GeneratePreviewCard(p_cube.name)
 					
 
 					let preview = new PreviewHandler(myController.scene_handler.background_color, p_cube)

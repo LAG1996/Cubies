@@ -86,16 +86,8 @@
 		      <div class="modal-body">
 		      	<label type = "button" for = "load_polycube" class = "btn btn-dark">Load polycube from file...</label>
 		      	<input type = "file" id = "load_polycube"></input>
-		      	<div class = "row">
-		      		<div class = "col-6">
-		        	</div>
-		        	 <div class = "col-2">
-		        		<p>-OR-</p>
-		        	</div>
-		        	<div class = "col-4"></div>
-		      	</div>
-		      	<p>Name the polycube and insert the polycube's origin:</p>
-
+		      	<p class = "text-center">-OR-</p>
+		      	<h3>Name the polycube and insert the polycube's origin:</h3>
 		      	<form>
   					<div class="form-group">
   					  <label for="name">Name</label>
@@ -113,23 +105,25 @@
   					  <label for="z">Z</label>
   					  <input type="text" class="form-control" id="poly_z" aria-describedby="z_coord" placeholder="Enter z-coordinate">
   					</div>
+  					<button class="btn btn-outline-success" type = "button" id = "submit_poly_coords" data-dismiss="modal">Create</button>
+  				</form>
+
+  					<p class = "text-center">-OR-</p>
+  					<h3>Pick from one of these templates!</h3>
+
+
   					<div id = "poly_prev"></div>
-				
 					<div class = "row" id = "prev_row_template"></div>
 					<div class = "col-4" id = "prev_card_template" style = "display: none">
 						<div class = "card">
 							<div id = "prev_container"></div>
 							<div class = "card-body">
-								<p id = "name">I am a card</p>
+								<button class = "btn btn-outline-success select_prev_btn" id = "select_prev_btn" data-dismiss="modal">I am a card</button>
 							</div>
 						</div>
 					</div>
-  					<button class="btn btn-outline-success" type = "button" id = "submit_poly_coords" data-dismiss="modal">Submit</button>
-				</form>
-
 
 		      <div class="modal-footer">
-		        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
 		      </div>
 		    </div>
 		  </div>

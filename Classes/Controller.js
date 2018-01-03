@@ -162,45 +162,66 @@ function Controller(){
 	
 		var args = Array.prototype.slice.call(arguments[0], 1)
 		var file = args[0]
-		
-		//Instantiate a file reader that will read the file specified
-		var reader = new FileReader()
+		var from_server = args[1]
 
-		//var that = this
-		reader.onload = function(){
-			let data = reader.result
 
-			let obj = JSON.parse(data)
+		if(from_server)
+		{
+			//The file came from the server and was processed by the polycube preview module
+			GeneratePolycube(file)
+		}
+		else
+		{
+			//The file came from the client and needs to be processed by a file loader.
+			LoadDataFromClient(file)
+		}
 		
-			//TODO: Verify the file
-		
-			//The file has been verified. Create a new polycube with all of the specified cubes
-			let p = PolyCube.GenerateNewPolyCube(new THREE.Vector3(obj.position[0], obj.position[1], obj.position[2]), obj.name)
-		
-			that.Load_Polycube_Handler_List.push(new Cube_Add_Handler(obj.cubes, p))
-		
+		function GeneratePolycube(poly_data)
+		{
+			let p = PolyCube.GenerateNewPolyCube(new THREE.Vector3(poly_data.position[0], poly_data.position[1], poly_data.position[2]), poly_data.name)
+			
+			that.Load_Polycube_Handler_List.push(new Cube_Add_Handler(poly_data.cubes, p))
+			
 			that.visualizer.ProcessPolycube(p)
-		
+			
 			VisualizePolycube(p)
 
 			PolyCube.SwitchToNewActive(p)
 			
 			that.Switch_Context('poly')
 		}
-		reader.onerror = function(){
-			data = ""
-		}
-		reader.onabort = function(){
-			data = ""
-		}
-	
-		if(file)
+
+		function LoadDataFromClient(file)
 		{
-			reader.readAsText(file)
-		}
-		else
-		{
-			reader.abort()
+			//Instantiate a file reader that will read the file specified
+			var reader = new FileReader()
+
+			//var that = this
+			reader.onload = function(){
+				let data = reader.result
+
+				let obj = JSON.parse(data)
+			
+				//TODO: Verify the file
+			
+				//The file has been verified. Create a new polycube with all of the specified cubes
+				GeneratePolycube(obj)
+			}
+			reader.onerror = function(){
+				data = ""
+			}
+			reader.onabort = function(){
+				data = ""
+			}
+		
+			if(file)
+			{
+				reader.readAsText(file)
+			}
+			else
+			{
+				reader.abort()
+			}
 		}
 	
 	}

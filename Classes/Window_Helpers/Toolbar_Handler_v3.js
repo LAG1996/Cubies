@@ -4,8 +4,7 @@ function Toolbar_Handler(controller){
 
 
 	$("#add_cube_inactive").hide()
-
-	var prev_id = 0
+	
 	var current_cursor = "default"
 	var that = this
 
@@ -45,30 +44,7 @@ function Toolbar_Handler(controller){
 		$("#add_cube_inactive").show()
 	}
 
-	this.GeneratePreviewCard = function(polycube_name)
-	{
-		let card = $("#prev_card_template").clone()
 
-		card.attr("id", prev_id)
-
-		card.find("#name").text(polycube_name)
-
-		card.show()
-
-		//If we have three cards in the row, make a new row.
-		if(prev_id % 3 == 0)
-		{
-			let new_row = $("#prev_row_template").clone()
-			$("#newest_prev_row").attr("id", "")
-			new_row.attr("id", "newest_prev_row")
-			$("#poly_prev").append(new_row)
-		}
-
-		$("#newest_prev_row").append(card)
-
-		return {id: prev_id++, "card": card.find("#prev_container")}
-
-	}
 
 	//Add events
 	$("#submit_poly_coords").on("click", function(){HandleSubmitPolyCoords()})
@@ -79,6 +55,7 @@ function Toolbar_Handler(controller){
 	$("#delete_polycube").on("click", function(){HandleDeletePolycube()})
 
 	$("#add_cube_active").on("click", function(){HandleAddCube()})
+
 
 	function _Switch_To_World_Context()
 	{
