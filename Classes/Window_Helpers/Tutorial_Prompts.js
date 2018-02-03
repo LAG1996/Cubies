@@ -16,7 +16,7 @@ function Tutorial_Prompts()
 
 	//Create tutorial prompts
 	this.tutorial_prompts.push("Hello! Welcome to the Polycube Project! I'm going to step you through the basics of how this app works. It's really simple. You'll get it in no time.")
-	this.tutorial_prompts.push("The idea for this project is for users to cut and unfold polycubes.")
+	this.tutorial_prompts.push("With this application, you will be able to build, cut, and unfold polycubes.")
 
 
 	this.tutorial_prompts.push("Okay. Let's start. Go ahead and create a New Polycube by pressing the button labeled New Polycube.")
@@ -47,7 +47,7 @@ function Tutorial_Prompts()
 
 	this.tutorial_prompts.push("The polycube should look just the way it did before you did any unfolding. Let's tape the faces back together. Follow these steps: 1. Hover over a face and press Shift. It turns yellow. Keep Shift pressed and click on the face. 2. Then, while still holding Shift, press on another face that shares a cut (a red edge with it). 3. If you let go of Shift at any point, just start from step 1.")
 
-	this.tutorial_prompts.push("Now those two faces have been taped back together. Those are the basics for this project. You'll learn the rest by experimenting. Press Exit Tutorial to go back to the main application. Happy folding!")
+	this.tutorial_prompts.push("Now those two faces have been taped back together. That's basically how this all works! Press Exit Tutorial to go back to the main application. Happy folding!")
 
 	//Create tutorial parts
 	this.tutorial_parts.push("Hello")

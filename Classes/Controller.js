@@ -36,15 +36,6 @@ function Controller(){
 	this.second_highlight = new THREE.Color(0x0000FF)
 	this.cut_highlight = new THREE.Color(0x22EEDD)
 	this.hinge_highlight = new THREE.Color(0xAA380F)
-
-	//Create the main viewing scene that the user will see
-	this.scene_handler.view_scenes["main"] = new THREE.Scene()
-
-	//Add a grid to the default scene
-	var grid = GenerateGrid(100, 2, 0x000000)
-	grid.position.y = -1
-	grid.add(new THREE.AxisHelper(50))
-	this.scene_handler.view_scenes["main"].add(grid)
 	
 	//Some picking scenes that we're going to use
 	this.scene_handler.picking_scenes["poly_pick"] = new THREE.Scene()
@@ -411,7 +402,6 @@ function Controller(){
 						if(!that.face_graphs_out)
 						{
 							that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
-							//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(face.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
 						}
 					}
 					else
@@ -428,15 +418,15 @@ function Controller(){
 					{
 						var edge_2_data = edge_data.incidentEdge
 						
+						that.visualizer.SaveIncidentEdge(edge_2_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
+
 						that.visualizer.HighlightObject("edge", edge_2_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
-						//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(edge_2_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
 					}
 	
 					that.hovering_over_hinge = true
 					that.hover_over_hinge = edge_data
 					that.last_hover_over_hinge = edge_data
 					that.visualizer.HighlightObject("edge", edge_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
-					//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(edge_data.name), that.holding_down_shift ? that.mouse_over_hinge_highlight : that.prime_highlight, 'hinge', that.edge_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
 				}
 				
 				if(!that.add_cube_mode)
@@ -801,6 +791,8 @@ function Controller(){
 			{
 				that.Mouse_Hover_Funcs[index]()
 			}
+
+			that.scene_handler.VoxelPick(that.mouse_pos)
 	
 		}
 	

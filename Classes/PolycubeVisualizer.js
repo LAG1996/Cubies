@@ -13,13 +13,41 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 
 	this.Color2Poly = {}
 
-	//Highlights
-	this.special_mouse_highlight = new THREE.Color(0xFFFF00)
+	//HIGHLIGHTS
+	//The primary way we convey information to users in this app is through the highlights.
+
+	//Mouse over highlights
+	this.special_mouse_highlight = new THREE.Color(0xFFFF00) //When the user presses an action button (on default, this is 'Shift')
 	this.regular_mouse_highlight = new THREE.Color(0x00FF00)
-	this.prime_highlight = new THREE.Color(0xFF0000)
-	this.second_highlight = new THREE.Color(0x0000FF)
-	this.cut_highlight = new THREE.Color(0xFF0000)
-	this.hinge_highlight = new THREE.Color(0x22EEDD)
+
+	//Face highlight colors for when the user sees the two halves of a dual graph around a rotation hinge 
+	this.prime_face_highlight = new THREE.Color(0xFF0000)
+	this.second_face_highlight = new THREE.Color(0x0000FF)
+
+	this.cut_highlight = new THREE.Color(0xFF0000) //Color for cut highlights
+	this.hinge_highlight = new THREE.Color(0x22EEDD) //Color for hinge highlights
+
+	//A cache for the actual 3-d meshes that will highlight parts of polycubes
+	//We cache the meshes to save on rendering costs.
+	//The cache is mainly manipulated in the `HashEdge` and `HashFace` methods, which
+	//as the name implies, hash edges and faces into the cache for linear insertion
+	//and fast retrieval.
+	//The hashing scheme is as follows:
+	/*
+		Faces and edges each have 4 keys that uniquely identify them.
+
+		-Key 1 is the id of the polycube that they belong to.
+		-Key 2 is the type of part. Edges are denoted with a `0` and faces are denoted with a `1`
+		-Key 3 is the color of the object as it appears in its respective picking scene. 
+		Edges have unique colors in the `hinge_polycubes` scene, while faces have unique colors in the `face_polycubes` scene.
+		-Key 4 is the 'action' the user makes upon the part. For example, users can cut edges, or simply hover over them.
+	*/
+	//Because 4 keys are being used, the cache is really a 4-dimensional array.
+
+	var part_highlights_cache = []
+	var hasIncidentEdge = false
+	var incidentEdgeHighlightMesh
+
 
 	//An object for a pair of arrows
 	this.arrow_pair = new THREE.Group()
@@ -48,8 +76,6 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 	this.pick_arrow_pair.children[0].remove(this.pick_arrow_pair.children[0].children[0])
 	this.pick_arrow_pair.children[1].remove(this.pick_arrow_pair.children[1].children[0])
 	this.pick_arrow_pair.visible = true
-
-	var part_highlights_cache = []
 
 	var that = this
 
@@ -272,15 +298,45 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 
 	this.UnHighlightObject = function(polycube_id, object_type, object_name, action)
 	{
-		var highlight_name = object_name + action
-		var highlight_hash = HashObject(polycube_id, object_type, object_name, action)
+		let highlight_name = object_name + action
+		let highlight_hash = HashObject(polycube_id, object_type, object_name, action)
 
-		var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+		let highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
 
 		if(ObjectExists(highlight))
 		{
 			highlight.visible = false
+
+			if(ObjectExists(incidentEdgeHighlightMesh))
+				incidentEdgeHighlightMesh.visible = false
+
+			hasIncidentEdge = false
 		}
+	}
+
+	this.SaveIncidentEdge = function(incidentEdgeName, polycube_id, action)
+	{
+		//If this is the first incident edge we're saving, we don't have an incident edge highlight mesh to use.
+		//Render a new highlight mesh for this edge.
+
+		let edge = that.rotate_polycubes[polycube_id].getObjectByName(incidentEdgeName)
+		if(!ObjectExists(incidentEdgeHighlightMesh))
+		{
+			incidentEdgeHighlightMesh = Cube_Template.highlightEdge.clone()
+			incidentEdgeHighlightMesh.material = new THREE.MeshBasicMaterial()
+
+			RenderHighlight(edge, action, incidentEdgeHighlightMesh)
+			that.rotate_polycubes[polycube_id].children.unshift(incidentEdgeHighlightMesh)
+		}
+
+		incidentEdgeHighlightMesh.material.color.copy(action == "mouse_over_1" ? that.regular_mouse_highlight : that.special_mouse_highlight)
+
+		incidentEdgeHighlightMesh.position.copy(edge.getWorldPosition())
+		incidentEdgeHighlightMesh.rotation.copy(edge.getWorldRotation())
+
+		incidentEdgeHighlightMesh.updateMatrix()
+
+		hasIncidentEdge = true
 	}
 
 	function HashObject(polycube_id, object_type, object_name, action)
@@ -382,38 +438,17 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 
 		var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
 		
-		if(ObjectExists(highlight))
-		{
-			ShowHighlight(name, polycube_id, highlight, action)
-		}
-		else
+		if(!ObjectExists(highlight))
 		{
 			highlight = Cube_Template.highlightEdge.clone()
 			highlight.material = new THREE.MeshBasicMaterial()
 
-			var color = null
+			RenderHighlight(that.rotate_polycubes[polycube_id].getObjectByName(name), action, highlight, highlight_hash)
 
-			if(action == "cut")
-			{
-				color = that.cut_highlight.clone()
-			}
-			else if(action == "hinge")
-			{
-				color = that.hinge_highlight.clone()
-			}
-			else if(action == "mouse_over_1")
-			{
-				color = that.regular_mouse_highlight.clone()
-				highlight.scale.set(1.5, 1, 1.5)
-			}
-			else if(action == "mouse_over_2")
-			{
-				color = that.special_mouse_highlight.clone()
-				highlight.scale.set(1.5, 1, 1.5)
-			}
-
-			CreateHighlight(name, polycube_id, color, highlight, highlight_hash)
+			that.rotate_polycubes[polycube_id].children.unshift(highlight)
 		}
+
+		ShowHighlight(name, polycube_id, highlight, action)
 	}
 
 	function HighlightFace(name, polycube_id, action)
@@ -430,29 +465,54 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 			highlight = Cube_Template.highlightFace.clone()
 			highlight.material = new THREE.MeshBasicMaterial()
 
-			var color = null
-			if(action == "mouse_over_1")
-			{
-				color = that.regular_mouse_highlight.clone()
-			}
-			else if(action == "mouse_over_2")
-			{
-				color = that.special_mouse_highlight.clone()
-			}
-			else if(action == "dual_half_1")
-			{
-				color = that.prime_highlight.clone()
-			}
-			else if(action == "dual_half_2")
-			{
-				color = that.second_highlight.clone()
-			}
+			RenderHighlight(that.rotate_polycubes[polycube_id].getObjectByName(name), action, highlight, highlight_hash)
 
-			CreateHighlight(name, polycube_id, color, highlight, highlight_hash)
+			that.rotate_polycubes[polycube_id].children.unshift(highlight)
 		}
 	}
 
-	function CreateHighlight(name, polycube_id, color, highlight, highlight_hash)
+	function RenderHighlight(obj, action, highlightMesh, highlight_hash = null)
+	{
+		if(action == "cut")
+		{
+			color = that.cut_highlight.clone()
+		}
+		else if(action == "hinge")
+		{
+			color = that.hinge_highlight.clone()
+		}
+		else if(action == "mouse_over_1")
+		{
+			color = that.regular_mouse_highlight.clone()
+
+		}
+		else if(action == "mouse_over_2")
+		{
+			color = that.special_mouse_highlight.clone()
+		}
+		else if(action == "dual_half_1")
+		{
+			color = that.prime_face_highlight.clone()
+		}
+		else if(action == "dual_half_2")
+		{
+			color = that.second_face_highlight.clone()
+		}
+
+		highlightMesh.material.color.copy(color)
+		highlightMesh.material.transparent = true
+		highlightMesh.material.opacity = .5
+
+		highlightMesh.position.copy(obj.getWorldPosition())
+		highlightMesh.rotation.copy(obj.getWorldRotation())
+
+		highlightMesh.updateMatrix()
+
+		if(highlight_hash)
+			part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = highlightMesh
+	}
+	/*
+	function RenderHighlight(name, polycube_id, color, highlight, highlight_hash)
 	{
 		highlight.material.color.copy(color)
 		highlight.material.transparent = true
@@ -466,13 +526,11 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 
 		p_cube.children.unshift(highlight)
 
-		highlight.visible = true
-
 		highlight.updateMatrix()
 
 		part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]] = highlight
 	}
-
+*/
 	function ShowHighlight(name, polycube_id, highlight, action)
 	{
 		if(action == "mouse_over_1" || action == "mouse_over_2")
@@ -483,7 +541,10 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 			highlight.updateMatrix()
 		}
 
+
 		highlight.visible = true
+		if(hasIncidentEdge)
+			incidentEdgeHighlightMesh.visible = true
 	}
 
 	function ProcessCubeData(id, polycube, cube)
