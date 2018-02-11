@@ -7,7 +7,9 @@ function Controller(){
 		this.template_loader = new PolyCubePreview(this)
 
 	//Some helper variables
+	this.CLOCK = new THREE.Clock()
 	this.Load_Polycube_Handler_List = []
+	this.HingeAnimationQueue = []
 	this.mouse_pos = new THREE.Vector2()
 	this.old_mouse_pos = new THREE.Vector2()
 	this.mouse_delta = 0
@@ -441,267 +443,34 @@ function Controller(){
 				{
 					if(that.arrows_out)
 					{
-						var color = that.scene_handler.Pick("arrow_pick", that.mouse_pos)	
-						
-						if(color == that.visualizer.white_arrow_pick_color)
+						HandleArrowState()
+					}
+					else if(that.hovering_over_hinge && !that.add_cube_mode)
+					{
+						if(that.holding_down_shift)
 						{
-							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
-								return
-							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow)
-								that.toolbar_handler.HandleNextTutorialPart()
-
-							that.visualizer.RotateSubGraph(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, DEG2RAD(90), that)
-
-							that.cuts_need_update = true
-							that.hinges_need_update = true
-						}
-						else if(color == that.visualizer.black_arrow_pick_color)
-						{
-							if(that.toolbar_handler.tutorial_mode)
-							{
-								if((that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow) || that.toolbar_handler.tutorial_data.face_graph_clicked_1 != that.toolbar_handler.tutorial_data.face_graph_clicked_2)
-									return
-								else if(that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
-									that.toolbar_handler.HandleNextTutorialPart()
-							} 
-
-
-							that.visualizer.RotateSubGraph(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, DEG2RAD(-90), that)
-							that.cuts_need_update = true
-							that.hinges_need_update = true
+							HandleHinge()
 						}
 						else
 						{
-							if(that.toolbar_handler.tutorial_mode)
-								return
-
-							if(!that.face_graphs_out)
-							{
-								that.Switch_Context('world')
-							}
-						}
-
-						var faces = PolyCube.Active_Polycube.Get_Faces()
-
-						for(var fName in faces)
-						{
-							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", fName, "dual_half_1")
-							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", fName, "dual_half_2")
-
-						}
-
-						that.face_graphs_out = false
-						that.visualizer.arrow_pair.visible = false
-						that.arrows_out = false
-						//that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, .5)
-
-						return
-					}
-
-					if(that.hovering_over_hinge)
-					{
-						if(that.add_cube_mode)
-						{}
-						else if(!that.holding_down_shift)
-						{
-							if(that.toolbar_handler.tutorial_mode)
-							{
-								if(that.toolbar_handler.current_tutorial_part < that.toolbar_handler.tutorial_data.add_cuts_index || that.toolbar_handler.current_tutorial_part >= that.toolbar_handler.tutorial_data.unfold_index)
-									return
-								else if(that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.add_cuts_index)
-									that.toolbar_handler.HandleNextTutorialPart()
-							}
-
-
-							if(!PolyCube.Active_Polycube.Is_Cut(that.hover_over_hinge.name))
-								PolyCube.Active_Polycube.Cut_Edge(that.hover_over_hinge.name)
-
-							that.cuts_need_update = true
-							that.hinges_need_update = true
-						}
-						else if(that.holding_down_shift)
-						{
-							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", that.last_hover_over_face.name, "mouse_over_1")
-							that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", that.last_hover_over_face.name, "mouse_over_2")
-
-							if(that.toolbar_handler.tutorial_mode)
-							{
-								if(that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.unfold_index + 1)
-								{
-									that.toolbar_handler.HandleNextTutorialPart()
-								}
-								else if(that.toolbar_handler.current_tutorial_part != that.toolbar_handler.tutorial_data.click_black_arrow)
-								{
-									return
-								}
-							}
-
-							var data = PolyCube.Active_Polycube.Get_Face_Graphs(that.hover_over_hinge.name)
-		
-							var subgraphs = data['subgraphs']
-		
-							if(!ObjectExists(subgraphs))
-							{
-								return
-							}
-		
-							that.face_graphs_out = true
-		
-							that.subgraphs[0] = subgraphs[0]
-							that.subgraphs[1] = subgraphs[1]
-							that.hinge_to_rotate_around = that.hover_over_hinge
-							that.face2graph_map = data['face2graph_map']
-
-							var obj_1 = that.scene_handler.view_scenes["main"].getObjectByName(subgraphs[0][0].name)
-							var obj_2 = that.scene_handler.view_scenes["main"].getObjectByName(subgraphs[1][0].name)
-		
-							for(var tindex in subgraphs[0])
-							{
-								var face = subgraphs[0][tindex]
-								
-								that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, "dual_half_1")
-								//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(face.name), that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
-							}
-		
-							for(var tindex in subgraphs[1])
-							{
-								var face = subgraphs[1][tindex]
-								that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, "dual_half_2")
-								//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(face.name), that.second_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
-							}
-							
-							//that.visualizer.FadeFaces(PolyCube.Active_Polycube.id, 0)
+							HandleCut()
 						}
 					}
 					else if(that.hovering_over_face)
 					{
 						if(that.add_cube_mode)
 						{
-							that.add_cube_mode = false
-
-							var face_name = that.hover_over_face.name
-
-							var face_dir = Cube.FaceNameToDirection(face_name)
-
-							var vec = PolyCube.words2directions[face_dir]
-							var real_face = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
-							var pos = new THREE.Vector3().addVectors(real_face.position, vec)
-
-							pos.multiplyScalar(.5)
-
-							if(PolyCube.Active_Polycube.Add_Cube(pos))
-							{
-								if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.add_cube_index)
-								{
-									that.toolbar_handler.HandleNextTutorialPart()
-								}
-
-								that.visualizer.ProcessPolycubeAfterNewCube(PolyCube.Active_Polycube, PolyCube.Active_Polycube.GetCubeAtPosition(pos))
-							}
-
-							that.toolbar_handler.Switch_Cursor('pointer')
+							HandleAddCube()
 
 						}
 						else if(that.face_graphs_out)
 						{
-							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part < that.toolbar_handler.tutorial_data.click_black_arrow)
-								that.toolbar_handler.HandleNextTutorialPart()
-							//var polycube = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id]
-
-							var face_name = that.hover_over_face.name
-
-							var subgraph_index = that.face2graph_map[face_name]
-
-							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow)
-								that.toolbar_handler.tutorial_data.face_graph_clicked_1 = subgraph_index
-							if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
-								that.toolbar_handler.tutorial_data.face_graph_clicked_2 = subgraph_index
-
-
-							that.active_subgraph = that.subgraphs[subgraph_index]
-
-							that.visualizer.arrow_pair.visible = true
-
-							var face_data = PolyCube.Active_Polycube.Get_Face_Data(face_name)
-
-							var face_obj = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
-
-							that.visualizer.arrow_pair.position.copy(face_obj.getWorldPosition())
-							that.visualizer.pick_arrow_pair.position.copy(face_obj.getWorldPosition())
-
-							var normal = face_data.normal.clone()
-
-							if(normal.equals(new THREE.Vector3(-1, 0, 0)))
-							{
-								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
-								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
-							}
-							else if(normal.equals(new THREE.Vector3(0, 1, 0)))
-							{
-								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
-								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
-							}
-							else if(normal.equals(new THREE.Vector3(0, -1, 0)))
-							{
-								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
-								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
-							}
-							else if(normal.equals(new THREE.Vector3(0, 0, 1)))
-							{
-								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
-								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
-							}
-							else if(normal.equals(new THREE.Vector3(0, 0, -1)))
-							{
-								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
-								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
-							}
-							else
-							{
-								that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(1, 0, 0), DEG2RAD(90))
-								that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(1, 0, 0), DEG2RAD(90))
-							}
-
-							that.arrows_out = true
-
+							ShowArrows()
 						}
 						else if(that.holding_down_shift)
 						{
 							//The user is going to tape two faces together
-							
-							//Save face 1 if there is no face_1
-								
-							if(!ObjectExists(that.tape.face_1))
-								that.tape.face_1 = that.hover_over_face
-							else
-							{
-								//Save face 2
-								that.tape.face_2 = that.hover_over_face
-
-								if(that.tape.face_1.name != that.tape.face_2.name)
-								{
-									var packet = PolyCube.Active_Polycube.Have_Common_Edge(that.tape.face_1.name, that.tape.face_2.name)
-									if(packet.common && PolyCube.Active_Polycube.Is_Cut(packet.edge_1.name) && PolyCube.Active_Polycube.Is_Cut(packet.edge_2.name))
-									{
-
-										that.tape.face_1.neighbors[that.tape.face_2.name] = that.tape.face_2
-										that.tape.face_2.neighbors[that.tape.face_1.name] = that.tape.face_1
-
-										PolyCube.Active_Polycube.Recalculate_Edge_Neighbors(that.tape.face_1.name, that.tape.face_2.name, packet.edge_1.name, packet.edge_2.name)
-										
-										PolyCube.Active_Polycube.Cut_Edge(packet.edge_1)
-
-										that.cuts_need_update = true
-										that.hinges_need_update = true
-
-										if(that.toolbar_handler.tutorial_mode)
-											that.toolbar_handler.HandleNextTutorialPart()
-									}
-								}
-
-								that.tape.face_1 = null
-								that.tape.face_2 = null
-							}
+							HandleTape()
 						}	
 					}
 					else
@@ -740,7 +509,293 @@ function Controller(){
 			that.Mouse_Down_Funcs = [function(){				
 			}]
 		}
-	
+		
+		function ShowArrows(){
+
+			if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part < that.toolbar_handler.tutorial_data.click_black_arrow)
+			that.toolbar_handler.HandleNextTutorialPart()
+			//var polycube = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id]
+
+			var face_name = that.hover_over_face.name
+
+			var subgraph_index = that.face2graph_map[face_name]
+
+			if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow)
+				that.toolbar_handler.tutorial_data.face_graph_clicked_1 = subgraph_index
+			if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
+				that.toolbar_handler.tutorial_data.face_graph_clicked_2 = subgraph_index
+
+
+			that.active_subgraph = that.subgraphs[subgraph_index]
+
+			that.visualizer.arrow_pair.visible = true
+
+			var face_data = PolyCube.Active_Polycube.Get_Face_Data(face_name)
+
+			var face_obj = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
+
+			that.visualizer.arrow_pair.position.copy(face_obj.getWorldPosition())
+			that.visualizer.pick_arrow_pair.position.copy(face_obj.getWorldPosition())
+
+			var normal = face_data.normal.clone()
+
+			if(normal.equals(new THREE.Vector3(-1, 0, 0)))
+			{
+				that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
+				that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(180))
+			}
+			else if(normal.equals(new THREE.Vector3(0, 1, 0)))
+			{
+				that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
+				that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(90))
+			}
+			else if(normal.equals(new THREE.Vector3(0, -1, 0)))
+			{
+				that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
+				that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 0, 1), DEG2RAD(-90))
+			}
+			else if(normal.equals(new THREE.Vector3(0, 0, 1)))
+			{
+				that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
+				that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(-90))
+			}
+			else if(normal.equals(new THREE.Vector3(0, 0, -1)))
+			{
+				that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
+				that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), DEG2RAD(90))
+			}
+			else
+			{
+				that.visualizer.pick_arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(1, 0, 0), DEG2RAD(90))
+				that.visualizer.arrow_pair.setRotationFromAxisAngle(new THREE.Vector3(1, 0, 0), DEG2RAD(90))
+			}
+
+			that.arrows_out = true
+		}
+
+		function HandleArrowState(){
+
+			let color = that.scene_handler.Pick("arrow_pick", that.mouse_pos)	
+						
+			if(color == that.visualizer.white_arrow_pick_color)
+			{
+				if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
+					return
+				if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow)
+					that.toolbar_handler.HandleNextTutorialPart()
+
+				
+				let hinge_data = that.last_hover_over_poly.Get_Edge_Data(that.hinge_to_rotate_around.name)
+				let face_data = that.last_hover_over_poly.Get_Face_Data(that.active_subgraph[0].name)
+
+				let cross = new THREE.Vector3().crossVectors(face_data.normal, hinge_data.axis).normalize()
+
+				let dir_from_hinge = new THREE.Vector3().copy(face_data.position)
+				dir_from_hinge.sub(new THREE.Vector3().copy(hinge_data.position))
+				dir_from_hinge.normalize()
+
+				let rads = cross.equals(dir_from_hinge) ? DEG2RAD(90) : -1*DEG2RAD(90)
+
+				for(var f in that.active_subgraph)
+				{
+					that.last_hover_over_poly.Rotate_Data(that.hinge_to_rotate_around.name, that.active_subgraph[f].name, rads)
+				}
+
+				that.HingeAnimationQueue.push(new HingeAnimationHandler(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, that.visualizer, that, rads, .5))
+
+				that.cuts_need_update = true
+				that.hinges_need_update = true
+			}
+			else if(color == that.visualizer.black_arrow_pick_color)
+			{
+				if(that.toolbar_handler.tutorial_mode)
+				{
+					if((that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow) || that.toolbar_handler.tutorial_data.face_graph_clicked_1 != that.toolbar_handler.tutorial_data.face_graph_clicked_2)
+						return
+					else if(that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_black_arrow)
+						that.toolbar_handler.HandleNextTutorialPart()
+				} 
+
+				let hinge_data = that.last_hover_over_poly.Get_Edge_Data(that.hinge_to_rotate_around.name)
+				let face_data = that.last_hover_over_poly.Get_Face_Data(that.active_subgraph[0].name)
+
+				let cross = new THREE.Vector3().crossVectors(face_data.normal, hinge_data.axis).normalize()
+
+				let dir_from_hinge = new THREE.Vector3().copy(face_data.position)
+				dir_from_hinge.sub(new THREE.Vector3().copy(hinge_data.position))
+				dir_from_hinge.normalize()
+
+				let rads = cross.equals(dir_from_hinge) ? DEG2RAD(-90) : -1*DEG2RAD(-90)
+
+				for(var f in that.active_subgraph)
+				{
+					that.last_hover_over_poly.Rotate_Data(that.hinge_to_rotate_around.name, that.active_subgraph[f].name, DEG2RAD(-90))
+				}
+
+				that.HingeAnimationQueue.push(new HingeAnimationHandler(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, that.visualizer, that, DEG2RAD(-90), .5))
+				
+				that.cuts_need_update = true
+				that.hinges_need_update = true
+			}
+			else
+			{
+				if(that.toolbar_handler.tutorial_mode)
+					return
+
+				if(!that.face_graphs_out)
+				{
+					that.Switch_Context('world')
+				}
+			}
+
+			var faces = PolyCube.Active_Polycube.Get_Faces()
+
+			for(var fName in faces)
+			{
+				that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", fName, "dual_half_1")
+				that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", fName, "dual_half_2")
+
+			}
+
+			that.face_graphs_out = false
+			that.visualizer.arrow_pair.visible = false
+			that.arrows_out = false
+
+		}
+
+		function HandleCut(){
+
+			if(that.toolbar_handler.tutorial_mode)
+			{
+				if(that.toolbar_handler.current_tutorial_part < that.toolbar_handler.tutorial_data.add_cuts_index || that.toolbar_handler.current_tutorial_part >= that.toolbar_handler.tutorial_data.unfold_index)
+					return
+				else if(that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.add_cuts_index)
+					that.toolbar_handler.HandleNextTutorialPart()
+			}
+
+
+			if(!PolyCube.Active_Polycube.Is_Cut(that.hover_over_hinge.name))
+				PolyCube.Active_Polycube.Cut_Edge(that.hover_over_hinge.name)
+
+			that.cuts_need_update = true
+			that.hinges_need_update = true
+
+		}
+
+		function HandleAddCube(){
+			that.add_cube_mode = false
+
+			var face_name = that.hover_over_face.name
+
+			var face_dir = Cube.FaceNameToDirection(face_name)
+
+			var vec = PolyCube.words2directions[face_dir]
+			var real_face = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
+			var pos = new THREE.Vector3().addVectors(real_face.position, vec)
+
+			pos.multiplyScalar(.5)
+
+			if(PolyCube.Active_Polycube.Add_Cube(pos))
+			{
+				if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.add_cube_index)
+				{
+					that.toolbar_handler.HandleNextTutorialPart()
+				}
+
+				that.visualizer.ProcessPolycubeAfterNewCube(PolyCube.Active_Polycube, PolyCube.Active_Polycube.GetCubeAtPosition(pos))
+			}
+
+			that.toolbar_handler.Switch_Cursor('pointer')
+		}
+
+		function HandleTape(){
+			//Save face 1 if there is no face_1
+								
+			if(!ObjectExists(that.tape.face_1))
+				that.tape.face_1 = that.hover_over_face
+			else
+			{
+				//Save face 2
+				that.tape.face_2 = that.hover_over_face
+
+				if(that.tape.face_1.name != that.tape.face_2.name)
+				{
+					var packet = PolyCube.Active_Polycube.Have_Common_Edge(that.tape.face_1.name, that.tape.face_2.name)
+					if(packet.common && PolyCube.Active_Polycube.Is_Cut(packet.edge_1.name) && PolyCube.Active_Polycube.Is_Cut(packet.edge_2.name))
+					{
+
+						that.tape.face_1.neighbors[that.tape.face_2.name] = that.tape.face_2
+						that.tape.face_2.neighbors[that.tape.face_1.name] = that.tape.face_1
+
+						PolyCube.Active_Polycube.Recalculate_Edge_Neighbors(that.tape.face_1.name, that.tape.face_2.name, packet.edge_1.name, packet.edge_2.name)
+						
+						PolyCube.Active_Polycube.Cut_Edge(packet.edge_1)
+
+						that.cuts_need_update = true
+						that.hinges_need_update = true
+
+						if(that.toolbar_handler.tutorial_mode)
+							that.toolbar_handler.HandleNextTutorialPart()
+					}
+				}
+
+				that.tape.face_1 = null
+				that.tape.face_2 = null
+			}
+		}
+
+		function HandleHinge(){
+
+			that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", that.last_hover_over_face.name, "mouse_over_1")
+			that.visualizer.UnHighlightObject(PolyCube.Active_Polycube.id, "face", that.last_hover_over_face.name, "mouse_over_2")
+
+			if(that.toolbar_handler.tutorial_mode)
+			{
+				if(that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.unfold_index + 1)
+				{
+					that.toolbar_handler.HandleNextTutorialPart()
+				}
+				else if(that.toolbar_handler.current_tutorial_part != that.toolbar_handler.tutorial_data.click_black_arrow)
+				{
+					return
+				}
+			}
+
+			var data = PolyCube.Active_Polycube.Get_Face_Graphs(that.hover_over_hinge.name)
+		
+			var subgraphs = data['subgraphs']
+		
+			if(!ObjectExists(subgraphs))
+			{
+				return
+			}
+		
+			that.face_graphs_out = true
+		
+			that.subgraphs[0] = subgraphs[0]
+			that.subgraphs[1] = subgraphs[1]
+			that.hinge_to_rotate_around = that.hover_over_hinge
+			that.face2graph_map = data['face2graph_map']
+
+			var obj_1 = that.scene_handler.view_scenes["main"].getObjectByName(subgraphs[0][0].name)
+			var obj_2 = that.scene_handler.view_scenes["main"].getObjectByName(subgraphs[1][0].name)
+		
+			for(var tindex in subgraphs[0])
+			{
+				var face = subgraphs[0][tindex]
+				
+				that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, "dual_half_1")
+				//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(face.name), that.prime_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
+			}
+		
+			for(var tindex in subgraphs[1])
+			{
+				var face = subgraphs[1][tindex]
+				that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, "dual_half_2")
+				//HighlightParts(that.scene_handler.view_scenes["main"].getObjectByName(face.name), that.second_highlight, 'face', that.face_junk[PolyCube.Active_Polycube.id], that.scene_handler.view_scenes["main"])
+			}
+		}
+
 		//Creating mouse functions
 		function onMouseMove(event){
 			
@@ -938,6 +993,8 @@ function Controller(){
 		//The update function
 		this.update = function(){
 	
+			let deltaTime = that.CLOCK.getDelta()
+
 			that.scene_handler.Draw("main")
 	
 			//Load up cubes from any opened files
@@ -953,6 +1010,19 @@ function Controller(){
 	
 					if(ObjectExists(that.Load_Polycube_Handler_List[c].newest_cube))
 						that.visualizer.ProcessPolycubeAfterNewCube(that.Load_Polycube_Handler_List[c].my_polycube, that.Load_Polycube_Handler_List[c].newest_cube)
+				}
+			}
+
+			//Continue any animations that are in queue
+			for(var h in that.HingeAnimationQueue)
+			{
+				if(that.HingeAnimationQueue[h].finished)
+				{
+					delete that.HingeAnimationQueue[h]
+				}
+				else
+				{
+					that.HingeAnimationQueue[h].RotateFaces(deltaTime)
 				}
 			}
 			

@@ -141,39 +141,13 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 		delete this.Color2Poly[polycube.id]
 	}
 
-	this.RotateSubGraph = function(face_subgraph, edge_object, polycube, rads, controller)
+	this.RotateSubGraph = function(face_subgraph, hinge_object, polycube, rads, controller)
 	{
-		var edge_data = polycube.Get_Edge_Data(edge_object.name)
-	
 		//Get the axis we are going to rotate around
-		//var axis = new THREE.Vector3().copy(MakePositiveVector(edge_object.up).normalize())
-		var axis = edge_data.axis
-		var edge_pos = new THREE.Vector3().copy(edge_data.position)
+		let edge_pos = new THREE.Vector3().copy(that.rotate_polycubes[polycube.id].getObjectByName(hinge_object.name).getWorldPosition())
+		let axis = polycube.Get_Edge_Data(hinge_object.name).axis
 
-		axis.y = Math.round(axis.y)
-		axis.z = Math.round(axis.z)
-		axis.x = Math.round(axis.x)
-
-		//Calculate the angle we want to rotate
-		var f = this.rotate_polycubes[polycube.id].getObjectByName(face_subgraph[0].name)
-
-		var face_data  = polycube.Get_Face_Data(f.name)
-		var dir_from_edge = new THREE.Vector3().copy(face_data.position)
-		dir_from_edge.sub(edge_pos)
-
-		dir_from_edge.x = Math.round(dir_from_edge.x)
-		dir_from_edge.y = Math.round(dir_from_edge.y)
-		dir_from_edge.z = Math.round(dir_from_edge.z)
-
-		var cross = new THREE.Vector3().crossVectors(face_data.normal, axis)
-
-		cross.x = Math.round(cross.x)
-		cross.y = Math.round(cross.y)
-		cross.z = Math.round(cross.z)
-
-		rads = cross.equals(dir_from_edge) ? rads : -1*rads
-
-		var q = new THREE.Quaternion(); // create once and reuse
+		let q = new THREE.Quaternion(); // create once and reuse
 
 		q.setFromAxisAngle( axis, rads ); // axis must be normalized, angle in radians
 
@@ -184,38 +158,36 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 			var face_3 = this.rotate_hinge_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
 			var face_4 = this.rotate_pick_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
 
-			face_data = polycube.Get_Face_Data(face_1.name)
-			var rot_pos = new THREE.Vector3().copy(face_data.position)
-			rot_pos.sub(edge_pos)
-			rot_pos.applyAxisAngle(axis, rads)
-			rot_pos.add(edge_pos)
-			//rot_pos.add(polycube.position)
+			var dir_from_hinge = new THREE.Vector3().subVectors(face_1.getWorldPosition(), edge_pos)
 
-			face_1.position.copy(rot_pos)
-			face_2.position.copy(rot_pos)
-			face_3.position.copy(rot_pos)
-			face_4.position.copy(rot_pos)
+			dir_from_hinge.applyQuaternion(q)
+			dir_from_hinge.add(edge_pos)
+
+			face_1.position.copy(dir_from_hinge)
+			face_2.position.copy(dir_from_hinge)
+			face_3.position.copy(dir_from_hinge)
+			face_4.position.copy(dir_from_hinge)
 
 			face_1.quaternion.premultiply( q )
 			face_2.quaternion.premultiply( q )
 			face_3.quaternion.premultiply( q )
 			face_4.quaternion.premultiply( q )
 
-			face_1.position.x = Math.round(face_1.position.x)
-			face_1.position.y = Math.round(face_1.position.y)
-			face_1.position.z = Math.round(face_1.position.z)
+			//face_1.position.x = Math.round(face_1.position.x)
+			//face_1.position.y = Math.round(face_1.position.y)
+			//face_1.position.z = Math.round(face_1.position.z)
 
-			face_2.position.x = Math.round(face_2.position.x)
-			face_2.position.y = Math.round(face_2.position.y)
-			face_2.position.z = Math.round(face_2.position.z)
+			//face_2.position.x = Math.round(face_2.position.x)
+			//face_2.position.y = Math.round(face_2.position.y)
+			//face_2.position.z = Math.round(face_2.position.z)
 
-			face_3.position.x = Math.round(face_3.position.x)
-			face_3.position.y = Math.round(face_3.position.y)
-			face_3.position.z = Math.round(face_3.position.z)
+			//face_3.position.x = Math.round(face_3.position.x)
+			//face_3.position.y = Math.round(face_3.position.y)
+			//face_3.position.z = Math.round(face_3.position.z)
 
-			face_4.position.x = Math.round(face_4.position.x)
-			face_4.position.y = Math.round(face_4.position.y)
-			face_4.position.z = Math.round(face_4.position.z)
+			//face_4.position.x = Math.round(face_4.position.x)
+			//face_4.position.y = Math.round(face_4.position.y)
+			//face_4.position.z = Math.round(face_4.position.z)
 
 			face_1.updateMatrix()
 			face_2.updateMatrix()
@@ -272,7 +244,99 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 				}
 			}
 
-			controller.Alert('ROTATE_FACE_ROUND_EDGE', edge_object.name, face_1.name, rads, axis)
+			//controller.Alert('ROTATE_FACE_ROUND_EDGE', edge_object.name, face_1.name, rads, axis)
+		}
+
+	}
+
+	this.CorrectPosition = function(face_subgraph, polycube)
+	{
+		for(var f in face_subgraph)
+		{
+			let face_data = polycube.Get_Face_Data(face_subgraph[f].name)
+
+			let face_1 = this.rotate_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			let face_2 = this.rotate_face_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			let face_3 = this.rotate_hinge_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			let face_4 = this.rotate_pick_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+
+			face_1.position.copy(face_data.position)
+			face_2.position.copy(face_data.position)
+			face_3.position.copy(face_data.position)
+			face_4.position.copy(face_data.position)
+
+			face_1.rotation.x = Math.round(face_1.rotation.x)
+			face_1.rotation.y = Math.round(face_1.rotation.y)
+			face_1.rotation.z = Math.round(face_1.rotation.z)
+
+			face_2.rotation.x = Math.round(face_2.rotation.x)
+			face_2.rotation.y = Math.round(face_2.rotation.y)
+			face_2.rotation.z = Math.round(face_2.rotation.z)
+
+			face_3.rotation.x = Math.round(face_3.rotation.x)
+			face_3.rotation.y = Math.round(face_3.rotation.y)
+			face_3.rotation.z = Math.round(face_3.rotation.z)
+
+			face_4.rotation.x = Math.round(face_4.rotation.x)
+			face_4.rotation.y = Math.round(face_4.rotation.y)
+			face_4.rotation.z = Math.round(face_4.rotation.z)
+
+			face_1.updateMatrix()
+			face_2.updateMatrix()
+			face_3.updateMatrix()
+			face_4.updateMatrix()
+
+			for(var e in face_1.children)
+			{
+				var part = face_1.children[e]
+
+				if(part.name == "body")
+				{
+					var highlight_hash = HashObject(polycube.id, "face", face_1.name, "dual_half_1")
+					var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+					if(ObjectExists(highlight))
+					{
+						highlight.position.copy(face_1.getWorldPosition())
+						highlight.rotation.copy(face_1.getWorldRotation())
+						highlight.updateMatrix()
+					}
+
+					var highlight_hash = HashObject(polycube.id, "face", face_1.name, "dual_half_2")
+					var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+					if(ObjectExists(highlight))
+					{
+						highlight.position.copy(face_1.getWorldPosition())
+						highlight.rotation.copy(face_1.getWorldRotation())
+						highlight.updateMatrix()
+					}
+				}
+				else
+				{
+					var highlight_hash = HashObject(polycube.id, "edge", part.name, "cut")
+					var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+					if(ObjectExists(highlight))
+					{
+						highlight.position.copy(part.getWorldPosition())
+						highlight.rotation.copy(part.getWorldRotation())
+						highlight.updateMatrix()
+					}
+
+					var highlight_hash = HashObject(polycube.id, "edge", part.name, "hinge")
+					var highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+					if(ObjectExists(highlight))
+					{
+						highlight.position.copy(part.getWorldPosition())
+						highlight.rotation.copy(part.getWorldRotation())
+						highlight.updateMatrix()
+					}
+				}
+			}
+
+			//controller.Alert('ROTATE_FACE_ROUND_EDGE', edge_object.name, face_1.name, rads, axis)
 		}
 
 	}
@@ -337,6 +401,11 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 		incidentEdgeHighlightMesh.updateMatrix()
 
 		hasIncidentEdge = true
+	}
+
+	this.DidClickArrow = function(color)
+	{
+		return color == that.white_arrow_pick_color || color == that.black_arrow_pick_color
 	}
 
 	function HashObject(polycube_id, object_type, object_name, action)

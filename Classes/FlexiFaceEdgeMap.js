@@ -103,69 +103,71 @@ function FlexiFaceEdgeMap()
 		return loc.x.toString() + "," + loc.y.toString() + "," + loc.z.toString()
 	}
 	
-	this.RotateFaceAroundEdge = function(edge_name, face_name, rads, axis)
+	this.RotateFaceAroundEdge = function(edge_name, face_name, rads)
 	{
-		var obj = Face2FlexiData_Map[face_name]
-		var pEObj = Edge2FlexiData_Map[edge_name]
+		let face = Face2FlexiData_Map[face_name]
+		let hinge = Edge2FlexiData_Map[edge_name]
 
-		var separating_vec = new THREE.Vector3().subVectors(obj.position, pEObj.position).normalize()
-		separating_vec.multiplyScalar(obj.position.distanceTo(pEObj.position))
+		let axis = hinge.axis
+
+		let separating_vec = new THREE.Vector3().subVectors(face.position, hinge.position).normalize()
+		separating_vec.multiplyScalar(face.position.distanceTo(hinge.position))
 
 		separating_vec.applyAxisAngle(axis, rads)
 
-		RemoveObjectFromMap(obj.name, Loc2Face_Map, obj.position)
+		RemoveObjectFromMap(face.name, Loc2Face_Map, face.position)
 
-		obj.position.copy(separating_vec)
-		obj.position.add(pEObj.position)
+		face.position.copy(separating_vec)
+		face.position.add(hinge.position)
 
-		obj.position.x = Math.round(obj.position.x)
-		obj.position.y = Math.round(obj.position.y)
-		obj.position.z = Math.round(obj.position.z)
+		face.position.x = Math.round(face.position.x)
+		face.position.y = Math.round(face.position.y)
+		face.position.z = Math.round(face.position.z)
 
-		obj.normal.applyAxisAngle(axis, rads)
+		face.normal.applyAxisAngle(axis, rads)
 
-		obj.normal.x = Math.round(obj.normal.x)
-		obj.normal.y = Math.round(obj.normal.y)
-		obj.normal.z = Math.round(obj.normal.z)
+		face.normal.x = Math.round(face.normal.x)
+		face.normal.y = Math.round(face.normal.y)
+		face.normal.z = Math.round(face.normal.z)
 
-		obj.normal.normalize()
+		face.normal.normalize()
 
-		MapObject(obj.name, Loc2Face_Map, obj.position)
+		MapObject(face.name, Loc2Face_Map, face.position)
 
 		for(var e in Face2Edges[face_name])
 		{
-			var e_n = Face2Edges[face_name][e].name
+			let e_n = Face2Edges[face_name][e].name
 
-			obj = Edge2FlexiData_Map[e_n]
+			let edge = Edge2FlexiData_Map[e_n]
 
-			if(obj.position.equals(pEObj.position))
+			if(edge.position.equals(hinge.position))
 				continue
 
-			separating_vec = new THREE.Vector3().subVectors(obj.position, pEObj.position).normalize()
-			separating_vec.multiplyScalar(obj.position.distanceTo(pEObj.position))
+			separating_vec = new THREE.Vector3().subVectors(edge.position, hinge.position).normalize()
+			separating_vec.multiplyScalar(edge.position.distanceTo(hinge.position))
 
 			separating_vec.applyAxisAngle(axis, rads)
 
-			RemoveObjectFromMap(obj.name, Loc2Edge_Map, obj.position)
+			RemoveObjectFromMap(edge.name, Loc2Edge_Map, edge.position)
 
-			obj.position.copy(separating_vec)
-			obj.position.add(pEObj.position)
+			edge.position.copy(separating_vec)
+			edge.position.add(hinge.position)
 
-			obj.position.x = Math.round(obj.position.x)
-			obj.position.y = Math.round(obj.position.y)
-			obj.position.z = Math.round(obj.position.z)
+			edge.position.x = Math.round(edge.position.x)
+			edge.position.y = Math.round(edge.position.y)
+			edge.position.z = Math.round(edge.position.z)
 
-			s = HashPosition(obj.position)
+			s = HashPosition(edge.position)
 
-			MapObject(obj.name, Loc2Edge_Map, obj.position)
+			MapObject(edge.name, Loc2Edge_Map, edge.position)
 
-			obj.axis.applyAxisAngle(axis, rads)
+			edge.axis.applyAxisAngle(axis, rads)
 
-			obj.axis.x = Math.round(obj.axis.x)
-			obj.axis.y = Math.round(obj.axis.y)
-			obj.axis.z = Math.round(obj.axis.z)
+			edge.axis.x = Math.round(edge.axis.x)
+			edge.axis.y = Math.round(edge.axis.y)
+			edge.axis.z = Math.round(edge.axis.z)
 
-			obj.axis.normalize()
+			edge.axis.normalize()
 		}
 	}
 
@@ -233,12 +235,6 @@ function FlexiFaceEdgeMap()
 					package.common = true
 
 					package.neighbor_data.push({"edge_1" : edge_1_data, "edge_2": edge_2_data, "endpoints_1" : edge_1_endpoints, "endpoints_2": edge_2_endpoints})
-
-					//package.edge_1 = edge_1_data
-					//package.edge_2 = edge_2_data
-
-					//package.endpoints_1 = edge_1_endpoints
-					//package.endpoints_2 = edge_2_endpoints
 				}
 			}
 		}

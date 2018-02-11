@@ -1,4 +1,3 @@
-"use strict";
 function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	this.id = PolyCube.Next_ID
@@ -87,9 +86,9 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 	}
 
-	this.Rotate_Data = function(edge_name, face_name, rads, axis)
+	this.Rotate_Data = function(edge_name, face_name, rads)
 	{
-		FaceEdgeLocations.RotateFaceAroundEdge(edge_name, face_name, rads, axis)
+		FaceEdgeLocations.RotateFaceAroundEdge(edge_name, face_name, rads)
 	}
 
 	this.Reset_Data = function()
