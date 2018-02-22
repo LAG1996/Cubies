@@ -10,11 +10,8 @@ function HingeAnimationHandler(face_list, edge, polycube, visualizer, controller
 	var fake_f_list = []
 	var max_angle = rads
 	var dur = duration
-	var max_speed = (max_angle / duration)
 	var total_rot = 0
 	var total_time = 0
-
-	var ease_max = Ease(1) 
 
 	var p_cube = polycube
 
@@ -25,10 +22,8 @@ function HingeAnimationHandler(face_list, edge, polycube, visualizer, controller
 	this.RotateFaces = function(deltaTime)
 	{
 
-		let percentage = total_time / duration
-		let rotStep = (Ease(percentage) / ease_max) * max_speed * deltaTime
-
-		console.log(ease_max)
+		let percentage = total_time / dur
+		let rotStep = SmoothStep(percentage) * max_angle * deltaTime
 
 		total_rot += Math.abs(rotStep)
 		total_time += deltaTime
@@ -73,8 +68,8 @@ function HingeAnimationHandler(face_list, edge, polycube, visualizer, controller
 		
 	}
 
-	function Ease(t)
+	function SmoothStep(t)
 	{
-		return 1 - (1 / ((t + 1) * (t + 1) * (t + 1) * (t + 1)))
+		return (3*t*t) + (2*t*t)
 	}
 }
