@@ -514,7 +514,6 @@ function Controller(){
 
 			if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part < that.toolbar_handler.tutorial_data.click_black_arrow)
 			that.toolbar_handler.HandleNextTutorialPart()
-			//var polycube = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id]
 
 			var face_name = that.hover_over_face.name
 
@@ -532,7 +531,7 @@ function Controller(){
 
 			var face_data = PolyCube.Active_Polycube.Get_Face_Data(face_name)
 
-			var face_obj = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
+			var face_obj = that.visualizer.view_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
 
 			that.visualizer.arrow_pair.position.copy(face_obj.getWorldPosition())
 			that.visualizer.pick_arrow_pair.position.copy(face_obj.getWorldPosition())
@@ -690,7 +689,7 @@ function Controller(){
 			var face_dir = Cube.FaceNameToDirection(face_name)
 
 			var vec = PolyCube.words2directions[face_dir]
-			var real_face = that.visualizer.rotate_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
+			var real_face = that.visualizer.view_polycubes[PolyCube.Active_Polycube.id].getObjectByName(face_name)
 			var pos = new THREE.Vector3().addVectors(real_face.position, vec)
 
 			pos.multiplyScalar(.5)
@@ -917,7 +916,7 @@ function Controller(){
 		function VisualizePolycube(polycube)
 		{
 	
-			that.scene_handler.view_scenes["main"].add(that.visualizer.rotate_polycubes[polycube.id])
+			that.scene_handler.view_scenes["main"].add(that.visualizer.view_polycubes[polycube.id])
 	
 			that.scene_handler.picking_scenes["poly_pick"].add(that.visualizer.rotate_pick_polycubes[polycube.id])
 	
