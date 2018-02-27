@@ -4,9 +4,9 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 	var arrow_template = arrow_temp
 
 	this.view_polycubes = {}
-	this.rotate_hinge_polycubes = {}
-	this.rotate_face_polycubes = {}
-	this.rotate_pick_polycubes = {}
+	this.hinge_polycubes = {}
+	this.face_polycubes = {}
+	this.pick_polycubes = {}
 
 	this.Color2Hinge = []
 	this.Color2Face = []
@@ -134,14 +134,14 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 	{
 
 		this.view_polycubes[polycube.id].parent.remove(this.view_polycubes[polycube.id])
-		this.rotate_hinge_polycubes[polycube.id].parent.remove(this.rotate_hinge_polycubes[polycube.id])
-		this.rotate_face_polycubes[polycube.id].parent.remove(this.rotate_face_polycubes[polycube.id])
-		this.rotate_pick_polycubes[polycube.id].parent.remove(this.rotate_pick_polycubes[polycube.id])
+		this.hinge_polycubes[polycube.id].parent.remove(this.hinge_polycubes[polycube.id])
+		this.face_polycubes[polycube.id].parent.remove(this.face_polycubes[polycube.id])
+		this.pick_polycubes[polycube.id].parent.remove(this.pick_polycubes[polycube.id])
 
 		delete this.view_polycubes[polycube.id]
-		delete this.rotate_hinge_polycubes[polycube.id]
-		delete this.rotate_face_polycubes[polycube.id]
-		delete this.rotate_pick_polycubes[polycube.id]
+		delete this.hinge_polycubes[polycube.id]
+		delete this.face_polycubes[polycube.id]
+		delete this.pick_polycubes[polycube.id]
 
 		for(var key in this.Color2Hinge[polycube.id])
 			delete this.Color2Hinge[polycube.id][key]
@@ -151,31 +151,9 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 		delete this.Color2Poly[polycube.id]
 	}
 
-	this.RotateOnlyViewFaces = function(face_list, hinge_object, polycube, rads)
-	{
-		//Get the axis we are going to rotate around
-		let edge_pos = new THREE.Vector3().copy(that.view_polycubes[polycube.id].getObjectByName(hinge_object.name).getWorldPosition())
-		let axis = polycube.Get_Edge_Data(hinge_object.name).axis
-
-		let q = new THREE.Quaternion(); // create once and reuse
-
-		q.setFromAxisAngle( axis, rads ); // axis must be normalized, angle in radians
-
-		for(var f in face_list)
-		{
-			let f_mesh = face_list[f]
-
-			var dir_from_hinge = new THREE.Vector3().subVectors(f_mesh.getWorldPosition(), edge_pos)
-			dir_from_hinge.applyQuaternion(q)
-			dir_from_hinge.add(edge_pos)
-
-			f_mesh.position.copy(dir_from_hinge)
-			f_mesh.quaternion.premultiply(q)
-			f_mesh.updateMatrix()
-		}
-	}
-
-	this.RotateAllFaces = function(face_subgraph, hinge_object, polycube, rads)
+	//Input: A list of faces, a hinge ot rotate around, a polycube, and the angle of rotation in radians
+	//Result: Rotates the view  
+	this.RotateFaces = function(face_subgraph, hinge_object, polycube, rads)
 	{
 		//Get the axis we are going to rotate around
 		let edge_pos = new THREE.Vector3().copy(that.view_polycubes[polycube.id].getObjectByName(hinge_object.name).getWorldPosition())
@@ -188,19 +166,17 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 		for(var f in face_subgraph)
 		{
 			var face_1 = this.view_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
-			var face_2 = this.rotate_face_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
-			var face_3 = this.rotate_hinge_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
-			var face_4 = this.rotate_pick_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			var face_2 = this.face_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			var face_3 = this.hinge_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
+			var face_4 = this.pick_polycubes[polycube.id].getObjectByName(face_subgraph[f].name)
 
 			var dir_from_hinge = new THREE.Vector3().subVectors(face_1.getWorldPosition(), edge_pos)
 
-			dir_from_hinge.applyQuaternion(q)
-			dir_from_hinge.add(edge_pos)
-
-			face_1.position.copy(dir_from_hinge)
-			face_2.position.copy(dir_from_hinge)
-			face_3.position.copy(dir_from_hinge)
-			face_4.position.copy(dir_from_hinge)
+			let face_data = polycube.Get_Face_Data(face_1.name)
+			face_1.position.copy(face_data.position)
+			face_2.position.copy(face_data.position)
+			face_3.position.copy(face_data.position)
+			face_4.position.copy(face_data.position)
 
 			face_1.quaternion.premultiply( q )
 			face_2.quaternion.premultiply( q )
@@ -270,67 +246,32 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 	}
 
 	//Input: The polycube object, a face object
+	//Result: Hides the face, along with any highlights that may be associated with it.
 	this.HideFace = function(polycube_id, face_name)
 	{
 		let face_obj = this.GetViewFaceMesh(polycube_id, face_name)
 
-		for(var e in face_obj.children)
+		let highlight_list = this.GetAllHighlights(polycube_id, face_name)
+
+		for(var h in highlight_list)
 		{
-			let child = face_obj.children[e]
-			
-			if(child.name != "body")
-			{
-				let highlight_hash = HashObject(polycube_id, "edge", child.name, "cut")
-				let highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
-
-				if(ObjectExists(highlight))
-				{
-					highlight.visible = false
-					highlight.updateMatrix()
-				}
-
-				highlight_hash = HashObject(polycube_id, "edge", child.name, "hinge")
-				highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
-
-				if(ObjectExists(highlight))
-				{
-					highlight.visible = false
-					highlight.updateMatrix()
-				}
-			}
+			highlight_list[h].material.visible = false
 		}
 
 		face_obj.visible = false
 	}
 
+	//Input: A polycube's id, and a face's name
+	//Result: Makes the face and all highlights associated with it visible.
 	this.ShowFace = function(polycube_id, face_name)
 	{
 		let face_obj = this.GetViewFaceMesh(polycube_id, face_name)
 
-		for(var e in face_obj.children)
+		let highlight_list = this.GetAllHighlights(polycube_id, face_name)
+
+		for(var h in highlight_list)
 		{
-			let child = face_obj.children[e]
-			
-			if(child.name != "body")
-			{
-				let highlight_hash = HashObject(polycube_id, "edge", child.name, "cut")
-				let highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
-
-				if(ObjectExists(highlight))
-				{
-					highlight.visible = true
-					highlight.updateMatrix()
-				}
-
-				highlight_hash = HashObject(polycube_id, "edge", child.name, "hinge")
-				highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
-
-				if(ObjectExists(highlight))
-				{
-					highlight.visible = true
-					highlight.updateMatrix()
-				}
-			}
+			highlight_list[h].material.visible = true
 		}
 
 		face_obj.visible = true
@@ -366,10 +307,43 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 		}
 	}
 
+	this.GetAllHighlights = function(polycube_id, face_name)
+	{
+		let face_obj = this.GetViewFaceMesh(polycube_id, face_name)
+
+		let highlight_list = []
+
+		for(var e in face_obj.children)
+		{
+			let child = face_obj.children[e]
+			
+			if(child.name != "body")
+			{
+				let highlight_hash = HashObject(polycube_id, "edge", child.name, "cut")
+				let highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+				if(ObjectExists(highlight))
+				{
+					highlight_list.push(highlight)
+				}
+
+				highlight_hash = HashObject(polycube_id, "edge", child.name, "hinge")
+				highlight = part_highlights_cache[highlight_hash[0]][highlight_hash[1]][highlight_hash[2]][highlight_hash[3]]
+
+				if(ObjectExists(highlight))
+				{
+					highlight_list.push(highlight)
+				}
+			}
+		}
+
+		return highlight_list
+	}
+
 	this.SaveIncidentEdge = function(incidentEdgeName, polycube_id, action)
 	{
 		//If this is the first incident edge we're saving, we don't have an incident edge highlight mesh to use.
-		//Render a new highlight mesh for this edge.
+		//a a new highlight mesh for this edge.
 
 		let edge = that.view_polycubes[polycube_id].getObjectByName(incidentEdgeName)
 		if(!ObjectExists(incidentEdgeHighlightMesh))
@@ -434,7 +408,7 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 
 		var index_2 = 0
 
-		var index_3 = (action == "mouse_over_1" || action == "mouse_over_2") ?  0 : that.rotate_hinge_polycubes[polycube_id].getObjectByName(object_name).material.color.getHex()
+		var index_3 = (action == "mouse_over_1" || action == "mouse_over_2") ?  0 : that.hinge_polycubes[polycube_id].getObjectByName(object_name).material.color.getHex()
 
 		var index_4 = -1
 
@@ -465,7 +439,7 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 
 		var index_2 = 1
 
-		var index_3 = (action == "mouse_over_1" || action == "mouse_over_2") ?  0 : that.rotate_face_polycubes[polycube_id].getObjectByName(object_name).children[0].material.color.getHex() + 2
+		var index_3 = (action == "mouse_over_1" || action == "mouse_over_2") ?  0 : that.face_polycubes[polycube_id].getObjectByName(object_name).children[0].material.color.getHex() + 2
 
 		var index_4 = -1
 
@@ -651,7 +625,7 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 				p.material.color = new THREE.Color(polycube.id)
 			}
 
-			that.rotate_pick_polycubes[id].add(f_clone.clone())
+			that.pick_polycubes[id].add(f_clone.clone())
 
 			//Coloring the face picking polycubes
 			for(var part_num in f_clone.children)
@@ -663,7 +637,7 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 
 			}
 
-			that.rotate_face_polycubes[id].add(f_clone.clone())
+			that.face_polycubes[id].add(f_clone.clone())
 
 			that.Color2Face[id][f_number] = f.name
 
@@ -686,7 +660,7 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 					that.Color2Hinge[polycube.id][f_number * 4 + hinge_num++] = p.name
 				}
 			}
-			that.rotate_hinge_polycubes[id].add(f_clone.clone())
+			that.hinge_polycubes[id].add(f_clone.clone())
 
 			f_number++;
 		}
@@ -700,8 +674,8 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 		var face_name = Cube.GetFaceName(other_cube, PolyCube.direction_words_to_opposites[dir])
 
 		that.view_polycubes[id].remove(that.view_polycubes[id].getObjectByName(face_name))
-		that.rotate_hinge_polycubes[id].remove(that.rotate_hinge_polycubes[id].getObjectByName(face_name))
-		that.rotate_face_polycubes[id].remove(that.rotate_face_polycubes[id].getObjectByName(face_name))
+		that.hinge_polycubes[id].remove(that.hinge_polycubes[id].getObjectByName(face_name))
+		that.face_polycubes[id].remove(that.face_polycubes[id].getObjectByName(face_name))
 
 		for(var index in v_cube.children)
 		{
@@ -716,44 +690,44 @@ function PolycubeDataVisualizer(cube_temp, arrow_temp)
 	{
 
 		that.view_polycubes[polycube.id] = new THREE.Group()
-		that.rotate_hinge_polycubes[polycube.id] = new THREE.Group()
-		that.rotate_face_polycubes[polycube.id] = new THREE.Group()
-		that.rotate_pick_polycubes[polycube.id] = new THREE.Group()
+		that.hinge_polycubes[polycube.id] = new THREE.Group()
+		that.face_polycubes[polycube.id] = new THREE.Group()
+		that.pick_polycubes[polycube.id] = new THREE.Group()
 
 		that.view_polycubes[polycube.id].matrixAutoUpdate = false
-		that.rotate_hinge_polycubes[polycube.id].matrixAutoUpdate = false
-		that.rotate_face_polycubes[polycube.id].matrixAutoUpdate = false
-		that.rotate_pick_polycubes[polycube.id].matrixAutoUpdate = false
+		that.hinge_polycubes[polycube.id].matrixAutoUpdate = false
+		that.face_polycubes[polycube.id].matrixAutoUpdate = false
+		that.pick_polycubes[polycube.id].matrixAutoUpdate = false
 
 		that.Color2Hinge[polycube.id] = {}
 		that.Color2Face[polycube.id] = {}
 
 		that.view_polycubes[polycube.id].position.copy(polycube.position)
-		that.rotate_hinge_polycubes[polycube.id].position.copy(polycube.position)
-		that.rotate_face_polycubes[polycube.id].position.copy(polycube.position)
-		that.rotate_pick_polycubes[polycube.id].position.copy(polycube.position)
+		that.hinge_polycubes[polycube.id].position.copy(polycube.position)
+		that.face_polycubes[polycube.id].position.copy(polycube.position)
+		that.pick_polycubes[polycube.id].position.copy(polycube.position)
 
 		UpdatePolycubeMatrices(polycube)
 
 		that.view_polycubes[polycube.id].position.multiplyScalar(2)
-		that.rotate_hinge_polycubes[polycube.id].position.multiplyScalar(2)
-		that.rotate_face_polycubes[polycube.id].position.multiplyScalar(2)
-		that.rotate_pick_polycubes[polycube.id].position.multiplyScalar(2)
+		that.hinge_polycubes[polycube.id].position.multiplyScalar(2)
+		that.face_polycubes[polycube.id].position.multiplyScalar(2)
+		that.pick_polycubes[polycube.id].position.multiplyScalar(2)
 
 		UpdatePolycubeMatrices(polycube)
 
 		that.view_polycubes[polycube.id].name = polycube.name
-		that.rotate_hinge_polycubes[polycube.id].name = polycube.name
-		that.rotate_face_polycubes[polycube.id].name = polycube.name
-		that.rotate_pick_polycubes[polycube.id].name = polycube.name
+		that.hinge_polycubes[polycube.id].name = polycube.name
+		that.face_polycubes[polycube.id].name = polycube.name
+		that.pick_polycubes[polycube.id].name = polycube.name
 	}
 
 
 	function UpdatePolycubeMatrices(polycube)
 	{
 		that.view_polycubes[polycube.id].updateMatrix()
-		that.rotate_hinge_polycubes[polycube.id].updateMatrix()
-		that.rotate_face_polycubes[polycube.id].updateMatrix()
-		that.rotate_pick_polycubes[polycube.id].updateMatrix()
+		that.hinge_polycubes[polycube.id].updateMatrix()
+		that.face_polycubes[polycube.id].updateMatrix()
+		that.pick_polycubes[polycube.id].updateMatrix()
 	}
 }

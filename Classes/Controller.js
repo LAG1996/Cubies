@@ -918,11 +918,11 @@ function Controller(){
 	
 			that.scene_handler.view_scenes["main"].add(that.visualizer.view_polycubes[polycube.id])
 	
-			that.scene_handler.picking_scenes["poly_pick"].add(that.visualizer.rotate_pick_polycubes[polycube.id])
+			that.scene_handler.picking_scenes["poly_pick"].add(that.visualizer.pick_polycubes[polycube.id])
 	
-			that.scene_handler.picking_scenes["edge_pick"].add(that.visualizer.rotate_hinge_polycubes[polycube.id])
+			that.scene_handler.picking_scenes["edge_pick"].add(that.visualizer.hinge_polycubes[polycube.id])
 	
-			that.scene_handler.picking_scenes["face_pick"].add(that.visualizer.rotate_face_polycubes[polycube.id])
+			that.scene_handler.picking_scenes["face_pick"].add(that.visualizer.face_polycubes[polycube.id])
 		}
 	
 		function UpdateCuts(polycube, scene)
