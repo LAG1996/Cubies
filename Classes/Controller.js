@@ -583,17 +583,9 @@ function Controller(){
 				if(that.toolbar_handler.tutorial_mode && that.toolbar_handler.current_tutorial_part == that.toolbar_handler.tutorial_data.click_white_arrow)
 					that.toolbar_handler.HandleNextTutorialPart()
 
-				
-				let hinge_data = that.last_hover_over_poly.Get_Edge_Data(that.hinge_to_rotate_around.name)
-				let face_data = that.last_hover_over_poly.Get_Face_Data(that.active_subgraph[0].name)
 
-				let cross = new THREE.Vector3().crossVectors(face_data.normal, hinge_data.axis).normalize()
 
-				let dir_from_hinge = new THREE.Vector3().copy(face_data.position)
-				dir_from_hinge.sub(new THREE.Vector3().copy(hinge_data.position))
-				dir_from_hinge.normalize()
-
-				let rads = cross.equals(dir_from_hinge) ? DEG2RAD(90) : -1*DEG2RAD(90)
+				let rads = CorrectAngle("white")
 
 				for(var f in that.active_subgraph)
 				{
@@ -615,23 +607,14 @@ function Controller(){
 						that.toolbar_handler.HandleNextTutorialPart()
 				} 
 
-				let hinge_data = that.last_hover_over_poly.Get_Edge_Data(that.hinge_to_rotate_around.name)
-				let face_data = that.last_hover_over_poly.Get_Face_Data(that.active_subgraph[0].name)
-
-				let cross = new THREE.Vector3().crossVectors(face_data.normal, hinge_data.axis).normalize()
-
-				let dir_from_hinge = new THREE.Vector3().copy(face_data.position)
-				dir_from_hinge.sub(new THREE.Vector3().copy(hinge_data.position))
-				dir_from_hinge.normalize()
-
-				let rads = cross.equals(dir_from_hinge) ? DEG2RAD(-90) : -1*DEG2RAD(-90)
+				let rads = CorrectAngle("black")
 
 				for(var f in that.active_subgraph)
 				{
-					that.last_hover_over_poly.Rotate_Data(that.hinge_to_rotate_around.name, that.active_subgraph[f].name, DEG2RAD(-90))
+					that.last_hover_over_poly.Rotate_Data(that.hinge_to_rotate_around.name, that.active_subgraph[f].name, rads)
 				}
 
-				that.HingeAnimationQueue.push(new HingeAnimationHandler(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, that.visualizer, that, DEG2RAD(-90), .5))
+				that.HingeAnimationQueue.push(new HingeAnimationHandler(that.active_subgraph, that.hinge_to_rotate_around, that.last_hover_over_poly, that.visualizer, that, rads, .5))
 				
 				that.cuts_need_update = true
 				that.hinges_need_update = true
@@ -659,6 +642,56 @@ function Controller(){
 			that.face_graphs_out = false
 			that.visualizer.arrow_pair.visible = false
 			that.arrows_out = false
+
+			//Input: A string telling the color of the arrow that the user picked
+			//Output: The angle of rotation
+			function CorrectAngle(color_word)
+			{
+				//The expected direction of rotation.
+				//A 1 means along the white arrow, while a -1 means along the black arrow
+				let expected_direction = color_word == "white" ? 1 : -1
+
+				//The angle to rotate by in radians
+				let angle = DEG2RAD(90)
+
+				//Get data on the objects we're using to rotate
+				let hinge_data = that.last_hover_over_poly.Get_Edge_Data(that.hinge_to_rotate_around.name)
+				let face_data = that.last_hover_over_poly.Get_Face_Data(that.active_subgraph[0].name)
+
+				//Get the vector perpendicular to the face's normal and the axis of rotation.
+				//Since the face's normal and the axis of rotation are both orthogonal vectors, the cross
+				//product gives an orthogonal vector.
+				let cross = new THREE.Vector3().crossVectors(face_data.normal, hinge_data.axis)
+				cross.x = Math.round(cross.x)
+				cross.y = Math.round(cross.y)
+				cross.z = Math.round(cross.z)
+
+				//Get the vector between the center of the face and the hinge to rotate around.
+				//Since the face and hinge exist on an integer lattice, this is an orthogonal vector.
+				//Note that this vector is perpendicular to the face's normal and the axis of rotation.
+				let dir_from_hinge = new THREE.Vector3().copy(face_data.position)
+				dir_from_hinge.sub(new THREE.Vector3().copy(hinge_data.position))
+
+				dir_from_hinge.x = Math.round(dir_from_hinge.x)
+				dir_from_hinge.y = Math.round(dir_from_hinge.y)
+				dir_from_hinge.z = Math.round(dir_from_hinge.z)
+
+				//Check if the cross product and the direction are the same.
+				//If they are, then simply rotate by the expected direction.
+				//If they are not, then flip the sign
+				let corrected_direction = 0
+				if(cross.equals(dir_from_hinge))
+				{
+					corrected_direction = expected_direction
+				}
+				else
+				{
+					corrected_direction = -expected_direction 
+				}
+
+
+				return corrected_direction * angle
+			}
 
 		}
 
