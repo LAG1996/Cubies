@@ -80,6 +80,8 @@ function FaceEdgeMap()
 		Edge2RawData_Map[edge_name]["name"] = edge_name
 		Edge2RawData_Map[edge_name]["axis"] = new THREE.Vector3().copy(axis)
 		Edge2RawData_Map[edge_name]["position"] = new THREE.Vector3().copy(position)
+		Edge2RawData_Map[edge_name]["endpoints"][0] = this.GetEndPoints(edge_name)
+		Edge2RawData_Map[edge_name]["endpoints"][1] = this.GetEndPoints(edge_name)
 
 
 		MapObject(edge_name, Loc2Edge_Map, position)
@@ -342,4 +344,135 @@ function FaceEdgeMap()
 
 		map[position.x][position.y][position.z].push(obj_name)
 	}
+
+	//Class for an undirected map of hinges in the polycube.
+	//A hinge can be two edges 
+	function HingeGraph()
+	{
+		var Nt_Nodes = {} //Maps edge names to the node they belong to
+		var Et_Nodes = [] //Three-dimensional mapping of endpoints to a list of nodes
+		var Pt_Nodes = [] //Three-dimensional mapping of locations to a node
+
+		//Input: The edge object to be added. Optional: A partner for that edge
+		//Result:
+		//If the edge is incident to another, they are clumped together to form a new node
+		//Otherwise, simply create a new node
+		this.AddEdge = function(edge)
+		{
+			//First, find out if this edge shares a location with another
+			let node = VectorToData(Pt_Nodes, edge.position)
+			if(node)
+			{
+				//If so, simply add this edge to that node
+				node.Add(edge)
+			}
+			else
+				CreateNode([edge])
+		}
+
+		//Input: A list of edge objects
+		//Result:
+		//-A new node is created with the edges clumped in it.
+		function CreateNode(edge_list)
+		{
+			let new_node = new Node()
+
+			for(var e in edge_list)
+			{
+				new_node.AddEdge(edge_list[e])
+
+				Nt_Nodes[edge_list[e].name] = new_node
+
+				//MapObject(new_node, Et_Nodes, edge_list[e].endpoints[0], edge_list[e].endpoints[1])
+			}
+		}
+
+		//Input: A mapping and a vector
+		//Output: Data that the vector maps to, if any.
+		function VectorToData(map, vector)
+		{
+			if(map[vector.x])
+			{
+				if(map[vector.x][vector.y])
+				{
+					if(map[vector.x][vector.y][vector.z])
+					{
+						return map[vector.x][vector.y][vector.z]
+					}
+				}
+			}
+
+			return null
+		}
+
+		function MapEndpoints(endpoints, node)
+		{
+			if(!Array.isArray(Et_Nodes[endpoints[0].x]))
+			{
+				Et_Nodes[endpoints[0].x] = []
+				Et_Nodes[endpoints[0].x][endpoints[0].y] = []
+				Et_Nodes[endpoints[0].x][endpoints[0].y][endpoints[0].z] = []
+
+				Et_Nodes[endpoints[1].x] = []
+				Et_Nodes[endpoints[1].x][endpoints[1].y] = []
+				Et_Nodes[endpoints[1].x][endpoints[1].y][endpoints[1].z] = []
+			}
+
+			Et_Nodes[endpoints[0].x][endpoints[0].y][endpoints[0].z].push(node)
+			Et_Nodes[endpoints[1].x][endpoints[1].y][endpoints[1].z].push(node)
+		}
+
+		//Class for nodes in the graph
+		function Node()
+		{
+			var EdgePair = [] //Holds a list of edges. Intended to be a pair of edges.
+			var Neighbors = [] //Holds a list of neighbor nodes
+
+			//Input: The node object to be removed
+			//Result: The node is removed from the list of neighbors
+			this.RemoveNeighbor = function(node)
+			{
+				Neighbors.splice(Neighbors.IndexOf(node))
+			}
+
+			//Input: The node object to be added
+			//Result: The node is added to the list of neighbors
+			this.AddNeighbor = function(node)
+			{
+				Neighbors.push(node)
+			}
+
+			//Output: The list of neighbors
+			this.GetNeighbors = function()
+			{
+				return Neighbors
+			}
+
+			//Input: The edge object to be added
+			//Result: The edge is added to the pair
+			this.AddEdge = function(edge)
+			{
+				EdgePair.push(edge)
+			}
+
+			//Input: The edge object to be removed
+			//Result: The edge is removed from the pair
+			this.RemoveEdge = function(edge)
+			{
+				EdgePair.splice(EdgePair.IndexOf(edge))
+			}
+
+			//Output: A boolean value that tells if the value was cut or not
+			//Simply, if there is only a single edge in this node, then it must
+			//be a cut edge
+			this.IsCut = function()
+			{
+				return EdgePair.length >= 2
+			}
+		}
+
+	}
+
+	function FaceGraph()
+	{}
 }
