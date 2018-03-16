@@ -8,7 +8,7 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 	this.Cube_Map = []
 
 	var DualGraphs = new FaceEdgeDualGraph()
-	var FaceEdgeLocations = new FlexiFaceEdgeMap()
+	var FaceEdgeLocations = new FaceEdgeMap()
 
 	var cube_count = 0
 	var can_add_cube = true
