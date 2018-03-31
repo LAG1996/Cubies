@@ -415,6 +415,11 @@ function FaceEdgeDualGraph(){
 		return L_RotationLines
 	}
 
+	this.GetRotationLine = function(edgeName)
+	{
+		return this.GetRotationLineFromIndex(this.GetRotationLineIndex(edgeName))
+	}
+
 	this.GetRotationLineFromIndex = function(index){
 		return L_RotationLines[index]
 	}

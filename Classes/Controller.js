@@ -658,10 +658,16 @@ function Controller(){
 				let hinge_data = that.last_hover_over_poly.Get_Edge_Data(that.hinge_to_rotate_around.name)
 				let face_data = that.last_hover_over_poly.Get_Face_Data(that.active_subgraph[0].name)
 
+				console.log(face_data.normal)
+				console.log(face_data.position)
+				console.log(hinge_data.axis)
+				console.log(hinge_data.position)
+
 				//Get the vector perpendicular to the face's normal and the axis of rotation.
 				//Since the face's normal and the axis of rotation are both orthogonal vectors, the cross
 				//product gives an orthogonal vector.
 				let cross = new THREE.Vector3().crossVectors(face_data.normal, hinge_data.axis)
+				cross.normalize()
 				cross.x = Math.round(cross.x)
 				cross.y = Math.round(cross.y)
 				cross.z = Math.round(cross.z)
@@ -672,6 +678,7 @@ function Controller(){
 				let dir_from_hinge = new THREE.Vector3().copy(face_data.position)
 				dir_from_hinge.sub(new THREE.Vector3().copy(hinge_data.position))
 
+				dir_from_hinge.normalize()
 				dir_from_hinge.x = Math.round(dir_from_hinge.x)
 				dir_from_hinge.y = Math.round(dir_from_hinge.y)
 				dir_from_hinge.z = Math.round(dir_from_hinge.z)
@@ -806,7 +813,7 @@ function Controller(){
 		
 			that.subgraphs[0] = subgraphs[0]
 			that.subgraphs[1] = subgraphs[1]
-			that.hinge_to_rotate_around = that.hover_over_hinge
+			that.hinge_to_rotate_around = PolyCube.Active_Polycube.Get_Rotation_Line(that.hover_over_hinge.name)[0]
 			that.face2graph_map = data['face2graph_map']
 
 			var obj_1 = that.scene_handler.view_scenes["main"].getObjectByName(subgraphs[0][0].name)

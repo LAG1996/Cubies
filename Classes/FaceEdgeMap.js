@@ -80,6 +80,7 @@ function FaceEdgeMap()
 		Edge2RawData_Map[edge_name]["name"] = edge_name
 		Edge2RawData_Map[edge_name]["axis"] = new THREE.Vector3().copy(axis)
 		Edge2RawData_Map[edge_name]["position"] = new THREE.Vector3().copy(position)
+		Edge2RawData_Map[edge_name]["endpoints"] = []
 		Edge2RawData_Map[edge_name]["endpoints"][0] = this.GetEndPoints(edge_name)
 		Edge2RawData_Map[edge_name]["endpoints"][1] = this.GetEndPoints(edge_name)
 

@@ -173,6 +173,11 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 		return DualGraphs.GetRotationLines()
 	}
 
+	this.Get_Rotation_Line = function(edge_name)
+	{
+		return DualGraphs.GetRotationLine(edge_name)
+	}
+
 	this.Get_Face_Graphs = function(edge_name)
 	{
 		return DualGraphs.GetSubGraphs(edge_name)
