@@ -14,9 +14,10 @@
 	</head>
 
 	<body>
-		<div id = "container"></div>
+	
+	<div id = "container"></div>
 		<div id = "everything_else">
-						<div class = "row fixed-top" id = "tutorial_panel_row">
+			<div class = "row fixed-top" id = "tutorial_panel_row">
 				<div class = "col-12">
 					<div class = "mt-5 mr-5 card bg-dark" id = "tutorial_panel">
 						<div class = "card-head">
@@ -32,14 +33,15 @@
 						</div>
 						<div class = "card-footer">
 							<div class = "row">
+								<div class = "col-4"><button class = "btn btn-outline-warning" data-toggle = "modal" data-target = "#example_modal" id = "tutorial_example">See An Example</button></div>
 								<div class = "col-4"></div>
-								<!--<div class = "col-4"><button class = "btn btn-outline-warning" id = "tutorial_prev">Previous</button></div>-->
-								<div class = "col-4"><button class = "btn btn-outline-success right" id = "tutorial_next">Next</button></div>
+								<div class = "col-4"><button class = "btn btn-outline-success" id = "tutorial_next">Next</button></div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
+		</div>
 
 			<nav class = "navbar navbar-expand navbar-dark bg-dark fixed-top" id = "world_view_nav">
 					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "navbar" aria-expanded = "false" aria-controls = "navbar"
@@ -157,6 +159,33 @@
 		  </div>
 		</div>
 
+		<!--Example modal-->
+		<div id = "example_modal" class="modal" tabindex="-1" role="dialog">
+		  <div class="modal-dialog modal-lg" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title">Example</h5>
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div class = "modal-body">
+		      	<div class="embed-responsive embed-responsive-16by9">
+		      		<iframe id = "add_poly_vid" width="560" height="315" src="https://www.youtube.com/embed/wHrjtLwg9HI" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+		      		<iframe id = "add_cube_vid" width="560" height="315" src="https://www.youtube.com/embed/wE2twl3uUIs" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+		      		<iframe id = "add_cut_vid" width="560" height="315" src="https://www.youtube.com/embed/AjvPU5pNs6w" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+		      		<iframe id = "crease_pick_vid" width="560" height="315" src="https://www.youtube.com/embed/Gybbu--Otik" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+		      		<iframe id = "fold_unfold_vid" width="560" height="315" src="https://www.youtube.com/embed/yyIBv2EsYTM" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+				    <iframe id = "tape_vid" width="560" height="315" src="https://www.youtube.com/embed/qSTWIABPV6o" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+				</div>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+
 		<!--Scripts!!!-->
 		<script src = "third_party_src/THREE/three.js"></script>
 		<script src = "third_party_src/THREE/OBJLoader.js"></script>
@@ -173,7 +202,6 @@
 		<!--
 			Some dependencies written by me
 		-->
-		<script src = "Classes/Scene_v2.js"></script>
 		<script src = "Classes/Window_Helpers/Tutorial_Toolbar_Handler_v3.js"></script>
 		<script src = "Classes/Window_Helpers/Tutorial_Prompts.js"></script>
 		<script src = "Classes/Window_Helpers/Cube_Add_Handler_v2.js"></script>

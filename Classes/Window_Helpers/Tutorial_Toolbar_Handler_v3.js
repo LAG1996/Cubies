@@ -11,6 +11,7 @@ function Toolbar_Handler(controller){
 	this.current_tutorial_part = 0
 
 	$("#add_cube_inactive").hide()
+	$("iframe").hide()
 
 	GoToTutorialPart(this.current_tutorial_part)
 
@@ -98,6 +99,48 @@ function Toolbar_Handler(controller){
 		{
 			$("#tutorial_next").show()
 		}
+
+		if(part < that.tutorial_data.create_new_poly_index || (part == that.tutorial_data.unfold_index-1) || (part > that.tutorial_data.click_black_arrow + 2))
+		{
+			$("#tutorial_example").hide()
+		}
+		else
+		{
+			$("#tutorial_example").show()
+		}
+
+		//Decide which videos to show in the example modal
+		if(part == that.tutorial_data.create_new_poly_index)
+		{
+			console.log("AAAAAAAAAAAA")
+			$("iframe").hide()
+			$("#add_poly_vid").show()
+		}
+		else if(part == that.tutorial_data.add_cube_index)
+		{
+			$("iframe").hide()
+			$("#add_cube_vid").show()
+		}
+		else if(part == that.tutorial_data.add_cuts_index)
+		{
+			$("iframe").hide()
+			$("#add_cut_vid").show()
+		}
+		else if(part == that.tutorial_data.unfold_index)
+		{
+			$("iframe").hide()
+			$("#crease_pick_vid").show()
+		}
+		else if(part == that.tutorial_data.click_white_arrow)
+		{
+			$("iframe").hide()
+			$("#fold_unfold_vid").show()
+		}
+		else if(part == that.tutorial_data.click_black_arrow + 1)
+		{
+			$("iframe").hide()
+			$("#tape_vid").show()
+		}
 	}
 
 	//Add events
@@ -110,7 +153,7 @@ function Toolbar_Handler(controller){
 	//$("#delete_polycube").on("click", function(){HandleDeletePolycube()})
 
 	$("#tutorial_next").on("click", function(){that.HandleNextTutorialPart()})
-	//$("#tutorial_prev").on("click", function(){HandlePrevTutorialPart()})
+	$("#tutorial_example").on("click", function(){$("#example_modal").show()})
 
 
 	//Functions for events

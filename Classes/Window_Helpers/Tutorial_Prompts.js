@@ -18,7 +18,6 @@ function Tutorial_Prompts()
 	this.tutorial_prompts.push("Hello! Welcome to the Polycube Project! I'm going to step you through the basics of how this app works. It's really simple. You'll get it in no time.")
 	this.tutorial_prompts.push("With this application, you will be able to build, cut, and unfold polycubes.")
 
-
 	this.tutorial_prompts.push("Okay. Let's start. Go ahead and create a New Polycube by pressing the button labeled New Polycube.")
 	this.create_new_poly_index = this.tutorial_prompts.length-1
 

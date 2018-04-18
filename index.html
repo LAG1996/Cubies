@@ -17,14 +17,15 @@
 		<div id = "container"></div>
 		<div id = "everything_else">
 
-			<nav class = "navbar navbar-expand navbar-dark bg-dark fixed-top" id = "world_view_nav">
-					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "navbar" aria-expanded = "false" aria-controls = "navbar"
-					aria-label = "Toggle Nav">
+			<nav class = "navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id = "world_view_nav">
+				<a href = "#" class = "navbar-brand">The Polycube Project</a>
+				<div class = "navbar-header">
+					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "#wv_navbar" aria-expanded = "false" aria-controls = "navbar">
 						<span class = "navbar-toggler-icon"></span>
 					</button>
-					<a href = "#" class = "navbar-brand">The Polycube Project</a>
-					<div id = "navbar" class = "collapse navbar-collapse">
-						<ul class = "navbar-nav mr-auto">
+				</div>
+				<div id = "wv_navbar" class = "collapse navbar-collapse">
+					<ul class = "navbar-nav mr-auto">
 							<!--<li class = "nav-item dropdown">
 								<button class = "dropdown-toggle btn btn-outline-danger" data-toggle = "dropdown" role = "button" aria-haspopup = "true" aria-expanded = "false">P<span class = "caret"></span></button>
 								<div class = "dropdown-menu">
@@ -33,22 +34,23 @@
 							</li>-->
 							<li class = "nav-item"><button class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#add_polycube_modal">New Polycube</button></li>
 
-						</ul>
+					</ul>
 
-						<ul class = "nav navbar-nav navbar-right">
-							<li class = "nav-item"><a href="./tutorial.html" class = "btn btn-outline-info">Tutorial!</a></li>
-							<li class = "nav-item"><a href="#" class = "nav-link">World View</a></li>
-						</ul>
-					</div>
+					<ul class = "nav navbar-nav navbar-right">
+						<li class = "nav-item"><a href="./tutorial.html" class = "btn btn-outline-info">Tutorial!</a></li>
+						<li class = "nav-item"><a href="#" class = "nav-link">World View</a></li>
+					</ul>
+				</div>
 			</nav>
 
-			<nav class = "navbar navbar-expand navbar-dark bg-dark fixed-top" id = "poly_view_nav">
-					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "navbar" aria-expanded = "false" aria-controls = "navbar"
-					aria-label = "Toggle Nav">
+			<nav class = "navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id = "poly_view_nav">
+				<a href = "#" class = "navbar-brand">The Polycube Project</a>
+				<div class = "navbar-header">
+					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "#pv_navbar" aria-expanded = "false" aria-controls = "navbar">
 						<span class = "navbar-toggler-icon"></span>
 					</button>
-					<a href = "#" class = "navbar-brand">The Polycube Project</a>
-					<div id = "navbar" class = "collapse navbar-collapse">
+				</div>
+					<div id = "pv_navbar" class = "collapse navbar-collapse">
 						<ul class = "navbar-nav mr-auto">
 							<!--<li class = "nav-item dropdown">
 								<button class = "dropdown-toggle btn btn-outline-danger" data-toggle = "dropdown" role = "button" aria-haspopup = "true" aria-expanded = "false">P<span class = "caret"></span></button>
@@ -71,6 +73,8 @@
 						</ul>
 					</div>
 			</nav>
+
+			<button id = "phone-shift" class = "btn btn-info md-4 d-lg-none d-xl-none fixed-bottom">Shift</button>
 		</div>
 
 		<!--Add polycube_modal-->
@@ -145,7 +149,6 @@
 		<!--
 			Some dependencies written by me
 		-->
-		<script src = "Classes/Scene_v2.js"></script>
 		<script src = "Classes/Window_Helpers/Toolbar_Handler_v3.js"></script>
 		<script src = "Classes/Window_Helpers/Cube_Add_Handler_v2.js"></script>
 		<script src = "Classes/Hinge_Animation_Handler.js"></script>

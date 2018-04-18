@@ -29,6 +29,7 @@ function Controller(){
 	//Keyboard commands
 	this.holding_down_shift = false
 	this.holding_down_control = false
+	this.phone_shift_on = false
 
 	this.tape = {'face_1' : null, 'face_2': null}
 	
@@ -403,7 +404,7 @@ function Controller(){
 	
 						if(!that.face_graphs_out)
 						{
-							that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
+							that.visualizer.HighlightObject("face", face.name, PolyCube.Active_Polycube.id, (that.holding_down_shift || that.phone_shift_on) ? "mouse_over_2" : "mouse_over_1")
 						}
 					}
 					else
@@ -420,15 +421,15 @@ function Controller(){
 					{
 						var edge_2_data = edge_data.incidentEdge
 						
-						that.visualizer.SaveIncidentEdge(edge_2_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
+						that.visualizer.SaveIncidentEdge(edge_2_data.name, PolyCube.Active_Polycube.id, (that.holding_down_shift || that.phone_shift_on) ? "mouse_over_2" : "mouse_over_1")
 
-						that.visualizer.HighlightObject("edge", edge_2_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
+						that.visualizer.HighlightObject("edge", edge_2_data.name, PolyCube.Active_Polycube.id, (that.holding_down_shift || that.phone_shift_on) ? "mouse_over_2" : "mouse_over_1")
 					}
 	
 					that.hovering_over_hinge = true
 					that.hover_over_hinge = edge_data
 					that.last_hover_over_hinge = edge_data
-					that.visualizer.HighlightObject("edge", edge_data.name, PolyCube.Active_Polycube.id, that.holding_down_shift ? "mouse_over_2" : "mouse_over_1")
+					that.visualizer.HighlightObject("edge", edge_data.name, PolyCube.Active_Polycube.id, (that.holding_down_shift || that.phone_shift_on) ? "mouse_over_2" : "mouse_over_1")
 				}
 				
 				if(!that.add_cube_mode)
@@ -447,7 +448,7 @@ function Controller(){
 					}
 					else if(that.hovering_over_hinge && !that.add_cube_mode)
 					{
-						if(that.holding_down_shift)
+						if(that.holding_down_shift || that.phone_shift_on)
 						{
 							HandleHinge()
 						}
@@ -467,7 +468,7 @@ function Controller(){
 						{
 							ShowArrows()
 						}
-						else if(that.holding_down_shift)
+						else if(that.holding_down_shift || that.phone_shift_on)
 						{
 							//The user is going to tape two faces together
 							HandleTape()
@@ -813,6 +814,8 @@ function Controller(){
 		
 			that.subgraphs[0] = subgraphs[0]
 			that.subgraphs[1] = subgraphs[1]
+
+			//Save the first hinge in the rotation line.
 			that.hinge_to_rotate_around = PolyCube.Active_Polycube.Get_Rotation_Line(that.hover_over_hinge.name)[0]
 			that.face2graph_map = data['face2graph_map']
 
@@ -1023,8 +1026,16 @@ function Controller(){
 				}
 			}
 		}
-	
-	
+
+		$("#phone-shift").on("click", function(event){
+			that.phone_shift_on = !that.phone_shift_on
+
+			if(that.phone_shift_on)
+				$(this).text("Unshift")
+			else
+				$(this).text("Shift")
+		})
+
 		$('canvas').on('mousemove', onMouseMove)
 		$('canvas').on('mousedown', onMouseDown)
 		$('canvas').on('mouseup', onMouseUp)
