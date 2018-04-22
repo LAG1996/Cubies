@@ -1027,7 +1027,7 @@ function Controller(){
 			}
 		}
 
-		$("#phone-shift").on("click", function(event){
+		$("#phone-shift").on("click touchstart", function(event){
 			that.phone_shift_on = !that.phone_shift_on
 
 			if(that.phone_shift_on)
