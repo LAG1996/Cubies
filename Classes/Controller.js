@@ -658,12 +658,7 @@ function Controller(){
 				//Get data on the objects we're using to rotate
 				let hinge_data = that.last_hover_over_poly.Get_Edge_Data(that.hinge_to_rotate_around.name)
 				let face_data = that.last_hover_over_poly.Get_Face_Data(that.active_subgraph[0].name)
-
-				console.log(face_data.normal)
-				console.log(face_data.position)
-				console.log(hinge_data.axis)
-				console.log(hinge_data.position)
-
+				
 				//Get the vector perpendicular to the face's normal and the axis of rotation.
 				//Since the face's normal and the axis of rotation are both orthogonal vectors, the cross
 				//product gives an orthogonal vector.

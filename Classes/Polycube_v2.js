@@ -43,8 +43,6 @@ function PolyCube(position, name = "", auto_cleanse_flag = true){
 
 			if(!has_adjacent_cubes)
 			{
-				console.log("Cannot add a cube that is not adjacent to another")
-
 				return false
 			}
 		}
