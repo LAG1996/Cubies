@@ -39,3 +39,7 @@ Absolutely! There are still some features we're interested in adding to Cubies (
 - general bug fixes
 
 And much more! If you've got a change you want to make, go for it.
+
+## Fun Fact
+
+Cubies was originally developed on the Unity Engine. It's a very early, rough prototype, but the code is still [around](https://github.com/LAG1996/Polycubes).
