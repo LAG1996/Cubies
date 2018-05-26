@@ -6,9 +6,9 @@ Welcome to the GitHub page for Cubies!
 
 Cubies is a research tool made to make thinking about [polycube](https://en.wikipedia.org/wiki/Polycube) edge-unfolding easier (check out this short description from [Euclid Lab](http://euclidlab.org/unsolved/349-edge-unfolding-polycubes)). Currently, users can
 
--build polycubes
--unfold/fold polycubes
--tape faces back together
+- build polycubes
+- unfold/fold polycubes
+- tape faces back together
 
 You can check [Cubies](http://andrewwinslow.com/cubies) out for yourself right now!
 
