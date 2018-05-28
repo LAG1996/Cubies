@@ -20,12 +20,14 @@ Cubies is heavily front-ended, using the following technologies:
  - CSS ([Bootstrap](https://getbootstrap.com/))
  - JavaScript
  - [THREE.JS](https://threejs.org/)
+ - AJAX
+ - JSON
 
 It was made ~~mostly~~ with MVC architecture in mind. This is why there is a literal **Controller** file. We also use some geometric data structures such as the *face dual graph* and *spatial networks* to represent polycubes in data.
 
 ## Can I run it locally?
 
-Of course! You just need to be aware of the [same-origin policy](https://en.wikipedia.org/wiki/Same-origin_policy) most browsers follow. Long story short, most browsers (I used Google Chrome pretty extensively during Cubies' development) will not let you run Cubies without running a local server. The THREE.JS site features some solutions to this problem [here](https://threejs.org/docs/index.html#manual/introduction/How-to-run-things-locally).
+Of course! You just need to be aware of the [same-origin policy](https://en.wikipedia.org/wiki/Same-origin_policy) most browsers follow. Long story short, most browsers (I used Google Chrome pretty extensively during Cubies' development) will not let you run Cubies without running a local server because of some necessary AJAX calls that uploads 3D meshes into the application. The THREE.JS site features some solutions to this problem [here](https://threejs.org/docs/index.html#manual/introduction/How-to-run-things-locally).
 
 Once you've gotten a local server running, it's just a matter of opening`index.html`, found at the first level of the project directory.
 
