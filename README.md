@@ -36,6 +36,7 @@ Absolutely! There are still some features we're interested in adding to Cubies (
 - undoing and redoing actions
 - graphical updates like anti-aliasing
 - removing individual faces and cubes from polycubes
+- adding support for small screens and mobile
 - general bug fixes
 
 And much more! If you've got a change you want to make, go for it.
