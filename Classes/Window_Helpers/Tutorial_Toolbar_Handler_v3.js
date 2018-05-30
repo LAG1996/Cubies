@@ -112,7 +112,6 @@ function Toolbar_Handler(controller){
 		//Decide which videos to show in the example modal
 		if(part == that.tutorial_data.create_new_poly_index)
 		{
-			console.log("AAAAAAAAAAAA")
 			$("iframe").hide()
 			$("#add_poly_vid").show()
 		}

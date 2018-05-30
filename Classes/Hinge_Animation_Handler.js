@@ -49,13 +49,13 @@ function HingeAnimationHandler(face_list, edge, polycube, visualizer, controller
 		if(total_rot >= Math.abs(max_angle))
 		{
 			CleanUp()
-			polycube_visualizer.RotateFaces(real_f_list, hinge, p_cube, max_angle, cont)
+			polycube_visualizer.RotateFaces(real_f_list, hinge, p_cube, max_angle, cont) //Snaps the real faces to the new rotated position
 			
 			this.finished = true
 		}
 		else
 		{
-			RotateMeshes(fake_f_list, fake_h_list, hinge, p_cube, rotStep)
+			RotateMeshes(fake_f_list, fake_h_list, hinge, p_cube, rotStep) //Interpolates the fake faces' rotations
 		}
 	}
 
@@ -66,6 +66,9 @@ function HingeAnimationHandler(face_list, edge, polycube, visualizer, controller
 	{
 		//Get the axis we are going to rotate around
 		let edge_pos = new THREE.Vector3().copy(polycube_visualizer.view_polycubes[polycube.id].getObjectByName(hinge_object.name).getWorldPosition())
+		
+		console.log(edge_pos)
+
 		let axis = polycube.Get_Edge_Data(hinge_object.name).axis
 
 		let q = new THREE.Quaternion(); // create once and reuse
