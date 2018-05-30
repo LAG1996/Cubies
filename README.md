@@ -45,4 +45,4 @@ And much more! If you've got a change you want to make, go for it.
 
 ## Fun Fact
 
-Cubies was originally developed on the Unity Engine. It's a very early, rough prototype, but the code is still [around](https://github.com/LAG1996/Polycubes).
+Cubies was originally developed on the Unity Engine. It's a very early, rough prototype, but the code is still [around](https://github.com/LAG1996/Polycubes) and runnable. I would really, really suggest just playing with this version of Cubies, however.
