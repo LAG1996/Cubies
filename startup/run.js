@@ -1,4 +1,4 @@
-//import { controller } from '/view/handlers/controller.js' 
+import runCubies from '/startup/runCubies.js';
 
 $(document).ready(function(){
 	var hasFace, hasEdge, hasArrow = false;
@@ -15,7 +15,7 @@ $(document).ready(function(){
 		{
 			clearInterval(initializeAsync);
 
-			startCubies();
+			runCubies();
 		}
 	}, 10)
 
@@ -25,8 +25,8 @@ $(document).ready(function(){
 
 	function importCubeFace(){
 		objLoader.load('/imports/polycube-parts/cubeFace.obj', function (object) {
-				faceMesh = object.children[0]
-				hasFace = true
+				faceMesh = object.children[0];
+				hasFace = true;
 			}, 
 			function(xhr){}, 
 			function(xhr) {
@@ -36,8 +36,8 @@ $(document).ready(function(){
 
 	function importCubeEdge(){
 		objLoader.load('/imports/polycube-parts/cubeHinge.obj', function (object) {
-				edgeMesh = object.children[0]
-				hasEdge = true
+				edgeMesh = object.children[0];
+				hasEdge = true;
 			}, 
 			function(xhr){}, 
 			function(xhr) {
@@ -47,9 +47,8 @@ $(document).ready(function(){
 
 	function importArrows(){
 		objLoader.load("/imports/arrow-models/Arrow.obj", function (object){
-
-				arrowMesh = object.children[0]
-				hasArrow = true
+				arrowMesh = object.children[0];
+				hasArrow = true;
 			}, 
 			function(xhr){},
 			function(xhr){
@@ -57,7 +56,24 @@ $(document).ready(function(){
 		})
 	}
 
-	function startCubies(){
-		console.log("This is where I'd start cubies");
+	function assembleArrows(){
+		let obj = new THREE.Group()
+				
+		let main_arrow = arrowMesh.clone()
+		main_arrow.name = "main"
+		main_arrow.material.color.setHex(0xFFFFFF)
+
+		let outline = arrowMesh.clone()
+		outline.name = "outline"
+		outline.scale.set(1.01, 1.1, 1.1)
+		outline.material.color.setHex(0x000000)
+		outline.material.side = THREE.BackSide
+
+		obj.add(main_arrow)
+		obj.add(outline)
+
+		arrowTemplate = obj
 	}
+
+	function assembleCubeTemplate(){}
 })
