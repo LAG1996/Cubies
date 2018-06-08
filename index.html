@@ -133,43 +133,37 @@
 		  </div>
 		</div>
 
-		<!--Scripts!!!-->
-		<script src = "third_party_src/THREE/three.js"></script>
-		<script src = "third_party_src/THREE/OBJLoader.js"></script>
-		<script src = "third_party_src/THREE/OrbitControls.js"></script>
-		<script src = "third_party_src/FileSaver/FileSaver.js"></script>
-		<!--<script src = "third_party_src/JQUERY/jquery-3.2.1.min.js"></script>-->
-		<!-- Latest compiled and minified JavaScript -->
+		<!--Import THREE.js-->
+		<script src = "/third_party_src/THREE/three.js"></script>
+		<script src = "/third_party_src/THREE/OBJLoader.js"></script>
+		<script src = "/third_party_src/THREE/OrbitControls.js"></script>
+
+		<!--Import File Saving function-->
+		<script src = "/third_party_src/FileSaver/FileSaver.js"></script>
+
+		<!--Import bootstrap and JQUERY-->
 		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="		sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="		sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
+		<!--import other dependencies-->
+		<!--<script type = "module" src = "/imports/api/cube.js"></script>
+		<script type = "module" src = "/imports/api/dual-graph.js"></script>
+		<script type = "module" src = "/imports/api/polycube.js"></script>
+		<script type = "module" src = "/imports/api/spatial-map.js"></script>
+		<script type = "module" src = "/imports/api/utils.js"></script>-->
 
+		<!--import handlers-->
+		<!--<script type = "module" src = "/view/handlers/controller.js"></script>
+		<script type = "module" src = "/view/handlers/handle-hinging.js"></script>
+		<script type = "module" src = "/view/handlers/handle-load-polycube.js"></script>
+		<script type = "module" src = "/view/handlers/handle-polycube-preview.js"></script>
+		<script type = "module" src = "/view/handlers/handle-polycube-visual.js"></script>
+		<script type = "module" src = "/view/handlers/handle-scene.js"></script>
+		<script type = "module" src = "/view/handlers/handle-toolbar.js"></script>-->
 
-		<!--
-			Some dependencies written by me
-		-->
-		<script src = "Classes/Window_Helpers/Toolbar_Handler_v3.js"></script>
-		<script src = "Classes/Window_Helpers/Cube_Add_Handler_v2.js"></script>
-		<script src = "Classes/Hinge_Animation_Handler.js"></script>
-		<script src = "Classes/SceneHandler_v2.js"></script>
-		<script src = "Classes/Utils.js"></script>
-		<script src = "Classes/Init_v2.js"></script>
-
-		<!--
-			The real meat of the program
-		-->
-		<script src = "Classes/FaceEdgeMap.js"></script>
-		<script src = "Classes/DualGraphs_v2.js"></script>
-		<script src = "Classes/Cube_v2.js"></script>
-		<script src = "Classes/Polycube_v2.js"></script>
-		<script src = "Classes/PolycubeVisualizer.js"></script>
-		<script src = "Classes/PolyCubePreview.js"></script>
-		<script src = "Classes/Controller.js"></script>
-		<!--
-			The entry point for our program
-		-->
-		<script src = "Scenes/scene_3.js"></script>
+		<!--startup-->
+		<script type = "module" src = "/startup/run.js"></script>
 
 
 	</body>
