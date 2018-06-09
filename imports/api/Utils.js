@@ -1,5 +1,6 @@
-const Y_OFFSET = -0.115
-const XZ_OFFSET = 0
+export const Y_OFFSET = -0.115
+export const XZ_OFFSET = 0
+export const NTY_RAD = 90*(Math.PI/180);
 
 function DEG2RAD(degrees)
 {

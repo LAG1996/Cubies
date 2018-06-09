@@ -5,6 +5,8 @@ const SceneHandler = function(bgColor = 0xffffe6){
 	//private variables
 	let _bgColor = new THREE.Color(bgColor);
 	const _pickingScenes = new Map();
+	const _pickingTexture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+	_pickingTexture.texture.minFilter = THREE.LinearFilter;
 
 	//set the renderer and child it to the main canvas
 	const _renderer = new THREE.WebGLRenderer();
@@ -37,16 +39,44 @@ const SceneHandler = function(bgColor = 0xffffe6){
 	}
 
 	//public variables
-	//Function to handle picking
-	this.pick = function(sceneName, mousePosition, colorContainer = null){}
+
 
 	this.setBackgroundColor = function(color){
 		_bgColor.set(color);
 	}
 
+	/*
+		This draws the chosen picking scene, which is just the scene the user sees, but
+		with special colors that help identify what the user is clicking. 
+	*/
+	this.pick = function(sceneName, mousePosition){
+		_renderer.render(_pickingScenes.get(sceneName), _camera, _pickingTexture);
+
+		let pixelBuffer = new Uint8Array(4);
+
+		_renderer.readRenderTargetPixels(_pickingTexture, mousePos.x = 0,
+			pickingTexture.height - (mousePosition.y + 0), 1, 1, pixelBuffer);
+
+		var id = (pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | pixelBUffer[2];
+
+		return id;
+	}
+
+	//This function draws the scene
 	this.draw = function(){
 		_renderer.render(_mainScene, _camera);
 	}
+
+	//set window resize event
+	$(window).on('resize', function(){
+		_camera.aspect = window.innerWidth/window.innerHeight;
+		_camera.updateProjectionMatrix();
+
+		_renderer.setSize(window.innerWidth, window.innerHeight);
+		_renderer.setPixelRatio(window.devicePixelRatio);
+
+		_pickingTexture.setSize(window.innerWidth, window.innerHeight);
+	})
 }
 
 export const sceneHandler = new SceneHandler();
