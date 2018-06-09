@@ -10,75 +10,39 @@
 		
 		<!-- Optional theme -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="	sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-	 	<link rel="stylesheet" href = "index.css">
+	 	<link rel="stylesheet" href = "/view/style/index.css">
 	</head>
 
 	<body>
-		<div id = "container"></div>
-		<div id = "everything_else">
+		<div id = "main-canvas"></div>
+		<div id = "gui">
 
-			<nav class = "navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id = "world_view_nav">
+			<nav class = "navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id = "nav">
 				<a href = "#" class = "navbar-brand">The Polycube Project</a>
 				<div class = "navbar-header">
-					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "#wv_navbar" aria-expanded = "false" aria-controls = "navbar">
+					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "#modal-add-polycube" aria-expanded = "false" aria-controls = "navbar">
 						<span class = "navbar-toggler-icon"></span>
 					</button>
 				</div>
 				<div id = "wv_navbar" class = "collapse navbar-collapse">
 					<ul class = "navbar-nav mr-auto">
-							<!--<li class = "nav-item dropdown">
-								<button class = "dropdown-toggle btn btn-outline-danger" data-toggle = "dropdown" role = "button" aria-haspopup = "true" aria-expanded = "false">P<span class = "caret"></span></button>
-								<div class = "dropdown-menu">
-									<a href="#" class = "btn dropdown-item" data-toggle="modal" data-target = "#add_polycube_modal">New Polycube</a>
-								</div>
-							</li>-->
-							<li class = "nav-item"><button class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#add_polycube_modal">New Polycube</button></li>
+							<li class = "nav-item"><button class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#modal-add-polycube" id = "add-polycube">New Polycube</button></li>
+							<li class = "nav-item"><button class = "btn btn-outline-warning mr-2 ml-2" id = "add-cube-active">Add Cube</button></li>
+							<li class = "nav-item"><button class = "btn btn-outline-secondary mr-2 ml-2"  id = "add-cube-inactive">Add Cube</button></li>	
+							<li class = "nav-item"><button class = "btn btn-outline-light mr-2 ml-2" id = "delete-polycube">Delete Polycube</button></li>
 
 					</ul>
 
 					<ul class = "nav navbar-nav navbar-right">
 						<li class = "nav-item"><a href="./tutorial.html" class = "btn btn-outline-info">Tutorial!</a></li>
+						<li class = "nav-item"><button class = "btn btn-outline-light" id = "save-polycube">Save Polycube</button></li>
 						<li class = "nav-item"><a href="#" class = "nav-link">World View</a></li>
 					</ul>
 				</div>
 			</nav>
 
-			<nav class = "navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id = "poly_view_nav">
-				<a href = "#" class = "navbar-brand">The Polycube Project</a>
-				<div class = "navbar-header">
-					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "#pv_navbar" aria-expanded = "false" aria-controls = "navbar">
-						<span class = "navbar-toggler-icon"></span>
-					</button>
-				</div>
-					<div id = "pv_navbar" class = "collapse navbar-collapse">
-						<ul class = "navbar-nav mr-auto">
-							<!--<li class = "nav-item dropdown">
-								<button class = "dropdown-toggle btn btn-outline-danger" data-toggle = "dropdown" role = "button" aria-haspopup = "true" aria-expanded = "false">P<span class = "caret"></span></button>
-								<div class = "dropdown-menu">
-									<a href="#" class = "btn dropdown-item" data-toggle="modal" data-target = "#add_polycube_modal">New Polycube</a>
-								</div>
-							</li>-->
-							<li class = "nav-item"><button class = "btn btn-outline-warning mr-2 ml-2" id = "add_cube_active">Add Cube</button></li>
-							<li class = "nav-item"><button class = "btn btn-outline-secondary mr-2 ml-2"  id = "add_cube_inactive">Add Cube</button></li>
-							
-							<li class = "nav-item"><button class = "btn btn-outline-light mr-2 ml-2" id = "delete_polycube">Delete Polycube</button></li>
-
-						</ul>
-
-						<ul class = "nav navbar-nav navbar-right">
-							<li class = "nav-item"><a href="./tutorial.html" class = "btn btn-outline-info">Tutorial!</a></li>
-							<li class = "nav-item"><button class = "btn btn-outline-light" id = "save_polycube">Save Polycube</button></li>
-							<li class = "nav-item"><a href="#" class = "nav-link" id = "poly_cube_name">Polycube Name</a></li>
-							<li class = "nav-item"><a href="#" class = "nav-link">Poly View</a></li>
-						</ul>
-					</div>
-			</nav>
-
-			<button id = "phone-shift" class = "btn btn-info md-4 d-lg-none d-xl-none fixed-bottom">Shift</button>
-		</div>
-
 		<!--Add polycube_modal-->
-		<div id = "add_polycube_modal" class="modal" tabindex="-1" role="dialog">
+		<div id = "modal-add-polycube" class="modal" tabindex="-1" role="dialog">
 		  <div class="modal-dialog modal-lg" role="document">
 		    <div class="modal-content">
 		      <div class="modal-header">
@@ -89,7 +53,7 @@
 		      </div>
 		      <div class="modal-body">
 		      	<label type = "button" for = "load_polycube" class = "btn btn-dark">Load polycube from file...</label>
-		      	<input type = "file" id = "load_polycube"></input>
+		      	<input type = "file" id = "load_polycube" style = "display: none"></input>
 		      	<p class = "text-center">-OR-</p>
 		      	<h3>Name the polycube and create from scratch:</h3>
 		      	<form>
@@ -97,19 +61,6 @@
   					  <label for="name">Name</label>
   					  <input type="text" class="form-control" id="poly_name" aria-describedby="poly_name" placeholder="Enter polycube name">
   					</div>
-  					<div class="form-group" style= "display: none">
-  					  <label for="x">X</label>
-  					  <input type="text" class="form-control" id="poly_x" aria-describedby="x_coord" placeholder="Enter x-coordinate">
-  					</div>
-  					<div class="form-group" style= "display: none">
-  					  <label for="x">Y</label>
-  					  <input type="text" class="form-control" id="poly_y" aria-describedby="y_coord" placeholder="Enter y-coordinate">
-  					</div>
-  					<div class="form-group" style= "display: none">
-  					  <label for="z">Z</label>
-  					  <input type="text" class="form-control" id="poly_z" aria-describedby="z_coord" placeholder="Enter z-coordinate">
-  					</div>
-  					<button class="btn btn-outline-success" type = "button" id = "submit_poly_coords" data-dismiss="modal">Create</button>
   				</form>
 
   					<p class = "text-center">-OR-</p>
@@ -117,12 +68,12 @@
 
 
   					<div id = "poly_prev"></div>
-					<div class = "row" id = "prev_row_template"></div>
-					<div class = "col-4" id = "prev_card_template" style = "display: none">
+					<div class = "row" id = "prev-row-template"></div>
+					<div class = "col-4" id = "prev-card-template" style = "display: none">
 						<div class = "card">
 							<div id = "prev_container"></div>
 							<div class = "card-body">
-								<button class = "btn btn-outline-success select_prev_btn" id = "select_prev_btn" data-dismiss="modal">I am a card</button>
+								<button class = "btn btn-outline-success select-prev-btn" id = "select-prev-btn" data-dismiss="modal">I am a card</button>
 							</div>
 						</div>
 					</div>
@@ -146,24 +97,8 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="		sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="		sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 
-		<!--import other dependencies-->
-		<!--<script type = "module" src = "/imports/api/cube.js"></script>
-		<script type = "module" src = "/imports/api/dual-graph.js"></script>
-		<script type = "module" src = "/imports/api/polycube.js"></script>
-		<script type = "module" src = "/imports/api/spatial-map.js"></script>
-		<script type = "module" src = "/imports/api/utils.js"></script>-->
-
-		<!--import handlers-->
-		<!--<script type = "module" src = "/view/handlers/handle-hinging.js"></script>
-		<script type = "module" src = "/view/handlers/handle-load-polycube.js"></script>
-		<script type = "module" src = "/view/handlers/handle-polycube-preview.js"></script>
-		<script type = "module" src = "/view/handlers/handle-polycube-visual.js"></script>
-		<script type = "module" src = "/view/handlers/handle-scene.js"></script>
-		<script type = "module" src = "/view/handlers/handle-toolbar.js"></script>-->
-
-		<!--startup-->
-		<script type = "module" src = "/startup/runCubies.js"></script>
-		<script type = "module" src = "/startup/run.js"></script>
+		<!--start Cubies-->
+		<script type = "module" src = "/startup/Cubies.js"></script>
 
 
 	</body>

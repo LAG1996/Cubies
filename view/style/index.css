@@ -1,27 +1,22 @@
-#container{
+#main-canvas{
 	position:relative;
 }
 
-#everything_else{
+#gui{
 	width:100%;
 	top: 0;
 	position:absolute;
 }
 
-.mouse_tooltip{
-	position: absolute;
-	display: inline-block;
-}
-
-#tutorial_part{
+#tutorial-part{
 	padding-right: 2rem;
 	text-align: right;
 }
 
-#tutorial_panel_row{
+#tutorial-panel-row{
 	width: 25rem;
 }
 
-#load_polycube{
+#load-polycube{
 	visibility: hidden;
 }

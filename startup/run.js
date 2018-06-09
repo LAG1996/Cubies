@@ -1,4 +1,4 @@
-import runCubies from '/startup/runCubies.js';
+import { Cubies } from '/startup/Cubies.js';
 
 $(document).ready(function(){
 	var hasFace, hasEdge, hasArrow = false;
@@ -10,12 +10,12 @@ $(document).ready(function(){
 
 	var faceMesh, edgeMesh, arrowMesh = null;
 
-	var initializeAsync = setInterval(() => {
+	var runCubiesInterval = setInterval(() => {
 		if(hasFace && hasEdge && hasArrow)
 		{
-			clearInterval(initializeAsync);
+			clearInterval(runCubiesInterval);
 
-			runCubies();
+			let cubiesMain = new Cubies();
 		}
 	}, 10)
 
