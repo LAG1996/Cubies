@@ -3,7 +3,11 @@ import { guiHandler } from '/view/handlers/handler-gui.js';
 import { sceneHandler } from '/view/handlers/handler-scene.js';
 
 //import common utility stuff
-import { NTY_RAD } from '/imports/api/utils.js'; 
+import { NTY_RAD } from '/imports/api/utils.js';
+
+//import polycube class and interface
+import { Polycube } from '/imports/api/polycube.js';
+import { existsPolycubeName } from '/imports/api/polycube.js';
 
 //The main Cubies function - Represents the core function of our program.
 const Cubies = function(){
@@ -15,6 +19,7 @@ const Cubies = function(){
 	//initialize Cubies
 	loadModels();
 
+	//Default to the create polycube view on the gui
 	guiHandler.switchToCreatePolycubeView();
 
 	//Start the main loop
@@ -228,3 +233,51 @@ const Cubies = function(){
 
 //Run cubies
 Cubies();
+
+//some functions for testing
+function runTests(){
+	polycubeTest();
+}
+
+function polycubeTest(){
+	let pCube = null;
+	try{
+		pCube = new Polycube();
+
+		if(pCube.id){ failedTest("Private polycube property was accessed illegally.");}
+
+		if(pCube === undefined){ failedTest("Polycube was not created successfully"); }
+
+		if(pCube.addCube(new THREE.Vector3(0, 0, 0))){ failedTest("Illegal cube addition: cube added where a cube already exists."); }
+
+		if(!pCube.addCube(new THREE.Vector3(0, 1, 0))){ failedTest("Failed to add cube"); }
+
+		if(pCube.addCube(new THREE.Vector3(0, 3, 0))){ failedTest("Illegal cube addition: cube added without adjacent cubes."); }
+
+		if(!pCube.addCube(new THREE.Vector3(0, -1, 0))){ failedTest("Failed to add cube"); }
+
+		if(!pCube.addCube(new THREE.Vector3(0, 2, 0))){ failedTest("Failed to add cube"); }
+
+		if(pCube.cubeCount !== 4){ failedTest("Incorrect number of cubes"); }
+
+		pCube.name = "Peter";
+
+		if(pCube.name !== "Peter"){ failedTest("Name change failed"); }
+
+		let pCube2 = new Polycube();
+		pCube2.name = "Peter";
+
+		if(pCube2.name === "Peter"){ failedTest("Duplicate names"); }
+	}
+	catch(err){
+		console.error(err);
+	}
+	finally{
+		if(pCube)
+			pCube.destroy();
+	}
+}
+
+function failedTest(message){
+	throw "Test failed: " + message;
+}
