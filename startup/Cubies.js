@@ -35,7 +35,7 @@ loadModels();
 //Run cubies
 Cubies();
 
-runTests();
+//runTests();
 
 //Function to load cube parts and the arrows
 function loadModels(){

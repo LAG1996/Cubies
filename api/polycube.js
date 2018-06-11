@@ -185,8 +185,6 @@ const edgeEndpointCalculator = {
 		},
 };
 
-console.log(edgeEndpointCalculator);
-
 export const existsPolycubeName = function(polycubeName){ return MAP_PNAME.has(polycubeName); }
 
 export class Polycube {
@@ -356,6 +354,8 @@ function hasCubeAroundPosition(cubePosition){
 
 	directions.forEach(function(dir){
 		let scaledDirection = dir.clone().multiplyScalar(2);
+
+		console.log(dir);
 
 		if(hasCubeAtPosition(new THREE.Vector3().addVectors(cubePosition, scaledDirection))){
 			foundCube = true;

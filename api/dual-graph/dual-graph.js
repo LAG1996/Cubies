@@ -56,6 +56,8 @@ export class DualGraph{
 		if(FM[facePosition.x] && FM[facePosition.x][facePosition.y] && FM[facePosition.x][facePosition.y][facePosition.z]){
 			FM[facePosition.x][facePosition.y][facePosition.z].destroy();
 		}
+
+		console.log(FM);
 	}
 
 	destroy(){
