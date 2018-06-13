@@ -1,5 +1,4 @@
 import { FaceNode, EdgeNode } from './dual-graph-nodes.js';
-
 //Class representing the dual graph of a polycube
 //In this case, we refer to the face dual graph and the edge dual graph, the edge analogue to the face dual graph.
 //We use the ES6 method of defining the class and the WeakMap technique to defining private properties
@@ -16,6 +15,14 @@ export class DualGraph{
 			edgeToHinge: new Map(),
 		})
 	}
+	//getters
+	get faceMap(){
+		return DG_PRIVATES.get(this).faceMap;
+	}
+
+	get edgeMap(){
+		return DG_PRIVATES.get(this).edgeMap;
+	}
 
 	//Given an object representing a polycube face, add it to the dual graph.
 	/*
@@ -25,39 +32,34 @@ export class DualGraph{
 	*/
 	addFace(faceObj){
 		//Bind private functions that we'll be using here
-		placeNewFaceNode = placeNewFaceNode.bind(this);
+		addEdges = addEdges.bind(this);
 
 		let newFaceNode = new FaceNode(faceObj.position);
-		let edges = addEdges(newFaceNode, faceObj.edges);
-		setAdjacentFaces(newFaceNode);
-		placeNewFaceNode(newFaceNode.position, newFaceNode);
+		addEdges(this, newFaceNode, faceObj.edges);
+		placeNodeAt(DG_PRIVATES.get(this).faceMap, newFaceNode.position, newFaceNode);
 	}
 
 	//Check if there is a face at the specified position.
 	hasFaceAt(facePosition){
-		let FM = DG_PRIVATES.get(this).faceMap;
+		return hasNodeAt(DG_PRIVATES.get(this).faceMap, facePosition);
+	}
 
-		if(!FM[facePosition.x]){
-			return false;
-		}
-		else if(!FM[facePosition.x][facePosition.y]){
-			return false;
-		}
-		else if(!FM[facePosition.x][facePosition.y][facePosition.z]){
-			return false;
-		}
-
-		return true;
+	hasEdgeAt(edgePosition){
+		return hasNodeAt(DG_PRIVATES.get(this).edgeMap, edgePosition);
 	}
 
 	removeFace(facePosition){
-		let FM = DG_PRIVATES.get(this).faceMap;
-
-		if(FM[facePosition.x] && FM[facePosition.x][facePosition.y] && FM[facePosition.x][facePosition.y][facePosition.z]){
-			FM[facePosition.x][facePosition.y][facePosition.z].destroy();
+		let faceMap = DG_PRIVATES.get(this).faceMap;
+		if(hasNodeAt(faceMap, facePosition)){
+			faceMap[facePosition.x][facePosition.y][facePosition.z].destroy();
 		}
+	}
 
-		console.log(FM);
+	removeEdge(edgePosition){
+		let edgeMap = DG_PRIVATES.get(this).edgeMap;
+		if(hasNodeAt(edgeMap, edgePosition)){
+			edgeMap[edgePosition.x][edgePosition.y][edgePosition.z].destroy();
+		}
 	}
 
 	destroy(){
@@ -73,21 +75,47 @@ export class DualGraph{
 		* endpoints: [ THREE.Vector3, THREE.Vector3 ]
 		* position : THREE.Vector3
 */
-function addEdges(faceParent, edges){
+function addEdges(dualGraph, faceParent, edges){
+	let edgeMap = DG_PRIVATES.get(dualGraph).edgeMap;
+
+	edges.forEach(function(edge){
+		let newEdgeNode = new EdgeNode(edge.position, edge.endpoints, edge.axis, faceParent);
+		placeNodeAt(edgeMap, edge.position, newEdgeNode);
+		faceParent.addEdge(newEdgeNode);
+	})
 }
 
-function placeNewFaceNode(facePosition, faceNode){
-	let FM = DG_PRIVATES.get(this).faceMap;
+//Places a node of the specified type into their respective map.
+function placeNodeAt(map, nodePosition, newNode){
 
-	if(!FM[facePosition.x]){
-		FM[facePosition.x] = [];
-		FM[facePosition.x][facePosition.y] = [];
+	if(!map[nodePosition.x]){
+		map[nodePosition.x] = [];
+		map[nodePosition.x][nodePosition.y] = [];
 	}
-	else if(!FM[facePosition.x][facePosition.y]){
-		FM[facePosition.x][facePosition.y] = [];
+	else if(!map[nodePosition.x][nodePosition.y]){
+		map[nodePosition.x][nodePosition.y] = [];
 	}
 
-	FM[facePosition.x][facePosition.y][facePosition.z] = faceNode;
+	map[nodePosition.x][nodePosition.y][nodePosition.z] = newNode;
 }
+
+function hasNodeAt(map, nodePosition){
+
+	if(!map[nodePosition.x]){ return false; }
+	else if(!map[nodePosition.x][nodePosition.y]){ return false; }
+	else if(!map[nodePosition.x][nodePosition.y][nodePosition.z]){ return false; }
+
+	return true;
+}
+
+function getNodeAt(map, nodePosition){
+
+	if(hasNodeAt(map, nodePosition)){
+		return map[nodePosition.x][nodePosition.y][nodePosition.z]
+	}
+}
+
 
 function setAdjacentFaces(faceNode){}
+
+//Setup functions meant to be called when adding new cube

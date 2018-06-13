@@ -7,10 +7,10 @@ export class FaceNode{
 		//Defining private variables
 		FN_PRIVATES.set(this, {
 			neighbors: [],
+			edges: [],
 			position: facePosition,
 		});
 
-		this.edges = [];
 		this.visited = false;
 	}
 
@@ -23,13 +23,17 @@ export class FaceNode{
 		return FN_PRIVATES.get(this).position;
 	}
 
+	get edges(){
+		return FN_PRIVATES.get(this).edges;
+	}
+
 	//Add neighbors to the neighbor list. Release a warning if this face
 	//has more than 4 neighbors.
 	addNeighbor(face){
 		let neighbors = FN_PRIVATES.get(this).neighbors;
 		try{
 			if(neighbors.length >=4 ){
-				throw "Face ${FN_PRIVATES.get(this).name} has more than 4 neighbors. The polycube face dual graph is not 4-regular.";
+				throw "Face " + FN_PRIVATES.get(this).name + " has more than 4 neighbors. The polycube face dual graph is not 4-regular.";
 			}
 		}
 		catch(err){
@@ -40,6 +44,10 @@ export class FaceNode{
 		}
 	}
 
+	addEdge(edgeNode){
+		FN_PRIVATES.get(this).edges.push(edgeNode);
+	}
+
 	//Remove the specified neighbor
 	removeNeighbor(face){
 		let neighbors = FN_PRIVATES.get(this).neighbors;
@@ -47,8 +55,8 @@ export class FaceNode{
 	}
 
 	destroy(){
-
-		this.edges.forEach(function(edge){
+		console.log(this);
+		FN_PRIVATES.get(this).edges.forEach(function(edge){
 			edge.destroy();
 		})
 
@@ -63,10 +71,11 @@ export class FaceNode{
 const EN_PRIVATES = new WeakMap();
 
 export class EdgeNode{
-	constructor(edgePosition, edgeEndpoints, parentFace){
+	constructor(edgePosition, edgeEndpoints, edgeAxis, parentFace){
 		EN_PRIVATES.set(this, {
 			neighbors: [],
 			endpoints: edgeEndpoints,
+			axis: edgeAxis,
 			isBoundary: true,
 			parent: parentFace
 		})
@@ -79,6 +88,10 @@ export class EdgeNode{
 
 	get endpoints(){
 		return EN_PRIVATES.get(this).endpoints;
+	}
+
+	get axis(){
+		return EN_PRIVATES.get(this).axis;
 	}
 
 	get isBoundary(){
