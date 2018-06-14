@@ -5,12 +5,10 @@
 		<meta name = "author" content = "Luis Angel Garcia">
 		<meta charset = "utf-8">
 		<meta name = "viewport" content = "width=device-width">
-		<!-- Latest compiled and minified CSS -->
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
-		
-		<!-- Optional theme -->
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="	sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-	 	<link rel="stylesheet" href = "/view/style/index.css">
+
+		<link rel="stylesheet" href = "/view/style/index.css">
+		<!--Import bootstrap-->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
 	</head>
 
 	<body>
@@ -20,13 +18,15 @@
 			<nav class = "navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id = "nav">
 				<a href = "#" class = "navbar-brand">Cubies</a>
 				<div class = "navbar-header">
-					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "#modal-add-polycube" aria-expanded = "false" aria-controls = "navbar">
+					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "#nav" aria-expanded = "false" aria-controls = "navbar">
 						<span class = "navbar-toggler-icon"></span>
 					</button>
 				</div>
 				<div id = "wv_navbar" class = "collapse navbar-collapse">
 					<ul class = "navbar-nav mr-auto">
-							<li class = "nav-item"><button class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#modal-add-polycube" id = "add-polycube">New Polycube</button></li>
+							<li class = "nav-item">
+								<li class = "nav-item"><button class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#modalAddPolycube">New Polycube</button></li>
+							</li>
 							<li class = "nav-item"><button class = "btn btn-outline-warning mr-2 ml-2" id = "add-cube-active">Add Cube</button></li>
 							<li class = "nav-item"><button class = "btn btn-outline-secondary mr-2 ml-2"  id = "add-cube-inactive">Add Cube</button></li>	
 							<li class = "nav-item"><button class = "btn btn-outline-light mr-2 ml-2" id = "delete-polycube">Delete Polycube</button></li>
@@ -41,8 +41,8 @@
 				</div>
 			</nav>
 
-		<!--Add polycube_modal-->
-		<div id = "modal-add-polycube" class="modal" tabindex="-1" role="dialog">
+		<!--Add polycube modal-->
+		<div id = "modalAddPolycube" class="modal fade" tabindex="-1" role="dialog">
 		  <div class="modal-dialog modal-lg" role="document">
 		    <div class="modal-content">
 		      <div class="modal-header">
@@ -61,6 +61,7 @@
   					  <label for="name">Name</label>
   					  <input type="text" class="form-control" id="poly_name" aria-describedby="poly_name" placeholder="Enter polycube name">
   					</div>
+  					<button class="btn btn-outline-success" type = "button" id = "create-polycube" data-dismiss="modal">Create</button>
   				</form>
 
   					<p class = "text-center">-OR-</p>
@@ -68,12 +69,12 @@
 
 
   					<div id = "poly_prev"></div>
-					<div class = "row" id = "prev-row-template"></div>
-					<div class = "col-4" id = "prev-card-template" style = "display: none">
+					<div class = "row" id = "prev_row_template"></div>
+					<div class = "col-4" id = "prev_card_template" style = "display: none">
 						<div class = "card">
 							<div id = "prev_container"></div>
 							<div class = "card-body">
-								<button class = "btn btn-outline-success select-prev-btn" id = "select-prev-btn" data-dismiss="modal">I am a card</button>
+								<button class = "btn btn-outline-success select_prev_btn" id = "select_prev_btn" data-dismiss="modal">I am a card</button>
 							</div>
 						</div>
 					</div>
@@ -92,14 +93,17 @@
 		<!--Import File Saving function-->
 		<script src = "/imports/api/FileSaver/FileSaver.js"></script>
 
-		<!--Import JQUERY-->
-		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+		<!--import JQUERY-->
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+
+		<!--import Bootstrap Javascript functions-->
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
 
 		<!--run tests-->
 		<script type = "module" src = "/api/tests/test-bundle.js"></script>
 		<!--start Cubies-->
-		<script type = "module" src = "/startup/Cubies.js"></script>
-
-
+		<script type = "module" src = "/startup/runCubies.js"></script>
 	</body>
 </html>

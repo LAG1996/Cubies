@@ -49,3 +49,20 @@ export const toQ1Vector = function(vector){
 
 	return newVec;
 }
+
+//Maps a direction word to a function that gives the ID of a face based off the 
+export const faceIDCalculator = {
+	"up": (cubeCount) => { return cubeCount * 6;},
+	"down" : (cubeCount) => { return (cubeCount * 6) + 1; },
+	"left" : (cubeCount) => { return (cubeCount * 6) + 2; },
+	"right" : (cubeCount) => { return (cubeCount * 6) + 3; },
+	"front" : (cubeCount) => { return (cubeCount * 6) + 4; },
+	"back" : (cubeCount) => { return (cubeCount * 6) + 5; }
+}
+
+export const edgeIDCalculator = {
+	"up" : (faceID) => { return faceID * 4 + 1; },
+	"down" : (faceID) => { return (faceID * 4) + 2; },
+	"left" : (faceID) => { return (faceID * 4) + 3; },
+	"right" : (faceID) => { return (faceID * 4) + 4; }
+}

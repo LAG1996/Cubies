@@ -1,7 +1,7 @@
 //Class representing the scene handler.
 //This class handles the logic pertaining to drawing the editor scenes (including picking scenes)
 //We use the ES5 approach to creating classes since we only intend to use one instance of this class.
-const SceneHandler = function(bgColor = 0xffffe6){
+export const SceneHandler = function(bgColor = 0xffffe6){
 	//private variables
 	let _bgColor = new THREE.Color(bgColor);
 	const _pickingScenes = new Map();
@@ -39,7 +39,17 @@ const SceneHandler = function(bgColor = 0xffffe6){
 	}
 
 	//public variables
+	this.addToViewScene = function(object){
+		_mainScene.add(object);
+	}
 
+	this.addToPickingScene = function(sceneName, object){
+		_pickingScenes.get(sceneName).add(object);
+	}
+
+	this.setPickingScene = function(sceneName){
+		_pickingScenes.set(sceneName, new THREE.Scene());
+	}
 
 	this.setBackgroundColor = function(color){
 		_bgColor.set(color);
@@ -78,5 +88,3 @@ const SceneHandler = function(bgColor = 0xffffe6){
 		_pickingTexture.setSize(window.innerWidth, window.innerHeight);
 	})
 }
-
-export const sceneHandler = new SceneHandler();

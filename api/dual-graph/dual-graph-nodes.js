@@ -3,9 +3,10 @@
 const FN_PRIVATES = new WeakMap();
 
 export class FaceNode{
-	constructor(facePosition){
+	constructor(faceID, facePosition){
 		//Defining private variables
 		FN_PRIVATES.set(this, {
+			id: faceID,
 			neighbors: [],
 			edges: [],
 			position: facePosition,
@@ -15,6 +16,10 @@ export class FaceNode{
 	}
 
 	//getters
+	get ID(){
+		return FN_PRIVATES.get(this).id;
+	}
+
 	get neighbors(){
 		return FN_PRIVATES.get(this).neighbors;
 	}
@@ -49,20 +54,24 @@ export class FaceNode{
 	}
 
 	//Remove the specified neighbor
-	removeNeighbor(face){
-		let neighbors = FN_PRIVATES.get(this).neighbors;
-		neighbors.splice(neighbors.indexOf(face), 1);
+	removeNeighbor(faceNode){
+		this.neighbors.splice(this.neighbors.indexOf(faceNode), 1);
 	}
 
 	destroy(){
-		console.log(this);
-		FN_PRIVATES.get(this).edges.forEach(function(edge){
+
+		//Destroy all edges attached to this face
+		this.edges.forEach(function(edge){
 			edge.destroy();
 		})
 
-		FN_PRIVATES.delete(this);
+		//Tell all neighbors to forget about this node
+		this.neighbors.forEach(function(neighborFace){
+			neighborFace.removeNeighbor(this);
+		})
 
-		delete this;
+		//Remove references to this face's private members
+		FN_PRIVATES.delete(this);
 	}
 
 }
@@ -71,17 +80,27 @@ export class FaceNode{
 const EN_PRIVATES = new WeakMap();
 
 export class EdgeNode{
-	constructor(edgePosition, edgeEndpoints, edgeAxis, parentFace){
+	constructor(edgeID, edgePosition, edgeEndpoints, edgeAxis, parentFace){
 		EN_PRIVATES.set(this, {
+			id: edgeID,
 			neighbors: [],
 			endpoints: edgeEndpoints,
 			axis: edgeAxis,
+			position: edgePosition,
 			isBoundary: true,
 			parent: parentFace
 		})
 	}
 
 	//getters
+	get ID(){
+		return EN_PRIVATES.get(this).id;
+	}
+
+	get position(){
+		return EN_PRIVATES.get(this).position;
+	}
+
 	get neighbors(){
 		return EN_PRIVATES.get(this).neighbors;
 	}
@@ -107,9 +126,16 @@ export class EdgeNode{
 		EN_PRIVATES.get(this).isBoundary = val;
 	}
 
-	destroy(){
-		EN_PRIVATES.delete(this);
+	removeNeighbor(edgeNode){
+		this.neighbors.splice(this.neighbors.indexOf(edgeNode), 1);
+	}
 
-		delete this;
+	destroy(){
+		//tell all neighbors to remove me
+		this.neighbors.forEach(function(neighborEdge){
+			neighborEdge.removeNeighbor(this);
+		})
+
+		EN_PRIVATES.delete(this);
 	}
 }

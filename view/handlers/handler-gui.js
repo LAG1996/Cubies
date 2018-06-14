@@ -2,7 +2,7 @@
 //This class handles changes to the DOM using JQUERY.
 //We use the ES5 approach to creating the class since we
 //aren't going to make more than one instance.
-const GUIHandler = function(_tutorialMode){
+export const GUIHandler = function(_tutorialMode, _handlers){
 	//Private properties
 	let _showAddCube = true;
 
@@ -20,7 +20,7 @@ const GUIHandler = function(_tutorialMode){
 
 	this.switchToPolycubeView = function(polycubeName){
 		$("#add-cube-active").show();
-		$("#add-cube-inactive").show();
+		$("#add-cube-inactive").hide();
 		$("#save-polycube").show();
 		$("#delete-polycube").show();
 		
@@ -53,6 +53,7 @@ const GUIHandler = function(_tutorialMode){
 
 	let handleAddPolycube = function(){
 		console.log("Add Polycube function fired");
+		_handlers.onNewPolycube();
 	}
 
 	let handleLoadPolycube = function(){
@@ -67,19 +68,10 @@ const GUIHandler = function(_tutorialMode){
 		console.log("Delete Polycube function fired");
 	}
 
-	//bind these functions to this instance
-	handleAddCube = handleAddCube.bind(this);
-	handleAddPolycube = handleAddPolycube.bind(this);
-	handleLoadPolycube = handleLoadPolycube.bind(this);
-	handleDeletePolycube = handleDeletePolycube.bind(this);
-
 	//bind events to buttons
-	$("#add-polycube").on("click", function(){handleAddPolycube();});
+	$("#create-polycube").on("click", function(){handleAddPolycube();})
 	$("#load-polycube").on("click", function(){handleLoadPolycube();});
 	$("#delete-polycube").on("click", function(){handleDeletePolycube();});
 	$("#add-cube-active").on("click", function(){handleAddCube();});
 
 }
-
-//export an instance of the guiHandler (we'd only need one)
-export const guiHandler = new GUIHandler(false);
