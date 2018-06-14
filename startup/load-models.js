@@ -1,5 +1,3 @@
-import { NTY_RAD } from '/api/utils.js';
-
 export let areModelsLoaded = false;
 
 //Function to load cube parts and the arrows

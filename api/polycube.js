@@ -1,7 +1,3 @@
-//Import some important definitions
-import { directions, directionWords, wordToDirection, wordToOppositeWord, toQ1Vector } from './utils.js';
-import { faceIDCalculator, edgeIDCalculator } from './utils.js';
-
 //Import the dual graph class
 import { DualGraph } from './dual-graph/dual-graph.js';
 
@@ -187,11 +183,10 @@ const edgeEndpointCalculator = {
 };
 
 export const existsPolycubeName = function(polycubeName){ return MAP_PNAME.has(polycubeName); }
-export const existsPolycubeID = function(polycubeID){ return MAP_PID.has(polycubeID); }
 export const nextDefaultName = function(){ return "Polycube_" + nextPid; }
 
 export class Polycube {
-	constructor(polycubeName = nextDefaultName()){
+	constructor(polycubeName = Polycube.nextDefaultName()){
 		//Private variables, objects
 		P_PRIVATES.set(this, {
 			id: nextPid,
@@ -358,6 +353,14 @@ export class Polycube {
 		catch(err){
 			console.error(err);
 		}
+	}
+
+	static isNameTaken(name){
+		return MAP_PNAME.has(name);
+	}
+
+	static nextDefaultName(){
+		return "Polycube " + nextPid;
 	}
 }
 

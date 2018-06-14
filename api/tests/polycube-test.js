@@ -1,6 +1,6 @@
 import { TestManager } from './simple-test-manager.js';
 
-import { Polycube, existsPolycubeName, existsPolycubeID } from '/api/polycube.js';
+import { Polycube } from '/api/polycube.js';
 
 const pcubeTest = new TestManager("Polycube Test");
 
@@ -16,11 +16,7 @@ export const runPolycubeTest = function(){
 	}, "Check if polycube was created successfully");
 
 	pcubeTest.assert(true, () => {
-		return existsPolycubeID(0);
-	}, "Check if polycube is referenced by ID");
-
-	pcubeTest.assert(true, () => {
-		return existsPolycubeName("Polycube_0");
+		return Polycube.isNameTaken("Polycube 0");
 	}, "Check if polycube has default name Polycube_0");
 
 	pcubeTest.assert(false, () => {
@@ -87,12 +83,8 @@ export const runPolycubeTest = function(){
 	pCube.destroy();
 
 	pcubeTest.assert(false, () => {
-		return existsPolycubeName("Peter");
+		return Polycube.isNameTaken("Peter");
 	}, "Check if the name Peter is still taken");
-
-	pcubeTest.assert(false, () => {
-		return existsPolycubeID(0);
-	}, "Check if the first polycube still has ID");
 
 	pCube2.name = "Peter";
 	pcubeTest.assert("Peter", () => {
@@ -101,10 +93,10 @@ export const runPolycubeTest = function(){
 
 	pCube2.name = "Steven";
 	pcubeTest.assert(false, () => {
-		return existsPolycubeName("Peter");
+		return Polycube.isNameTaken("Peter");
 	}, "Check if Peter is a taken name after changing pCube2's name to Peter");
 
 	pcubeTest.assert(true, () => {
-		return existsPolycubeName("Steven");
+		return Polycube.isNameTaken("Steven");
 	}, "Check if Steven is a taken name");
 }

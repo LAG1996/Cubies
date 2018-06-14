@@ -1,6 +1,5 @@
 import { FaceNode, EdgeNode } from './dual-graph-nodes.js';
 
-import { directionWords, faceIDCalculator, edgeIDCalculator } from '/api/utils.js';
 //Class representing the dual graph of a polycube
 //In this case, we refer to the face dual graph and the edge dual graph, the edge analogue to the face dual graph.
 //We use the ES6 method of defining the class and the WeakMap technique to defining private properties

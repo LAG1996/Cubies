@@ -25,11 +25,11 @@
 				<div id = "wv_navbar" class = "collapse navbar-collapse">
 					<ul class = "navbar-nav mr-auto">
 							<li class = "nav-item">
-								<li class = "nav-item"><button class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#modalAddPolycube">New Polycube</button></li>
+								<li class = "nav-item"><button id = "add-polycube" class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#modalAddPolycube">New Polycube</button></li>
 							</li>
-							<li class = "nav-item"><button class = "btn btn-outline-warning mr-2 ml-2" id = "add-cube-active">Add Cube</button></li>
-							<li class = "nav-item"><button class = "btn btn-outline-secondary mr-2 ml-2"  id = "add-cube-inactive">Add Cube</button></li>	
-							<li class = "nav-item"><button class = "btn btn-outline-light mr-2 ml-2" id = "delete-polycube">Delete Polycube</button></li>
+							<li class = "nav-item"><button id = "add-cube-active" class = "btn btn-outline-warning mr-2 ml-2" id = "add-cube-active">Add Cube</button></li>
+							<li class = "nav-item"><button id = "add-cube-inactive" class = "btn btn-outline-secondary mr-2 ml-2">Add Cube</button></li>	
+							<li class = "nav-item"><button id = "delete-polycube" class = "btn btn-outline-light mr-2 ml-2">Delete Polycube</button></li>
 
 					</ul>
 
@@ -101,8 +101,10 @@
 		<!--import Bootstrap Javascript functions-->
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
 
+		<!--import utils-->
+		<script src = "/api/utils.js"></script> 
 		<!--run tests-->
-		<script type = "module" src = "/api/tests/test-bundle.js"></script>
+		<!--<script type = "module" src = "/api/tests/test-bundle.js"></script>-->
 		<!--start Cubies-->
 		<script type = "module" src = "/startup/runCubies.js"></script>
 	</body>

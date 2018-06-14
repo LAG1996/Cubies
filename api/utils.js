@@ -1,6 +1,6 @@
-export const Y_OFFSET = -0.115
-export const XZ_OFFSET = 0
-export const NTY_RAD = 90*(Math.PI/180);
+const Y_OFFSET = -0.115
+const XZ_OFFSET = 0
+const NTY_RAD = 90*(Math.PI/180);
 
 const up = new THREE.Vector3(0, 1, 0);
 const down = new THREE.Vector3(0, -1, 0);
@@ -9,11 +9,11 @@ const right = new THREE.Vector3(1, 0, 0);
 const front = new THREE.Vector3(0, 0, 1);
 const back = new THREE.Vector3(0, 0, -1);
 
-export const directionWords = ["up", "down", "right", "left", "front", "back", "up"];
+const directionWords = ["up", "down", "right", "left", "front", "back", "up"];
 
-export const directions = [up, down, left, right, front, back, up];
+const directions = [up, down, left, right, front, back];
 
-export const wordToDirection = new Map(
+const wordToDirection = new Map(
 	[["up", up],
 	["down", down],
 	["left", left],
@@ -21,7 +21,7 @@ export const wordToDirection = new Map(
 	["front", front],
 	["back", back]]);
 
-export const wordToOppositeWord = new Map(
+const wordToOppositeWord = new Map(
 	[["up", "down"], 
 	["down", "up"], 
 	["right", "left"], 
@@ -29,9 +29,9 @@ export const wordToOppositeWord = new Map(
 	["front", "back"], 
 	["back", "front"]]);
 
-export const toLattice = function(position){
+const toLatticeVector = function(vector){
 
-	let lattPos = position.clone();
+	let lattPos = vector.clone();
 
 	lattPos.x = Math.round(lattPos.x);
 	lattPos.y = Math.round(lattPos.y);
@@ -40,7 +40,7 @@ export const toLattice = function(position){
 	return lattPos;
 }
 
-export const toQ1Vector = function(vector){
+const toQ1Vector = function(vector){
 	let newVec = vector.clone();
 
 	newVec.x = newVec.x < 0 ? newVec.x * -1 : newVec.x;
@@ -51,18 +51,60 @@ export const toQ1Vector = function(vector){
 }
 
 //Maps a direction word to a function that gives the ID of a face based off the 
-export const faceIDCalculator = {
-	"up": (cubeCount) => { return cubeCount * 6;},
-	"down" : (cubeCount) => { return (cubeCount * 6) + 1; },
-	"left" : (cubeCount) => { return (cubeCount * 6) + 2; },
-	"right" : (cubeCount) => { return (cubeCount * 6) + 3; },
-	"front" : (cubeCount) => { return (cubeCount * 6) + 4; },
-	"back" : (cubeCount) => { return (cubeCount * 6) + 5; }
+const faceIDCalculator = {
+	"up": (cubeCount) => { return (cubeCount * 6) + 1;},
+	"down" : (cubeCount) => { return (cubeCount * 6) + 2; },
+	"left" : (cubeCount) => { return (cubeCount * 6) + 3; },
+	"right" : (cubeCount) => { return (cubeCount * 6) + 4; },
+	"front" : (cubeCount) => { return (cubeCount * 6) + 5; },
+	"back" : (cubeCount) => { return (cubeCount * 6) + 6; }
 }
 
-export const edgeIDCalculator = {
-	"up" : (faceID) => { return faceID * 4 + 1; },
-	"down" : (faceID) => { return (faceID * 4) + 2; },
-	"left" : (faceID) => { return (faceID * 4) + 3; },
-	"right" : (faceID) => { return (faceID * 4) + 4; }
+const edgeIDCalculator = {
+	"up" : (faceID) => { return ((faceID - 1) * 4) + 1; },
+	"down" : (faceID) => { return ((faceID - 1) * 4) + 2; },
+	"left" : (faceID) => { return ((faceID - 1) * 4) + 3; },
+	"right" : (faceID) => { return ((faceID - 1) * 4) + 4; }
+}
+
+const faceName = {
+	withCubeID: (cubeID, direction) => {
+		return "face" + faceIDCalculator[direction](cubeID);
+	},
+	withFaceID: (faceID) => {
+		return "face" + faceID;
+	}
+}
+
+const edgeName = {
+	withFaceID: (faceID, direction) => {
+		return "edge" + edgeIDCalculator[direction](faceID);
+	},
+	withEdgeID: (edgeID) => {
+		return "edge" + edgeID;
+	}
+}
+
+const faceIDtoDirWord = function(faceID){
+	let mod = ID % 6;
+
+	switch(mod){
+		case 1: return "up"; break;
+		case 2: return "down"; break;
+		case 3: return "left"; break;
+		case 4: return "right"; break;
+		case 5: return "front"; break;
+		case 0: return "back"; break;
+	}
+}
+
+const edgeIDtoDirWord = function(edgeID){
+	let mod = edgeID % 4;
+
+	switch(mod){
+		case 1: return "up"; break;
+		case 2: return "down"; break;
+		case 3: return "left"; break;
+		case 0: return "right"; break;
+	}
 }
