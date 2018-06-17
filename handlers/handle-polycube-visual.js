@@ -7,7 +7,7 @@ let _edgePickPolycubes = new Map();
 let _facePickPolycubes = new Map();
 
 //Highlight materials when mousing over
-const _HIGHLIGHT_MOUSE_SHIFT = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0x00FF00});
+const _HIGHLIGHT_MOUSE_SHIFT = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0xFFFF00});
 const _HIGHLIGHT_MOUSE = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0x00FF00});
 
 //Highlight materials for cut edges
@@ -22,6 +22,8 @@ const _HIGHLIGHT_FACE_DUAL2 = new THREE.MeshBasicMaterial({transparent: true, op
 
 //Material for inactive parts in picking scenes.
 const _INACTIVE_PICK_PART_MAT = new THREE.MeshBasicMaterial({color : 0x000000});
+
+const _visibleHighlights = [];
 
 const _modelTemplates = {cube: null, face: null, edge: null};
 
@@ -89,6 +91,8 @@ export const PolycubeVisualHandler = {
 		edgeHighlight.material = isRegular ? _HIGHLIGHT_MOUSE : _HIGHLIGHT_MOUSE_SHIFT;
 		edgeHighlight.updateMatrix();
 		edgeHighlight.visible = true;
+
+		_visibleHighlights.push(edgeHighlight);
 	},
 	showFaceHighlight: (polycubeID, faceID, isRegular) => {
 		let polycube = _viewPolycubes.get(polycubeID);
@@ -103,10 +107,34 @@ export const PolycubeVisualHandler = {
 		faceHighlight.material = isRegular ? _HIGHLIGHT_MOUSE : _HIGHLIGHT_MOUSE_SHIFT;
 		faceHighlight.updateMatrix();
 		faceHighlight.visible = true;
+
+		_visibleHighlights.push(faceHighlight);
 	},
-	hideHighlights: (polycubeID) => {
-		edgeHighlight.visible = false;
-		faceHighlight.visible = false;
+	showFaceAdjacencyHighlight: (polycubeID, mainFaceID, faceNeighborIDs) => {
+		let polycube = _viewPolycubes.get(polycubeID);
+
+		let mainFaceBody = polycube.getObjectByName(faceName.withFaceID(mainFaceID)).getObjectByName("body");
+
+		mainFaceBody.children[0].material = _HIGHLIGHT_FACE_DUAL1;
+		mainFaceBody.visible = true;
+
+		_visibleHighlights.push(mainFaceBody.children[0]);
+
+		faceNeighborIDs.map((neighborID) => {
+			let neighborFaceBody = polycube.getObjectByName(faceName.withFaceID(neighborID)).getObjectByName("body");
+
+			neighborFaceBody.children[0].material = _HIGHLIGHT_FACE_DUAL2;
+			neighborFaceBody.children[0].visible = true;
+
+			_visibleHighlights.push(neighborFaceBody.children[0]);
+		});
+	},
+	hideHighlights: () => {
+		_visibleHighlights.map((highlight) => {
+			highlight.visible = false;
+		});
+
+		clearArray(_visibleHighlights);
 	}
 }
 

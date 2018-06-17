@@ -4,11 +4,13 @@ const _oldMousePosition = new THREE.Vector2(0, 0);
 let _mouseDeltaMagnitude = 0;
 let _mouseDown = false;
 
-export const MouseHandler = {
+export const InputHandler = {
 	callbacks: {
 		onMouseDown: () => {},
 		onMouseUp: () => {},
-		onMouseMove: () => {}
+		onMouseMove: () => {},
+		onKeyDown: () => {},
+		onKeyUp: () => {}
 	},
 	getMousePosition: () => {
 		return _mousePosition.clone();
@@ -37,18 +39,26 @@ $("#main-canvas").on("mousemove", (event) => {
 
 	_oldMousePosition.copy(_mousePosition);
 
-	MouseHandler.callbacks.onMouseMove();
+	InputHandler.callbacks.onMouseMove();
 });
 
 $("#main-canvas").on("mousedown", (event) => {
 	_mouseDown = true;
 	_mouseDeltaMagnitude = 0;
 
-	MouseHandler.callbacks.onMouseDown();
+	InputHandler.callbacks.onMouseDown();
 });
 
 $("#main-canvas").on("mouseup", (event) => {
 	_mouseDown = false;
 
-	MouseHandler.callbacks.onMouseUp();
+	InputHandler.callbacks.onMouseUp();
 });
+
+$(window).on("keydown", (event) => {
+	InputHandler.callbacks.onKeyDown(event.key);
+})
+
+$(window).on("keyup", (event) => {
+	InputHandler.callbacks.onKeyUp(event.key);
+})

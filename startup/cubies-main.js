@@ -1,6 +1,6 @@
 //import handlers
 import { GUIHandler } from '/handlers/ui/handler-gui.js';
-import { MouseHandler } from '/handlers/ui/handler-mouse.js';
+import { InputHandler } from '/handlers/ui/handler-input.js';
 import { SceneHandler } from '/handlers/handler-scene.js';
 import { PolycubeVisualHandler, setModelTemplates, edgeHighlight, faceHighlight } from '/handlers/handle-polycube-visual.js';
 
@@ -12,6 +12,8 @@ const CubiesState = {
 		showFaceDual: false,
 		showArrows: false,
 		isShiftDown: false,
+		isControlDown: false,
+		isKeyDown: false,
 		isOverEdge: false,
 		isOverFace: false,
 		doUpdateCuts: false,
@@ -67,37 +69,77 @@ GUIHandler.callbacks.onAddCube = () => {
 	console.log("Adding cube");
 }
 
-MouseHandler.callbacks.onMouseDown = () => {
+InputHandler.callbacks.onMouseDown = () => {
 }
 
-MouseHandler.callbacks.onMouseUp = () => {
+InputHandler.callbacks.onMouseUp = () => {
 }
 
 //Function to handle mouse hovering
-MouseHandler.callbacks.onMouseMove = () => {
+InputHandler.callbacks.onMouseMove = () => {
+	tryHighlight();
+}
 
-	if(!MouseHandler.isMouseDown()){
-		//Hide highlights
-		PolycubeVisualHandler.hideHighlights(CubiesState.cache.focusPolycube.ID);
-		
-		//Find what component of the polycube we are hovering over.
-		let faceID = SceneHandler.pick("face", MouseHandler.getMousePosition());
+//Function to handle key presses
+InputHandler.callbacks.onKeyDown = (key) => {
+	if(CubiesState.flags.isKeyDown) return; 
 
-		let edgeID = 0;
-		if(faceID === 0)
-		{
-			edgeID = SceneHandler.pick("edge", MouseHandler.getMousePosition());
+	if(key === "Shift"){
+		console.log("Clicked shift");
+		CubiesState.flags.isKeyDown = true;
 
-			if(edgeID !== 0){
-				PolycubeVisualHandler.showEdgeHighlight(CubiesState.cache.focusPolycube.ID, edgeID, !CubiesState.flags.isShiftDown);
-			}
+		CubiesState.flags.isControlDown = false;
+		CubiesState.flags.isShiftDown = true;
+	}
+	else if(key === "Control"){
+		console.log("Clicked control")
+		CubiesState.flags.isKeyDown = true;
+
+		CubiesState.flags.isShiftDown = false;
+		CubiesState.flags.isControlDown = true;
+	}
+
+	tryHighlight();
+}
+
+InputHandler.callbacks.onKeyUp = (key) => {
+	console.log("hmmmm")
+	CubiesState.flags.isKeyDown = false;
+
+	if(key === "Shift"){
+		CubiesState.flags.isShiftDown = false;
+	}
+	else if(key === "Control"){
+		CubiesState.flags.isControlDown = false;
+	}
+
+	tryHighlight();
+}
+
+function tryHighlight(){
+	if(CubiesState.cache.focusPolycube != null && !InputHandler.isMouseDown()){
+	//Hide highlights
+	PolycubeVisualHandler.hideHighlights(CubiesState.cache.focusPolycube.ID);
+	//Find what component of the polycube we are hovering over.
+	let faceID = SceneHandler.pick("face", InputHandler.getMousePosition());
+
+	let edgeID = 0;
+	if(faceID === 0)
+	{
+		edgeID = SceneHandler.pick("edge", InputHandler.getMousePosition());
+
+		if(edgeID !== 0){
+			PolycubeVisualHandler.showEdgeHighlight(CubiesState.cache.focusPolycube.ID, edgeID, !CubiesState.flags.isShiftDown);
 		}
-		else{
-			PolycubeVisualHandler.showFaceHighlight(CubiesState.cache.focusPolycube.ID, faceID, !CubiesState.flags.isShiftDown);
+	}
+	else{
+			if(!CubiesState.flags.isControlDown)
+				PolycubeVisualHandler.showFaceHighlight(CubiesState.cache.focusPolycube.ID, faceID, !CubiesState.flags.isShiftDown);
+			else
+				PolycubeVisualHandler.showFaceAdjacencyHighlight(CubiesState.cache.focusPolycube.ID, faceID, CubiesState.cache.focusPolycube.getFaceNeighbors(faceID));
 		}
 	}
 	else{
 
 	}
-
 }

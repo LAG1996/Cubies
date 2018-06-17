@@ -3,13 +3,14 @@
 const FN_PRIVATES = new WeakMap();
 
 export class FaceNode{
-	constructor(faceID, facePosition){
+	constructor(faceID, facePosition, parentCubePosition){
 		//Defining private variables
 		FN_PRIVATES.set(this, {
 			id: faceID,
-			neighbors: [],
+			neighbors: new Map(),
 			edges: [],
 			position: facePosition,
+			parentCubePosition: parentCubePosition
 		});
 
 		this.visited = false;
@@ -28,24 +29,28 @@ export class FaceNode{
 		return FN_PRIVATES.get(this).position;
 	}
 
+	get parentCubePosition(){
+		return FN_PRIVATES.get(this).parentCubePosition;
+	}
+
 	get edges(){
 		return FN_PRIVATES.get(this).edges;
 	}
 
 	//Add neighbors to the neighbor list. Release a warning if this face
 	//has more than 4 neighbors.
-	addNeighbor(face){
+	addNeighbor(faceNode, neighborsEdge, myEdge){
 		let neighbors = FN_PRIVATES.get(this).neighbors;
 		try{
 			if(neighbors.length >=4 ){
-				throw "Face " + FN_PRIVATES.get(this).name + " has more than 4 neighbors. The polycube face dual graph is not 4-regular.";
+				throw "Face #" + this.ID + " has more than 4 neighbors. The polycube face dual graph is not 4-regular.";
 			}
 		}
 		catch(err){
 			console.error(err);
 		}
 		finally{
-			neighbors.push(face);
+			neighbors.set(faceNode.ID, {face: faceNode, neighborsEdge: neighborsEdge, myEdge: myEdge});
 		}
 	}
 
@@ -55,7 +60,7 @@ export class FaceNode{
 
 	//Remove the specified neighbor
 	removeNeighbor(faceNode){
-		this.neighbors.splice(this.neighbors.indexOf(faceNode), 1);
+		this.neighbors.delete(faceNode.ID);
 	}
 
 	destroy(){
@@ -66,8 +71,8 @@ export class FaceNode{
 		})
 
 		//Tell all neighbors to forget about this node
-		this.neighbors.forEach(function(neighborFace){
-			neighborFace.removeNeighbor(this);
+		this.neighbors.forEach((neighborData) => {
+			neighborData.face.removeNeighbor(this);
 		})
 
 		//Remove references to this face's private members

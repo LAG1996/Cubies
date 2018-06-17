@@ -9,7 +9,7 @@ const right = new THREE.Vector3(1, 0, 0);
 const front = new THREE.Vector3(0, 0, 1);
 const back = new THREE.Vector3(0, 0, -1);
 
-const directionWords = ["up", "down", "right", "left", "front", "back", "up"];
+const directionWords = ["up", "down", "left", "right", "front", "back"];
 
 const directions = [up, down, left, right, front, back];
 
@@ -52,12 +52,22 @@ const toQ1Vector = function(vector){
 
 //Maps a direction word to a function that gives the ID of a face based off the 
 const faceIDCalculator = {
-	"up": (cubeCount) => { return (cubeCount * 6) + 1;},
-	"down" : (cubeCount) => { return (cubeCount * 6) + 2; },
-	"left" : (cubeCount) => { return (cubeCount * 6) + 3; },
-	"right" : (cubeCount) => { return (cubeCount * 6) + 4; },
-	"front" : (cubeCount) => { return (cubeCount * 6) + 5; },
-	"back" : (cubeCount) => { return (cubeCount * 6) + 6; }
+	"up": (cubeID) => { return (cubeID * 6) + 1;},
+	"down" : (cubeID) => { return (cubeID * 6) + 2; },
+	"left" : (cubeID) => { return (cubeID * 6) + 3; },
+	"right" : (cubeID) => { return (cubeID * 6) + 4; },
+	"front" : (cubeID) => { return (cubeID * 6) + 5; },
+	"back" : (cubeID) => { return (cubeID * 6) + 6; }
+}
+
+//Given a cube's ID, get a list of that cube's faces' ID's.
+const getFaceIDBundle = function(cubeID){
+	let faceBundle = [];
+	directionWords.map((dirWord) => {
+		faceBundle.push(faceIDCalculator[dirWord](cubeID));
+	});
+
+	return faceBundle;
 }
 
 const edgeIDCalculator = {
@@ -86,7 +96,7 @@ const edgeName = {
 }
 
 const faceIDtoDirWord = function(faceID){
-	let mod = ID % 6;
+	let mod = faceID % 6;
 
 	switch(mod){
 		case 1: return "up"; break;
@@ -107,4 +117,8 @@ const edgeIDtoDirWord = function(edgeID){
 		case 3: return "left"; break;
 		case 0: return "right"; break;
 	}
+}
+
+const clearArray = function(array){
+	array.length = 0;
 }

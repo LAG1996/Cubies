@@ -1,6 +1,8 @@
 //Import the dual graph class
 import { DualGraph } from './dual-graph/dual-graph.js';
 
+import { SpatialMap } from './spatial-map.js';
+
 //Class representing polycubes
 //Polycubes are composed of cubes, a dual graph, and a spatial map.
 //We use the ES6 class with the Weak Map technique to creating private variables.
@@ -182,9 +184,6 @@ const edgeEndpointCalculator = {
 		},
 };
 
-export const existsPolycubeName = function(polycubeName){ return MAP_PNAME.has(polycubeName); }
-export const nextDefaultName = function(){ return "Polycube_" + nextPid; }
-
 export class Polycube {
 	constructor(polycubeName = Polycube.nextDefaultName()){
 		//Private variables, objects
@@ -193,9 +192,8 @@ export class Polycube {
 			cubeCount: 0,
 			faceCount: 0,
 			name: polycubeName,
-			cubeMap: new Array(),
+			cubeMap: new SpatialMap(),
 			dualGraph: new DualGraph(),
-			//spatialMap: new SpatialMap(),
 		});
 
 		//Map this polycube's name and id to itself
@@ -235,7 +233,7 @@ export class Polycube {
 			//If there is a cube in the direction given by `dir`, then there is a face incident to this one.
 			//We need to remove that face.
 			let cubeInDirectionID = that.getCube(new THREE.Vector3().addVectors(cubePosition, dir));
-			if(typeof cubeInDirectionID === "number"){
+			if(cubeInDirectionID != null){
 
 				let oppositeDirectionWord = wordToOppositeWord.get(dirWord);
 				let faceToRemoveID = faceIDCalculator[oppositeDirectionWord](cubeInDirectionID);
@@ -257,7 +255,7 @@ export class Polycube {
 				//Generate the edge's data
 				let edgeData = calculateEdgeData(faceID, scaledCubePosition, dirWord);
 
-				dualGraph.addFace({id: faceID, position: facePosition, parentCubePosition: cubePosition, edgeData: edgeData});
+				dualGraph.addFace({id: faceID, position: facePosition, parentCubePosition: cubePosition, edgeData: edgeData}, P_PRIVATES.get(that).cubeMap);
 
 				//Increment the face count.
 				faceCount += 1;
@@ -303,29 +301,23 @@ export class Polycube {
 	}
 
 	hasCubeAtPosition(cubePosition){
-		let CM = P_PRIVATES.get(this).cubeMap;
-		
-		if(typeof CM[cubePosition.x] === 'undefined'){
-			return false;
-		}
-		else if(typeof CM[cubePosition.x][cubePosition.y] === 'undefined'){
-			return false;
-		}
-		else if(typeof CM[cubePosition.x][cubePosition.y][cubePosition.z] === 'undefined'){
-			return false;
-		}
-
-		return true;
+		return P_PRIVATES.get(this).cubeMap.hasDataAtPosition(cubePosition);
 	}
 
+	hasCubeAroundPosition(cubePosition){
+		let hasCube = false;
 
+		directions.map((dir) => {
+			if(P_PRIVATES.get(this).cubeMap.hasDataAtPosition(new THREE.Vector3().addVectors(cubePosition, dir))){
+				hasCube = true;
+			}
+		});
+
+		return hasCube;
+	}
 
 	getCube(cubePosition){
-		if(this.hasCubeAtPosition(cubePosition)){
-			return P_PRIVATES.get(this).cubeMap[cubePosition.x][cubePosition.y][cubePosition.z];
-		}
-
-		return null;
+		return P_PRIVATES.get(this).cubeMap.getData(cubePosition);
 	}
 
 	getCubesAroundPosition(cubePosition){
@@ -335,6 +327,17 @@ export class Polycube {
 		})
 
 		return neighborList;	
+	}
+
+	getFaceNeighbors(faceID){
+		let neighbors = P_PRIVATES.get(this).dualGraph.getFace(faceID).neighbors;
+
+		let neighborIDs = [];
+		neighbors.forEach((neighbor) => {
+			neighborIDs.push(neighbor.face.ID);
+		});
+
+		return neighborIDs;
 	}
 
 	//Removes all references to this object
@@ -365,80 +368,34 @@ export class Polycube {
 }
 
 //Private functions
-function canAddCube(polycube, cubePosition){
+//Checks if a new cube can be added to the polycube
+function canAddCube(polycube, newCubePosition){
 
 	//Check if there is already a cube at this position.
-	if(hasCubeAtPosition(polycube, cubePosition)){ return false; }
+	if(polycube.hasCubeAtPosition(newCubePosition)){ return false; }
 	//Check if there aren't any cubes adjacent to this one
-	else if(!hasCubeAroundPosition(polycube, cubePosition)) { return false; }
+	else if(!polycube.hasCubeAroundPosition(newCubePosition)) { return false; }
 
 	return true;
 }
 
-//Checks if a cube exists at this position
-function hasCubeAtPosition(polycube, cubePosition){
-	let CM = P_PRIVATES.get(polycube).cubeMap;
-	
-	if(typeof CM[cubePosition.x] === 'undefined'){
-		return false;
-	}
-	else if(typeof CM[cubePosition.x][cubePosition.y] === 'undefined'){
-		return false;
-	}
-	else if(typeof CM[cubePosition.x][cubePosition.y][cubePosition.z] === 'undefined'){
-		return false;
-	}
-
-	return true;
+//Place the new cube's ID (given by the current polycube count before adding this cube) at the given position
+function reserveCubePosition(polycube, newCubePosition){
+	P_PRIVATES.get(polycube).cubeMap.addToMap(P_PRIVATES.get(polycube).cubeCount, newCubePosition);
 }
 
-//Checks in the six directions around the given position for the existence of a cube.
-function hasCubeAroundPosition(polycube, cubePosition){
-	let foundCube = false;
-
-	directions.forEach(function(dir){
-		if(hasCubeAtPosition(polycube, new THREE.Vector3().addVectors(cubePosition, dir))){
-			foundCube = true;
-		}
-	})
-
-	return foundCube;
-}
-
-function reserveCubePosition(polycube, cubePosition){
-	//Grab the reference for the cubeMap
-	let newCM = P_PRIVATES.get(polycube).cubeMap;
-
-	//Build new parts of the cube map if needed.
-	if(!newCM[cubePosition.x]){
-		newCM[cubePosition.x] = []
-		newCM[cubePosition.x][cubePosition.y] = []
-	}
-	else if(!newCM[cubePosition.x][cubePosition.y]){
-		newCM[cubePosition.x][cubePosition.y] = []
-	}
-
-	//Set the entry for this position in the cube map.
-	newCM[cubePosition.x][cubePosition.y][cubePosition.z] = P_PRIVATES.get(polycube).cubeCount;
-}
-
-function addFace(polycube, facePosition){
-	return P_PRIVATES.get(polycube).dualGraph.addFace(facePosition);
-}
-
-function removeFace(polycube, cube, facePosition){
-	P_PRIVATES.get(polycube).dualGraph.removeFace(facePosition);
-}
-
-function calculateEdgeData(parentFaceID, cubePosition, dirWord1){
+//Given the ID of a new face, the cube's position (scaled to 2 so we can place edges on a lattice), and the direction word for the new face,
+//calculate the endpoints, position, axis, and ID for each edge of the new face.
+//Returns a list of objects containing data on the edges.
+function calculateEdgeData(parentFaceID, scaledCubePosition, dirWord1){
 	let edgeData = [];
 
 	wordToDirection.forEach(function(dir, dirWord2){
 
 		if(dirWord2 !== "front" && dirWord2 !== "back"){
-			let edgeEndpoints = edgeEndpointCalculator[dirWord1][dirWord2](cubePosition);
+			let edgeEndpoints = edgeEndpointCalculator[dirWord1][dirWord2](scaledCubePosition);
 		
-			let facePosition = new THREE.Vector3().addVectors(cubePosition, wordToDirection.get(dirWord1));
+			let facePosition = new THREE.Vector3().addVectors(scaledCubePosition, wordToDirection.get(dirWord1));
 			let edgeAxis = toQ1Vector(new THREE.Vector3().subVectors(edgeEndpoints[0], edgeEndpoints[1]).normalize());
 			let edgePosition = new THREE.Line3(edgeEndpoints[0], edgeEndpoints[1]).getCenter();
 
