@@ -27,22 +27,30 @@ const _visibleHighlights = [];
 
 const _modelTemplates = {cube: null, face: null, edge: null};
 
-export let edgeHighlight = null;
-export let faceHighlight = null;
+let _edgeHighlight = null;
+let _faceHighlight = null;
+let _previewCube = null;
 
 export const setModelTemplates = function(templates){
 	_modelTemplates.cube = templates.cube.clone();
 	_modelTemplates.face = templates.face.clone();
 	_modelTemplates.edge = templates.edge.clone();
 
-	edgeHighlight = _modelTemplates.edge.clone();
-	faceHighlight = _modelTemplates.face.clone();
+	_edgeHighlight = _modelTemplates.edge.clone();
+	_faceHighlight = _modelTemplates.face.clone();
+	_previewCube = _modelTemplates.cube.clone();
 
-	faceHighlight.scale.set(0.9, 0.9, 0.9);
+	_faceHighlight.scale.set(0.9, 0.9, 0.9);
 
+	_previewCube.children.map((face) => {
+		face.children.map((part) => {
+			part.material = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: part.material.color.getHex()});
+		});
+	});
 
-	edgeHighlight.visible = false;
-	faceHighlight.visible = false;
+	_edgeHighlight.visible = false;
+	_faceHighlight.visible = false;
+	_previewCube.visible = false;
 }
 
 export const PolycubeVisualHandler = {
@@ -56,18 +64,21 @@ export const PolycubeVisualHandler = {
 
 			addCube(newPolycube, 0, new THREE.Vector3(0, 0, 0));
 	},
-	onDestroyPolycube: (polycube) => {
-		let viewPolycube = _viewPolycubes.get(polycube.ID);
-		let edgePickPolycube = _edgePickPolycubes.get(polycube.ID);
-		let facePickPolycube = _facePickPolycubes.get(polycube.ID);
+	onNewCube: (polycube, newCubePosition) => {
+		addCube(polycube, polycube.cubeCount - 1, newCubePosition);
+	},
+	onDestroyPolycube: (polycubeID) => {
+		let viewPolycube = _viewPolycubes.get(polycubeID);
+		let edgePickPolycube = _edgePickPolycubes.get(polycubeID);
+		let facePickPolycube = _facePickPolycubes.get(polycubeID);
 
 		viewPolycube.parent.remove(viewPolycube);
 		edgePickPolycube.parent.remove(edgePickPolycube);
 		facePickPolycube.parent.remove(facePickPolycube);
 
-		_viewPolycubes.delete(polycube.ID);
-		_edgePickPolycubes.delete(polycube.ID);
-		_facePickPolycubes.delete(polycube.ID);
+		_viewPolycubes.delete(polycubeID);
+		_edgePickPolycubes.delete(polycubeID);
+		_facePickPolycubes.delete(polycubeID);
 	},
 	getViewPolycube: (polycubeID) => {
 		return _viewPolycubes.get(polycubeID);
@@ -86,13 +97,15 @@ export const PolycubeVisualHandler = {
 		let position = edgeObj.getWorldPosition();
 		let rotation = edgeObj.getWorldRotation();
 
-		edgeHighlight.position.copy(position);
-		edgeHighlight.rotation.copy(rotation);
-		edgeHighlight.material = isRegular ? _HIGHLIGHT_MOUSE : _HIGHLIGHT_MOUSE_SHIFT;
-		edgeHighlight.updateMatrix();
-		edgeHighlight.visible = true;
+		_edgeHighlight.position.copy(position);
+		_edgeHighlight.rotation.copy(rotation);
+		_edgeHighlight.material = isRegular ? _HIGHLIGHT_MOUSE : _HIGHLIGHT_MOUSE_SHIFT;
+		_edgeHighlight.updateMatrix();
+		_edgeHighlight.visible = true;
 
-		_visibleHighlights.push(edgeHighlight);
+		polycube.add(_edgeHighlight);
+
+		_visibleHighlights.push(_edgeHighlight);
 	},
 	showFaceHighlight: (polycubeID, faceID, isRegular) => {
 		let polycube = _viewPolycubes.get(polycubeID);
@@ -102,13 +115,15 @@ export const PolycubeVisualHandler = {
 		let position = faceObj.getWorldPosition();
 		let rotation = faceObj.getWorldRotation();
 
-		faceHighlight.position.copy(position);
-		faceHighlight.rotation.copy(rotation);
-		faceHighlight.material = isRegular ? _HIGHLIGHT_MOUSE : _HIGHLIGHT_MOUSE_SHIFT;
-		faceHighlight.updateMatrix();
-		faceHighlight.visible = true;
+		_faceHighlight.position.copy(position);
+		_faceHighlight.rotation.copy(rotation);
+		_faceHighlight.material = isRegular ? _HIGHLIGHT_MOUSE : _HIGHLIGHT_MOUSE_SHIFT;
+		_faceHighlight.updateMatrix();
+		_faceHighlight.visible = true;
 
-		_visibleHighlights.push(faceHighlight);
+		polycube.add(_faceHighlight);
+
+		_visibleHighlights.push(_faceHighlight);
 	},
 	showFaceAdjacencyHighlight: (polycubeID, mainFaceID, faceNeighborIDs) => {
 		let polycube = _viewPolycubes.get(polycubeID);
@@ -129,6 +144,22 @@ export const PolycubeVisualHandler = {
 			_visibleHighlights.push(neighborFaceBody.children[0]);
 		});
 	},
+	showPreviewCube: (polycubeID, faceID) => {
+		let polycube = _viewPolycubes.get(polycubeID);
+
+		let faceObj = polycube.getObjectByName(faceName.withFaceID(faceID));
+
+		let position = new THREE.Vector3().addVectors(faceObj.getWorldPosition(), wordToDirection.get(faceIDtoDirWord(faceID)));
+
+		_previewCube.position.copy(position);
+		_previewCube.updateMatrix();
+		_previewCube.visible = true;
+
+		polycube.add(_previewCube);
+	},
+	hidePreviewCube: () => {
+		_previewCube.visible = false;
+	},
 	hideHighlights: () => {
 		_visibleHighlights.map((highlight) => {
 			highlight.visible = false;
@@ -138,6 +169,15 @@ export const PolycubeVisualHandler = {
 	}
 }
 
+//Given a polycube object (so that we can ask about cube positions), the new cube's ID, and the new cube's position,
+//add the new cube's faces to the scene.
+//This does this in a few steps:
+/*
+	* Step 1: Remove incident faces
+	* Step 2: Color the face and edge picking cubes
+	* Step 3: Add the appropriate highlight meshes
+	* Step 4: Add the faces to the appropriate polycube Groups
+*/
 function addCube(polycube, newCubeID, cubePosition){
 	//Create a new cube model
 	let newCubeModel = _modelTemplates.cube.clone();
@@ -148,26 +188,35 @@ function addCube(polycube, newCubeID, cubePosition){
 	let facePoly = _facePickPolycubes.get(polycube.ID);
 
 	//Check in all directions. If there is an adjacent cube, remove the corresponding faces.
-	wordToDirection.forEach(function(dir, word){
+	for(var w in directionWords){
+		let word = directionWords[w];
+		let dir = wordToDirection.get(word);
+
 		let adjacentPosition = new THREE.Vector3().addVectors(cubePosition, dir);
 		if(polycube.hasCubeAtPosition(adjacentPosition)){
 
 			//Get the face's name
 			let cubeID = polycube.getCube(adjacentPosition);
 			let faceID = faceIDCalculator[wordToOppositeWord.get(word)](cubeID);
-			let faceName = getFaceName(faceID);
+			let fName = faceName.withFaceID(faceID);
 
 			//Remove the appropriate face from each polycube
-			viewPoly.remove(viewPoly.getObjectByName(faceName));
-			edgePoly.remove(edgePoly.getObjectByName(faceName));
-			facePoly.remove(facePoly.getObjectByName(faceName));
+			viewPoly.remove(viewPoly.getObjectByName(fName));
+			edgePoly.remove(edgePoly.getObjectByName(fName));
+			facePoly.remove(facePoly.getObjectByName(fName));
 
 			//Remove the appropriate face from the new cube model
-			newCubeModel.remove(newCubeModel.getObjectByName(dir));
+			for(var index in newCubeModel.children){
+				if(newCubeModel.children[index].name == word){
+					newCubeModel.remove(newCubeModel.children[index]);
+					break;
+				}
+			}
 		}
-	})
+	}
 
 	//Color the faces and edges for each scene appropriately.
+	let viewNewCube = newCubeModel.clone();
 	let edgeNewCube = newCubeModel.clone();
 	let faceNewCube = newCubeModel.clone();
 
@@ -176,7 +225,7 @@ function addCube(polycube, newCubeID, cubePosition){
 
 	let scaledCubePosition = cubePosition.clone().multiplyScalar(2);
 
-	newCubeModel.children.map((face) => {
+	viewNewCube.children.map((face) => {
 		let position = new THREE.Vector3().addVectors(face.position, scaledCubePosition);
 		let rotation = face.getWorldRotation();
 

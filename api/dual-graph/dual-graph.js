@@ -78,8 +78,6 @@ export class DualGraph{
 
 	//Given a list of faces, set adjacencies as appropriate.
 	setAdjacentFaces(faceIDs){
-		console.log(faceIDs);
-
 		faceIDs.map((faceID) => {
 			let faceNode = DG_PRIVATES.get(this).faceHash.get(faceID);
 
@@ -131,9 +129,7 @@ function removeEdgeFromMap(dualGraph, edgeNode){
 	if(edgeMap.hasDataAtPosition(edgeNode.position)){
 		let edgeList = edgeMap.getData(edgeNode.position);
 
-		console.log(edgeMap.getData(edgeNode.position).length);
 		edgeList.splice(edgeList.indexOf(edgeNode), 1);
-		console.log(edgeMap.getData(edgeNode.position).length);
 	}
 }
 

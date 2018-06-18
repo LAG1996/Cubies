@@ -329,6 +329,10 @@ export class Polycube {
 		return neighborList;	
 	}
 
+	getFace(faceID){
+		return P_PRIVATES.get(this).dualGraph.getFace(faceID);
+	}
+
 	getFaceNeighbors(faceID){
 		let neighbors = P_PRIVATES.get(this).dualGraph.getFace(faceID).neighbors;
 

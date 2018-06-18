@@ -29,9 +29,9 @@ export const GUIHandler = {
 	},
 	switchCursor: (cursorType) => {
 		switch(cursorType){
-			case "cell" : $("#container").css("cursor", "cell"); break;
-			case "crosshair" : $("#container").css("cursor", "crosshair"); break;
-			default: $("#container").css("cursor", "default");
+			case "cell" : $("#main-canvas").css("cursor", "cell"); break;
+			case "crosshair" : $("#main-canvas").css("cursor", "crosshair"); break;
+			default: $("#main-canvas").css("cursor", "default");
 		}	
 	},
 	toggleAddCubeButton: () => {
@@ -52,5 +52,4 @@ export const GUIHandler = {
 $("#create-polycube").on("click", function(){ GUIHandler.callbacks.onCreatePolycube();});
 $("#add-cube-active").on("click", function(){ GUIHandler.callbacks.onAddCube();});
 $("#load-polycube").on("click", function(){});
-$("#delete-polycube").on("click", function(){ GUIHandler.callbacks.onSavePolycube();});
-$("#add-cube-active").on("click", function(){ GUIHandler.callbacks.onDeletePolycube();});
+$("#delete-polycube").on("click", function(){ GUIHandler.callbacks.onDeletePolycube();});

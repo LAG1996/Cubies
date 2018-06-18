@@ -2,11 +2,16 @@
 import { GUIHandler } from '/handlers/ui/handler-gui.js';
 import { InputHandler } from '/handlers/ui/handler-input.js';
 import { SceneHandler } from '/handlers/handler-scene.js';
-import { PolycubeVisualHandler, setModelTemplates, edgeHighlight, faceHighlight } from '/handlers/handle-polycube-visual.js';
+import { PolycubeVisualHandler, setModelTemplates } from '/handlers/handle-polycube-visual.js';
 
-//import polycube class and interface
+//import polycube class
 import { Polycube } from '/api/polycube.js';
 
+//import mode handler class
+import { Mode } from '/handlers/modes/mode-handler.js';
+
+//Cubies Main module. This module should contain all of Cubies' main functions. These functions should be simply
+//taking inputs and sending instructions to the appropriate handlers.
 const CubiesState = {
 	flags: {
 		showFaceDual: false,
@@ -20,34 +25,93 @@ const CubiesState = {
 		doUpdateEdges: false
 	},
 	cache : {
-		hoverEdge: null,
-		hoverFace: null,
+		hoverEdge: 0,
+		hoverFace: 0,
 		focusPolycube: null
+	},
+	modes: {
+		inDefault: false,
+		inAddCube: false,
+		inPickDualGraph: false,
+		inPickHingeArrow: false,
+		currentMode: null
 	}
 }
 
-//The main Cubies function - Represents the core function of our program.
-export const CubiesMain = function(modelTemplates){
-
-	setModelTemplates(modelTemplates);
-	//Tell the GUI handler to show the main nav.
-	GUIHandler.displayGUI(true);
-	GUIHandler.switchToCreatePolycubeView();
-
-	SceneHandler.addToViewScene(edgeHighlight, faceHighlight);
-	SceneHandler.setPickingScene("face");
-	SceneHandler.setPickingScene("edge");
-
-	requestAnimationFrame(update);
-
-	function update(){
-		SceneHandler.draw();
-		requestAnimationFrame(update);
+const defaultMode = new Mode({
+	startMode : () => {
+		CubiesState.modes.inDefault = true;
+		GUIHandler.switchCursor("default");
+	},
+	endMode : () => {
+		CubiesState.modes.inDefault = false;
+	},
+	mouseMove : () => {
+		tryMouseOverHighlight();
+	},
+	keyDown : () => {
+		//Update highlights to reflect the new key press.
+		tryMouseOverHighlight();
+	},
+	keyUp: () => {
+		//Update highlights to reflect the new key press.
+		tryMouseOverHighlight();
 	}
+});
+
+const addCubeMode = new Mode({
+	startMode : () => {	
+		CubiesState.modes.inAddCube = true;
+		GUIHandler.switchCursor("cell");
+	},
+	endMode : () => {
+		CubiesState.modes.inAddCube = false;
+		GUIHandler.switchCursor("default");
+	},
+	mouseMove: () => {
+		if(CubiesState.flags.isOverFace){
+			PolycubeVisualHandler.showPreviewCube(CubiesState.cache.focusPolycube.ID, CubiesState.cache.hoverFace);
+		}
+		else{
+			PolycubeVisualHandler.hidePreviewCube();
+		}
+	},
+	mouseUp: () => {
+		if(CubiesState.flags.isOverFace){
+			let faceID = CubiesState.cache.hoverFace;
+			let polycube = CubiesState.cache.focusPolycube;
+
+			let adjacentCubePosition = CubiesState.cache.focusPolycube.getFace(faceID).parentCubePosition;
+			let direction = wordToDirection.get(faceIDtoDirWord(faceID));
+
+			let cubePosition = new THREE.Vector3().addVectors(adjacentCubePosition, direction);
+			
+			if(polycube.addCube(cubePosition)){
+				PolycubeVisualHandler.onNewCube(polycube, cubePosition);
+			}
+		}
+
+		PolycubeVisualHandler.hidePreviewCube();
+	}
+});
+
+//Functions that handle entering and exiting "modes in Cubies"
+function startMode(mode){
+	CubiesState.modes.currentMode = mode;
+
+	CubiesState.modes.currentMode.startMode();
 }
 
-//Set callback functions
-//GUI callbacks
+function interruptMode(){
+	CubiesState.modes.currentMode.endMode();
+}
+
+//Set the current mode to the default mode
+startMode(defaultMode);
+
+//Define GUI handler callbacks
+//Function for creating a polycube. Generates a new polycube object, hands the object to the visual handler for
+//generating an appropriate Object3D instance, and then hands that instance to the scene handler to render.
 GUIHandler.callbacks.onCreatePolycube = (polycubeName = Polycube.nextDefaultName()) => {
 
 	if(!Polycube.isNameTaken(polycubeName)){
@@ -66,44 +130,71 @@ GUIHandler.callbacks.onCreatePolycube = (polycubeName = Polycube.nextDefaultName
 }
 
 GUIHandler.callbacks.onAddCube = () => {
-	console.log("Adding cube");
+	startMode(addCubeMode);
 }
 
+GUIHandler.callbacks.onDeletePolycube = () => {
+	PolycubeVisualHandler.onDestroyPolycube(CubiesState.cache.focusPolycube.ID);
+	CubiesState.cache.focusPolycube.destroy();
+	CubiesState.cache.focusPolycube = null;
+	GUIHandler.switchToCreatePolycubeView(0);
+}
+
+//Define input handler function callbacks
 InputHandler.callbacks.onMouseDown = () => {
 }
 
 InputHandler.callbacks.onMouseUp = () => {
+
+	if(InputHandler.getMouseDeltaMagnitude() < 5){
+		
+		CubiesState.modes.currentMode.onMouseUp();
+
+		if(CubiesState.modes.inAddCube && !CubiesState.modes.isShiftDown){
+			startMode(defaultMode);
+		}
+	}
 }
 
-//Function to handle mouse hovering
+//Function for mouse hovering. 
 InputHandler.callbacks.onMouseMove = () => {
-	tryHighlight();
+
+	CubiesState.flags.isOverFace = false;
+	CubiesState.flags.isOverEdge = false;
+
+	if((CubiesState.cache.hoverFace = SceneHandler.pick("face", InputHandler.getMousePosition())) !== 0){
+		CubiesState.flags.isOverFace = true;
+	}
+	else if((CubiesState.cache.hoverEdge = SceneHandler.pick("edge", InputHandler.getMousePosition())) !== 0){
+		CubiesState.flags.isOverEdge = true;
+	}
+
+	CubiesState.modes.currentMode.onMouseMove();
 }
 
 //Function to handle key presses
 InputHandler.callbacks.onKeyDown = (key) => {
-	if(CubiesState.flags.isKeyDown) return; 
+	if(CubiesState.flags.isKeyDown) return;
 
+	CubiesState.flags.isKeyDown = true;
+
+	//Respond to either Shift or Control.
 	if(key === "Shift"){
-		console.log("Clicked shift");
-		CubiesState.flags.isKeyDown = true;
-
 		CubiesState.flags.isControlDown = false;
 		CubiesState.flags.isShiftDown = true;
 	}
 	else if(key === "Control"){
-		console.log("Clicked control")
 		CubiesState.flags.isKeyDown = true;
 
 		CubiesState.flags.isShiftDown = false;
 		CubiesState.flags.isControlDown = true;
 	}
 
-	tryHighlight();
+	CubiesState.modes.currentMode.onKeyDown();
 }
 
+//Function to handle when a key is let go.
 InputHandler.callbacks.onKeyUp = (key) => {
-	console.log("hmmmm")
 	CubiesState.flags.isKeyDown = false;
 
 	if(key === "Shift"){
@@ -113,33 +204,55 @@ InputHandler.callbacks.onKeyUp = (key) => {
 		CubiesState.flags.isControlDown = false;
 	}
 
-	tryHighlight();
+	CubiesState.modes.currentMode.onKeyUp();
 }
 
-function tryHighlight(){
-	if(CubiesState.cache.focusPolycube != null && !InputHandler.isMouseDown()){
-	//Hide highlights
-	PolycubeVisualHandler.hideHighlights(CubiesState.cache.focusPolycube.ID);
-	//Find what component of the polycube we are hovering over.
-	let faceID = SceneHandler.pick("face", InputHandler.getMousePosition());
 
-	let edgeID = 0;
-	if(faceID === 0)
-	{
-		edgeID = SceneHandler.pick("edge", InputHandler.getMousePosition());
+//Functions that update view
+//Function that draws mouse-over highlights on polycube components.
+function tryMouseOverHighlight(polycubeID = CubiesState.cache.focusPolycube){
+	if(polycubeID != null && !InputHandler.isMouseDown()){
+		//Hide highlights
+		PolycubeVisualHandler.hideHighlights(polycubeID);
 
-		if(edgeID !== 0){
-			PolycubeVisualHandler.showEdgeHighlight(CubiesState.cache.focusPolycube.ID, edgeID, !CubiesState.flags.isShiftDown);
+		//Try hovering over a face. If that fails, try hovering over an edge. There is no reason for this particular ordering. The functions
+		//can be swapped.
+		if(CubiesState.flags.isOverFace){
+			doFaceHighlight();
+		}
+		else if(CubiesState.flags.isOverEdge){
+			doEdgeHighlight();
 		}
 	}
-	else{
-			if(!CubiesState.flags.isControlDown)
-				PolycubeVisualHandler.showFaceHighlight(CubiesState.cache.focusPolycube.ID, faceID, !CubiesState.flags.isShiftDown);
-			else
-				PolycubeVisualHandler.showFaceAdjacencyHighlight(CubiesState.cache.focusPolycube.ID, faceID, CubiesState.cache.focusPolycube.getFaceNeighbors(faceID));
-		}
-	}
-	else{
+}
 
+function doFaceHighlight(faceID = CubiesState.cache.hoverFace){
+	if(!CubiesState.flags.isControlDown)
+		PolycubeVisualHandler.showFaceHighlight(CubiesState.cache.focusPolycube.ID, faceID, !CubiesState.flags.isShiftDown);
+	else{
+		PolycubeVisualHandler.showFaceAdjacencyHighlight(CubiesState.cache.focusPolycube.ID, faceID, CubiesState.cache.focusPolycube.getFaceNeighbors(faceID));
+	}
+}
+
+function doEdgeHighlight(edgeID = CubiesState.cache.hoverEdge){
+	PolycubeVisualHandler.showEdgeHighlight(CubiesState.cache.focusPolycube.ID, edgeID, !CubiesState.flags.isShiftDown);
+}
+
+//The main Cubies function - Represents the core function of our program.
+export const CubiesMain = function(modelTemplates){
+
+	setModelTemplates(modelTemplates);
+	//Tell the GUI handler to show the main nav.
+	GUIHandler.displayGUI(true);
+	GUIHandler.switchToCreatePolycubeView();
+
+	SceneHandler.setPickingScene("face");
+	SceneHandler.setPickingScene("edge");
+
+	requestAnimationFrame(update);
+
+	function update(){
+		SceneHandler.draw();
+		requestAnimationFrame(update);
 	}
 }
