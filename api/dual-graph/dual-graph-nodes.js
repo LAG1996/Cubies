@@ -88,11 +88,12 @@ export class EdgeNode{
 	constructor(edgeID, edgePosition, edgeEndpoints, edgeAxis, parentFace){
 		EN_PRIVATES.set(this, {
 			id: edgeID,
-			neighbors: [],
+			neighbors: new Map(),
 			endpoints: edgeEndpoints,
 			axis: edgeAxis,
 			position: edgePosition,
 			isBoundary: true,
+			incidentEdge: null,
 			parent: parentFace
 		})
 	}
@@ -117,29 +118,77 @@ export class EdgeNode{
 	get axis(){
 		return EN_PRIVATES.get(this).axis;
 	}
-
-	get isBoundary(){
-		return EN_PRIVATES.get(this).isBoundary;
+	
+	get incidentEdge(){
+		return EN_PRIVATES.get(this).incidentEdge;
 	}
 
 	get parent(){
 		return EN_PRIVATES.get(this).parent;
 	}
 
+	get isBoundary(){
+		return this.incidentEdge == null;
+	}
+
 	//setters
-	set isBoundary(val){
-		EN_PRIVATES.get(this).isBoundary = val;
+	set incidentEdge(edgeNode){
+		console.log("Edge #" + this.ID + ": now incident with edge#" + edgeNode.ID); 
+		EN_PRIVATES.get(this).incidentEdge = edgeNode;
+	}
+
+	getAllNeighbors(){
+		let neighborNodes = [];
+
+		this.neighbors.forEach((neighbor) => {
+			neighborNodes.push(neighbor);
+		});
+
+		if(!this.isBoundary){
+			this.incidentEdge.neighbors.forEach((neighbor) => {
+				neighborNodes.push(neighbor);
+			});
+		}
+
+		return neighborNodes;
+	}
+
+	setNeighbor(edgeNode){
+		try{
+			if(this.neighbors.length >= 8)
+				throw "Edge #" + this.ID + " has " + (this.neighbors.length + 1) + " neighbors. Edge graph is no longer of maximum degree 8."
+		}
+		catch(err){
+			console.error(err);
+		}
+		finally{
+			//console.log("Edge #" + this.ID + ": setting edge #" + edgeNode.ID + " as a neighbor");
+			EN_PRIVATES.get(this).neighbors.set(edgeNode.ID, edgeNode);
+		}
 	}
 
 	removeNeighbor(edgeNode){
-		this.neighbors.splice(this.neighbors.indexOf(edgeNode), 1);
+		EN_PRIVATES.get(this).neighbors.delete(edgeNode.ID);
 	}
 
+	removeIncidentEdge(){
+		EN_PRIVATES.get(this).incidentEdge = null;
+	}
+
+	//Delete all internal references to this node.
 	destroy(){
-		//tell all neighbors to remove me
-		this.neighbors.forEach(function(neighborEdge){
-			neighborEdge.removeNeighbor(this);
+		//tell all neighbors to forget this node
+		console.log("Deleting edge#" + this.ID);
+
+		let that = this;
+		EN_PRIVATES.get(this).neighbors.forEach((neighborEdge) => {
+			neighborEdge.removeNeighbor(that);
 		})
+
+		//tell the incident edge to forget this node
+		if(!this.isBoundary){
+			EN_PRIVATES.get(this).incidentEdge.removeIncidentEdge();
+		}
 
 		EN_PRIVATES.delete(this);
 	}

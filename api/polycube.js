@@ -229,38 +229,56 @@ export class Polycube {
 		let dualGraph = P_PRIVATES.get(this).dualGraph;
 
 		let that = this;
-		wordToDirection.forEach(function(dir, dirWord){
-			//If there is a cube in the direction given by `dir`, then there is a face incident to this one.
-			//We need to remove that face.
-			let cubeInDirectionID = that.getCube(new THREE.Vector3().addVectors(cubePosition, dir));
-			if(cubeInDirectionID != null){
 
+		//An array of direction words that are set as "forebidden". A dir word is forebidden if an incident face
+		//was found in the direction given by `dirWord` relative to the new cube.
+		let dirWordIsForebidden = {};
+		directionWords.map((dirWord) => {
+			dirWordIsForebidden[dirWord] = false;
+		})
+
+		//Search for cubes in the direction given by `dirWord`. If there is such a cube, remove the appropriate face.
+		directionWords.map((dirWord) => {
+			let dirVector = wordToDirection.get(dirWord);
+			let cubeInDirectionID = that.getCube(new THREE.Vector3().addVectors(cubePosition, dirVector));
+
+			if(cubeInDirectionID != null){
 				let oppositeDirectionWord = wordToOppositeWord.get(dirWord);
 				let faceToRemoveID = faceIDCalculator[oppositeDirectionWord](cubeInDirectionID);
 
+				console.log("Removing face#" + faceToRemoveID + "(direction is " + oppositeDirectionWord + ")");
 				dualGraph.removeFace(faceToRemoveID);
+
+				//Set this direction word as forebidden.
+				dirWordIsForebidden[dirWord] = true;
 
 				//Decrement the face count, since we just removed a face.
 				faceCount -= 1;
-
 			}
-			//Otherwise, generate the data for the new face, including data for its edges.
-			else
-			{
-				//Calculate this face's position
-				let facePosition = new THREE.Vector3().addVectors(scaledCubePosition, dir);
-				//Calculate this face's ID
+		});
+
+		//For direction words that are not forebidden (see above for a definition of 'forebidden' dir words),
+		//add a face at that direction relative to the new cube's position in the dual graph.
+		//Note that a "face" is both a face node and edge nodes representing the new face's edges.
+		directionWords.map((dirWord) => {
+			if(!dirWordIsForebidden[dirWord]){
+				let dirVector = wordToDirection.get(dirWord);
+
+				//Calculate the face's position
+				let facePosition = new THREE.Vector3().addVectors(scaledCubePosition, dirVector);
+				//Calculate the face's ID
 				let faceID = faceIDCalculator[dirWord](cubeCount);
 
 				//Generate the edge's data
 				let edgeData = calculateEdgeData(faceID, scaledCubePosition, dirWord);
 
-				dualGraph.addFace({id: faceID, position: facePosition, parentCubePosition: cubePosition, edgeData: edgeData}, P_PRIVATES.get(that).cubeMap);
-
-				//Increment the face count.
+				//Add this new information to the dual graph
+				dualGraph.addFace({id: faceID, position: facePosition, parentCubePosition: cubePosition, edgeData: edgeData}, P_PRIVATES.get(this).cubeMap);
+				
+				//Increment the face count
 				faceCount += 1;
 			}
-		})
+		});
 
 		P_PRIVATES.get(this).cubeCount = cubeCount + 1;
 		P_PRIVATES.get(this).faceCount = faceCount;
@@ -342,6 +360,29 @@ export class Polycube {
 		});
 
 		return neighborIDs;
+	}
+
+	getEdgeNeighbors(edgeID){
+		let neighborNodes = P_PRIVATES.get(this).dualGraph.getEdge(edgeID).getAllNeighbors();
+
+		let neighborIDs = [];
+
+		neighborNodes.map((neighbor) => {
+			neighborIDs.push(neighbor.ID);
+		});
+
+		return neighborIDs;
+	}
+
+	getIncidentEdge(edgeID){
+		let incidentEdge = P_PRIVATES.get(this).dualGraph.getEdge(edgeID).incidentEdge;
+
+		if(incidentEdge != null){
+			return incidentEdge.ID;
+		}
+		else{
+			return 0;
+		}
 	}
 
 	//Removes all references to this object

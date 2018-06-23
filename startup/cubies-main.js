@@ -227,15 +227,20 @@ function tryMouseOverHighlight(polycubeID = CubiesState.cache.focusPolycube){
 }
 
 function doFaceHighlight(faceID = CubiesState.cache.hoverFace){
+	let polycube = CubiesState.cache.focusPolycube;
 	if(!CubiesState.flags.isControlDown)
-		PolycubeVisualHandler.showFaceHighlight(CubiesState.cache.focusPolycube.ID, faceID, !CubiesState.flags.isShiftDown);
+		PolycubeVisualHandler.showFaceHighlight(polycube.ID, faceID, CubiesState.flags.isShiftDown);
 	else{
-		PolycubeVisualHandler.showFaceAdjacencyHighlight(CubiesState.cache.focusPolycube.ID, faceID, CubiesState.cache.focusPolycube.getFaceNeighbors(faceID));
+		PolycubeVisualHandler.showFaceAdjacencyHighlight(polycube.ID, faceID, polycube.getFaceNeighbors(faceID));
 	}
 }
 
 function doEdgeHighlight(edgeID = CubiesState.cache.hoverEdge){
-	PolycubeVisualHandler.showEdgeHighlight(CubiesState.cache.focusPolycube.ID, edgeID, !CubiesState.flags.isShiftDown);
+	let polycube = CubiesState.cache.focusPolycube;
+	if(!CubiesState.flags.isControlDown)
+		PolycubeVisualHandler.showEdgeHighlight(polycube.ID, edgeID, polycube.getIncidentEdge(edgeID), CubiesState.flags.isShiftDown);
+	else
+		PolycubeVisualHandler.showEdgeAdjacencyHighlight(polycube.ID, edgeID, polycube.getIncidentEdge(edgeID), polycube.getEdgeNeighbors(edgeID));
 }
 
 //The main Cubies function - Represents the core function of our program.

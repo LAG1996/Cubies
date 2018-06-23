@@ -14,6 +14,7 @@ export class DualGraph{
 			faceHash: new Map(),
 			edgeHash: new Map(),
 			edgeMap: new SpatialMap(),
+			faceMap: new SpatialMap(),
 			cutEdges: [],
 			edgeToCutTreeIndex: new Map(),
 			edgeToHinge: new Map(),
@@ -69,7 +70,7 @@ export class DualGraph{
 			DG_PRIVATES.get(this).edgeHash.delete(edgeNode.ID);
 
 			removeEdgeFromMap(this, edgeNode);
-		} )
+		});
 
 		let faceNode = this.getFace(faceID);
 		faceNode.destroy();
@@ -77,15 +78,7 @@ export class DualGraph{
 	}
 
 	//Given a list of faces, set adjacencies as appropriate.
-	setAdjacentFaces(faceIDs){
-		faceIDs.map((faceID) => {
-			let faceNode = DG_PRIVATES.get(this).faceHash.get(faceID);
-
-			if(faceNode !== undefined){
-			}
-		})
-
-	}
+	setAdjacentFaces(faceIDs){}
 
 	destroy(){
 		DG_PRIVATES.delete(this);
@@ -130,6 +123,7 @@ function removeEdgeFromMap(dualGraph, edgeNode){
 		let edgeList = edgeMap.getData(edgeNode.position);
 
 		edgeList.splice(edgeList.indexOf(edgeNode), 1);
+
 	}
 }
 
@@ -148,13 +142,14 @@ function findAdjacentFaces(dualGraph, newFaceNode, cubeMap){
 
 		//If edges incident to this edge node exist, check if the faces' cubes fit the criteria enumerated above.
 		if(incidentEdges != null){
-			incidentEdges.map((edge) => {
-				if(edge.parent != newFaceNode){
-					let face2 = edge.parent;
+			incidentEdges.map((incidentEdge) => {
+				if(incidentEdge.parent != newFaceNode){
+					let face2 = incidentEdge.parent;
+
+					let facesAreAdjacent = false;
 
 					if(newFaceNode.parentCubePosition.distanceTo(face2.parentCubePosition) <= 1){
-						newFaceNode.addNeighbor(face2, edge, edgeNode);
-						face2.addNeighbor(newFaceNode, edgeNode, edge);
+						setAdjacencies(newFaceNode, face2, edgeNode, incidentEdge);
 					}
 					else{
 						//Check if the two faces' cubes have a common neighbor.
@@ -163,12 +158,34 @@ function findAdjacentFaces(dualGraph, newFaceNode, cubeMap){
 						let commonNeighborDir = wordToDirection.get(wordToOppositeWord.get(face2Dir));
 
 						if(cubeMap.hasDataAtPosition(new THREE.Vector3().addVectors(newFaceNode.parentCubePosition, commonNeighborDir))){
-							newFaceNode.addNeighbor(face2, edge, edgeNode);
-							face2.addNeighbor(newFaceNode, edgeNode, edge);
+							setAdjacencies(newFaceNode, face2, edgeNode, incidentEdge);
 						}
 					}
 				}
 			})
 		}
+	});
+}
+
+function setAdjacencies(face1, face2, edge1, edge2){
+	face1.addNeighbor(face2, edge2, edge1);
+	face2.addNeighbor(face1, edge1, edge2);
+
+	edge1.incidentEdge = edge2;
+	edge2.incidentEdge = edge1;
+
+	face1.edges.map((face1Edge) => {
+		face2.edges.map((face2Edge) => {
+			if(face1Edge.incidentEdge !== face2Edge){
+				if(face1Edge.endpoints[0].equals(face2Edge.endpoints[0])
+					|| face1Edge.endpoints[0].equals(face2Edge.endpoints[1])
+					|| face1Edge.endpoints[1].equals(face2Edge.endpoints[0])
+					|| face1Edge.endpoints[1].equals(face2Edge.endpoints[1])){
+
+					face1Edge.setNeighbor(face2Edge);
+					face2Edge.setNeighbor(face1Edge);
+				}
+			}
+		});
 	});
 }

@@ -27,7 +27,7 @@ const _visibleHighlights = [];
 
 const _modelTemplates = {cube: null, face: null, edge: null};
 
-let _edgeHighlight = null;
+let _edgeHighlightPair = [null, null];
 let _faceHighlight = null;
 let _previewCube = null;
 
@@ -36,7 +36,7 @@ export const setModelTemplates = function(templates){
 	_modelTemplates.face = templates.face.clone();
 	_modelTemplates.edge = templates.edge.clone();
 
-	_edgeHighlight = _modelTemplates.edge.clone();
+	_edgeHighlightPair = [_modelTemplates.edge.clone(), _modelTemplates.edge.clone()];
 	_faceHighlight = _modelTemplates.face.clone();
 	_previewCube = _modelTemplates.cube.clone();
 
@@ -48,7 +48,8 @@ export const setModelTemplates = function(templates){
 		});
 	});
 
-	_edgeHighlight.visible = false;
+	_edgeHighlightPair[0].visible = false;
+	_edgeHighlightPair[1].visible = false;
 	_faceHighlight.visible = false;
 	_previewCube.visible = false;
 }
@@ -89,25 +90,80 @@ export const PolycubeVisualHandler = {
 	getFacePickPolycube: (polycubeID) => {
 		return _facePickPolycubes.get(polycubeID);
 	},
-	showEdgeHighlight: (polycubeID, edgeID, isRegular) => {
+	//Handles edge mouse over highlight. Note that edges are allowed to be incident, so we should expect two IDs.
+	showEdgeHighlight: (polycubeID, edge1ID, edge2ID, isShiftDown) => {
 		let polycube = _viewPolycubes.get(polycubeID);
+		let highlightMaterial = isShiftDown ? _HIGHLIGHT_MOUSE_SHIFT: _HIGHLIGHT_MOUSE;
 
-		let edgeObj = polycube.getObjectByName(edgeName.withEdgeID(edgeID));
+		let edgeObj1 = polycube.getObjectByName(edgeName.withEdgeID(edge1ID));
 
-		let position = edgeObj.getWorldPosition();
-		let rotation = edgeObj.getWorldRotation();
+		let position1 = edgeObj1.getWorldPosition();
+		let rotation1 = edgeObj1.getWorldRotation();
 
-		_edgeHighlight.position.copy(position);
-		_edgeHighlight.rotation.copy(rotation);
-		_edgeHighlight.material = isRegular ? _HIGHLIGHT_MOUSE : _HIGHLIGHT_MOUSE_SHIFT;
-		_edgeHighlight.updateMatrix();
-		_edgeHighlight.visible = true;
+		_edgeHighlightPair[0].position.copy(position1);
+		_edgeHighlightPair[0].rotation.copy(rotation1);
+		_edgeHighlightPair[0].material = highlightMaterial;
+		_edgeHighlightPair[0].updateMatrix();
+		_edgeHighlightPair[0].visible = true;
 
-		polycube.add(_edgeHighlight);
+		polycube.add(_edgeHighlightPair[0]);
 
-		_visibleHighlights.push(_edgeHighlight);
+		_visibleHighlights.push(_edgeHighlightPair[0]);
+
+		//console.log("Highlighting edge#" + edge1ID);
+
+		//If there is an incident edge, then do the same as above but to this second edge.
+		if(edge2ID !== 0){
+			let edgeObj2 = polycube.getObjectByName(edgeName.withEdgeID(edge2ID));
+
+			let position2 = edgeObj2.getWorldPosition();
+			let rotation2 = edgeObj2.getWorldRotation();
+
+			_edgeHighlightPair[1].position.copy(position2);
+			_edgeHighlightPair[1].rotation.copy(rotation2);
+			_edgeHighlightPair[1].material = highlightMaterial;
+			_edgeHighlightPair[1].updateMatrix();
+			_edgeHighlightPair[1].visible = true;
+
+			polycube.add(_edgeHighlightPair[1]);
+
+			_visibleHighlights.push(_edgeHighlightPair[1]);
+
+			//console.log("Highlight edge#" + edge2ID);
+		}
 	},
-	showFaceHighlight: (polycubeID, faceID, isRegular) => {
+	showEdgeAdjacencyHighlight(polycubeID, edge1ID, edge2ID, edgeNeighborIDs){
+		let polycube = _viewPolycubes.get(polycubeID);
+		let edge1Obj = polycube.getObjectByName(edgeName.withEdgeID(edge1ID));
+
+		let highlight1 = edge1Obj.getObjectByName("adjacency");
+		highlight1.material = _HIGHLIGHT_FACE_DUAL1;
+		highlight1.visible = true;
+
+		_visibleHighlights.push(highlight1);
+
+		if(edge2ID !== 0){
+			let edge2Obj = polycube.getObjectByName(edgeName.withEdgeID(edge2ID));
+
+			let highlight2 = edge2Obj.getObjectByName("adjacency");
+			highlight2.material = _HIGHLIGHT_FACE_DUAL1;
+			highlight2.visible = true;
+
+			_visibleHighlights.push(highlight2);
+		}
+
+		edgeNeighborIDs.map((neighborID) => {
+			let edgeObj = polycube.getObjectByName(edgeName.withEdgeID(neighborID));
+
+			let highlight = edgeObj.getObjectByName("adjacency");
+			highlight.material = _HIGHLIGHT_FACE_DUAL2;
+			highlight.visible = true;
+
+			_visibleHighlights.push(highlight);
+		})
+	},
+	//Shows the appropriate face mouse-over highlight
+	showFaceHighlight: (polycubeID, faceID, isShiftDown) => {
 		let polycube = _viewPolycubes.get(polycubeID);
 
 		let faceObj = polycube.getObjectByName(faceName.withFaceID(faceID));
@@ -117,7 +173,7 @@ export const PolycubeVisualHandler = {
 
 		_faceHighlight.position.copy(position);
 		_faceHighlight.rotation.copy(rotation);
-		_faceHighlight.material = isRegular ? _HIGHLIGHT_MOUSE : _HIGHLIGHT_MOUSE_SHIFT;
+		_faceHighlight.material = isShiftDown ? _HIGHLIGHT_MOUSE_SHIFT: _HIGHLIGHT_MOUSE ;
 		_faceHighlight.updateMatrix();
 		_faceHighlight.visible = true;
 
@@ -125,13 +181,14 @@ export const PolycubeVisualHandler = {
 
 		_visibleHighlights.push(_faceHighlight);
 	},
+	//Highlight mode meant for debugging. Shows the face and its neighbors.
 	showFaceAdjacencyHighlight: (polycubeID, mainFaceID, faceNeighborIDs) => {
 		let polycube = _viewPolycubes.get(polycubeID);
 
 		let mainFaceBody = polycube.getObjectByName(faceName.withFaceID(mainFaceID)).getObjectByName("body");
 
 		mainFaceBody.children[0].material = _HIGHLIGHT_FACE_DUAL1;
-		mainFaceBody.visible = true;
+		mainFaceBody.children[0].visible = true;
 
 		_visibleHighlights.push(mainFaceBody.children[0]);
 
@@ -252,6 +309,13 @@ function addCube(polycube, newCubeID, cubePosition){
 				hingeHighlight.visible = false;
 				comp.add(hingeHighlight);
 
+				let adjacencyHighlight = comp.clone();
+				adjacencyHighlight.position.set(0, 0, 0);
+				adjacencyHighlight.rotation.set(0, 0, 0);
+				adjacencyHighlight.name = "adjacency";
+				adjacencyHighlight.visible = false;
+				comp.add(adjacencyHighlight);
+
 				comp.name = edgeName.withFaceID(faceIDCalculator[face.name](newCubeID), comp.name);
 			}
 		})
@@ -292,35 +356,35 @@ function addCube(polycube, newCubeID, cubePosition){
 
 		facePoly.add(face.clone());
 	})
+}
 
-	function colorEdges(cubeModel, newCubeID){
-		cubeModel.children.map((face) => {
-			let faceID = faceIDCalculator[face.name](newCubeID);
-			face.children.map((facePiece) => {
-				if(facePiece.name === "body"){
-					facePiece.material = _INACTIVE_PICK_PART_MAT;
-				}
-				else{
-					facePiece.material = new THREE.MeshBasicMaterial();
-					facePiece.material.color.setHex(edgeIDCalculator[facePiece.name](faceID));
-				}
-			})
-		})	
-	}
-
-	function colorFaces(cubeModel, newCubeID){
-		//give each face a color according to the face's ID. This means coloring all of the face's children.
-		cubeModel.children.map((face) => {
-			let faceID = faceIDCalculator[face.name](newCubeID);
-			face.children.map((facePiece) => {
-				if(facePiece.name === "body"){
-					facePiece.material = new THREE.MeshBasicMaterial();
-					facePiece.material.color.setHex(faceID)
-				}
-				else{
-					facePiece.material = _INACTIVE_PICK_PART_MAT;
-				}
-			})
+function colorEdges(cubeModel, newCubeID){
+	cubeModel.children.map((face) => {
+		let faceID = faceIDCalculator[face.name](newCubeID);
+		face.children.map((facePiece) => {
+			if(facePiece.name === "body"){
+				facePiece.material = _INACTIVE_PICK_PART_MAT;
+			}
+			else{
+				facePiece.material = new THREE.MeshBasicMaterial();
+				facePiece.material.color.setHex(edgeIDCalculator[facePiece.name](faceID));
+			}
 		})
-	}
+	})	
+}
+
+function colorFaces(cubeModel, newCubeID){
+	//give each face a color according to the face's ID. This means coloring all of the face's children.
+	cubeModel.children.map((face) => {
+		let faceID = faceIDCalculator[face.name](newCubeID);
+		face.children.map((facePiece) => {
+			if(facePiece.name === "body"){
+				facePiece.material = new THREE.MeshBasicMaterial();
+				facePiece.material.color.setHex(faceID)
+			}
+			else{
+				facePiece.material = _INACTIVE_PICK_PART_MAT;
+			}
+		})
+	})
 }
