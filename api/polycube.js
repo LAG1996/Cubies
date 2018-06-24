@@ -355,19 +355,19 @@ export class Polycube {
 		let neighbors = P_PRIVATES.get(this).dualGraph.getFace(faceID).neighbors;
 
 		let neighborIDs = [];
-		neighbors.forEach((neighbor) => {
-			neighborIDs.push(neighbor.face.ID);
+		neighbors.map((neighbor) => {
+			neighborIDs.push(neighbor.ID);
 		});
 
 		return neighborIDs;
 	}
 
 	getEdgeNeighbors(edgeID){
-		let neighborNodes = P_PRIVATES.get(this).dualGraph.getEdge(edgeID).getAllNeighbors();
+		let neighbors = P_PRIVATES.get(this).dualGraph.getEdge(edgeID).getAllNeighbors();
 
 		let neighborIDs = [];
 
-		neighborNodes.map((neighbor) => {
+		neighbors.map((neighbor) => {
 			neighborIDs.push(neighbor.ID);
 		});
 

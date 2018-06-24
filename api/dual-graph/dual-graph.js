@@ -149,7 +149,7 @@ function findAdjacentFaces(dualGraph, newFaceNode, cubeMap){
 					let facesAreAdjacent = false;
 
 					if(newFaceNode.parentCubePosition.distanceTo(face2.parentCubePosition) <= 1){
-						setAdjacencies(newFaceNode, face2, edgeNode, incidentEdge);
+						setComponentRelationships(newFaceNode, face2, edgeNode, incidentEdge);
 					}
 					else{
 						//Check if the two faces' cubes have a common neighbor.
@@ -158,7 +158,7 @@ function findAdjacentFaces(dualGraph, newFaceNode, cubeMap){
 						let commonNeighborDir = wordToDirection.get(wordToOppositeWord.get(face2Dir));
 
 						if(cubeMap.hasDataAtPosition(new THREE.Vector3().addVectors(newFaceNode.parentCubePosition, commonNeighborDir))){
-							setAdjacencies(newFaceNode, face2, edgeNode, incidentEdge);
+							setComponentRelationships(newFaceNode, face2, edgeNode, incidentEdge);
 						}
 					}
 				}
@@ -167,9 +167,11 @@ function findAdjacentFaces(dualGraph, newFaceNode, cubeMap){
 	});
 }
 
-function setAdjacencies(face1, face2, edge1, edge2){
-	face1.addNeighbor(face2, edge2, edge1);
-	face2.addNeighbor(face1, edge1, edge2);
+//Sets relationships between components of the dual graphs (i.e. adjacency and incidence)
+function setComponentRelationships(face1, face2, edge1, edge2){
+
+	face1.addNeighbor(face2);
+	face2.addNeighbor(face1);
 
 	edge1.incidentEdge = edge2;
 	edge2.incidentEdge = edge1;
@@ -182,8 +184,8 @@ function setAdjacencies(face1, face2, edge1, edge2){
 					|| face1Edge.endpoints[1].equals(face2Edge.endpoints[0])
 					|| face1Edge.endpoints[1].equals(face2Edge.endpoints[1])){
 
-					face1Edge.setNeighbor(face2Edge);
-					face2Edge.setNeighbor(face1Edge);
+					face1Edge.addNeighbor(face2Edge);
+					face2Edge.addNeighbor(face1Edge);
 				}
 			}
 		});

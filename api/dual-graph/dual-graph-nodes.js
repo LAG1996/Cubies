@@ -7,7 +7,7 @@ export class FaceNode{
 		//Defining private variables
 		FN_PRIVATES.set(this, {
 			id: faceID,
-			neighbors: new Map(),
+			neighbors: [],
 			edges: [],
 			position: facePosition,
 			parentCubePosition: parentCubePosition
@@ -39,7 +39,7 @@ export class FaceNode{
 
 	//Add neighbors to the neighbor list. Release a warning if this face
 	//has more than 4 neighbors.
-	addNeighbor(faceNode, neighborsEdge, myEdge){
+	addNeighbor(faceNode){
 		let neighbors = FN_PRIVATES.get(this).neighbors;
 		try{
 			if(neighbors.length >=4 ){
@@ -50,7 +50,7 @@ export class FaceNode{
 			console.error(err);
 		}
 		finally{
-			neighbors.set(faceNode.ID, {face: faceNode, neighborsEdge: neighborsEdge, myEdge: myEdge});
+			neighbors.push(faceNode);
 		}
 	}
 
@@ -60,20 +60,22 @@ export class FaceNode{
 
 	//Remove the specified neighbor
 	removeNeighbor(faceNode){
-		this.neighbors.delete(faceNode.ID);
+		let neighbors = FN_PRIVATES.get(this).neighbors;
+
+		neighbors.splice(neighbors.indexOf(faceNode), 1);
 	}
 
 	destroy(){
 
 		//Destroy all edges attached to this face
-		this.edges.forEach(function(edge){
+		FN_PRIVATES.get(this).edges.map((edge) => {
 			edge.destroy();
-		})
+		});
 
 		//Tell all neighbors to forget about this node
-		this.neighbors.forEach((neighborData) => {
-			neighborData.face.removeNeighbor(this);
-		})
+		FN_PRIVATES.get(this).neighbors.map((neighbor) => {
+			neighbor.removeNeighbor(this);
+		});
 
 		//Remove references to this face's private members
 		FN_PRIVATES.delete(this);
@@ -88,7 +90,7 @@ export class EdgeNode{
 	constructor(edgeID, edgePosition, edgeEndpoints, edgeAxis, parentFace){
 		EN_PRIVATES.set(this, {
 			id: edgeID,
-			neighbors: new Map(),
+			neighbors: [],
 			endpoints: edgeEndpoints,
 			axis: edgeAxis,
 			position: edgePosition,
@@ -133,27 +135,30 @@ export class EdgeNode{
 
 	//setters
 	set incidentEdge(edgeNode){
-		console.log("Edge #" + this.ID + ": now incident with edge#" + edgeNode.ID); 
+		//console.log("Edge #" + this.ID + ": now incident with edge#" + edgeNode.ID); 
 		EN_PRIVATES.get(this).incidentEdge = edgeNode;
 	}
 
 	getAllNeighbors(){
 		let neighborNodes = [];
 
-		this.neighbors.forEach((neighbor) => {
+		EN_PRIVATES.get(this).neighbors.forEach((neighbor) => {
 			neighborNodes.push(neighbor);
 		});
 
 		if(!this.isBoundary){
 			this.incidentEdge.neighbors.forEach((neighbor) => {
 				neighborNodes.push(neighbor);
+
+				if(!neighbor.isBoundary)
+					neighborNodes.push(neighbor.incidentEdge);
 			});
 		}
 
 		return neighborNodes;
 	}
 
-	setNeighbor(edgeNode){
+	addNeighbor(edgeNode){
 		try{
 			if(this.neighbors.length >= 8)
 				throw "Edge #" + this.ID + " has " + (this.neighbors.length + 1) + " neighbors. Edge graph is no longer of maximum degree 8."
@@ -163,12 +168,14 @@ export class EdgeNode{
 		}
 		finally{
 			//console.log("Edge #" + this.ID + ": setting edge #" + edgeNode.ID + " as a neighbor");
-			EN_PRIVATES.get(this).neighbors.set(edgeNode.ID, edgeNode);
+			EN_PRIVATES.get(this).neighbors.push(edgeNode);
 		}
 	}
 
 	removeNeighbor(edgeNode){
-		EN_PRIVATES.get(this).neighbors.delete(edgeNode.ID);
+		let neighbors = EN_PRIVATES.get(this).neighbors;
+
+		neighbors.splice(neighbors.indexOf(edgeNode), 1);
 	}
 
 	removeIncidentEdge(){
@@ -178,11 +185,10 @@ export class EdgeNode{
 	//Delete all internal references to this node.
 	destroy(){
 		//tell all neighbors to forget this node
-		console.log("Deleting edge#" + this.ID);
+		//console.log("Deleting edge#" + this.ID);
 
-		let that = this;
-		EN_PRIVATES.get(this).neighbors.forEach((neighborEdge) => {
-			neighborEdge.removeNeighbor(that);
+		EN_PRIVATES.get(this).neighbors.map((neighborEdge) => {
+			neighborEdge.removeNeighbor(this);
 		})
 
 		//tell the incident edge to forget this node
