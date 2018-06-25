@@ -1,14 +1,14 @@
 //import handlers
-import { GUIHandler } from '/handlers/ui/handler-gui.js';
-import { InputHandler } from '/handlers/ui/handler-input.js';
-import { SceneHandler } from '/handlers/handler-scene.js';
-import { PolycubeVisualHandler, setModelTemplates } from '/handlers/handle-polycube-visual.js';
+import { GUIHandler } from '../handlers/ui/handler-gui.js';
+import { InputHandler } from '../handlers/ui/handler-input.js';
+import { SceneHandler } from '../handlers/handler-scene.js';
+import { PolycubeVisualHandler, setModelTemplates } from '../handlers/handle-polycube-visual.js';
 
 //import polycube class
-import { Polycube } from '/api/polycube.js';
+import { Polycube } from '../api/polycube.js';
 
 //import mode handler class
-import { Mode } from '/handlers/modes/mode-handler.js';
+import { Mode } from '../handlers/modes/mode-handler.js';
 
 //Cubies Main module. This module should contain all of Cubies' main functions. These functions should be simply
 //taking inputs and sending instructions to the appropriate handlers.

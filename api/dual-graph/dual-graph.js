@@ -1,6 +1,6 @@
 import { FaceNode, EdgeNode } from './dual-graph-nodes.js';
 
-import { SpatialMap } from '/api/spatial-map.js'
+import { SpatialMap } from '../spatial-map.js'
 
 //Class representing the dual graph of a polycube
 //In this case, we refer to the face dual graph and the edge dual graph, the edge analogue to the face dual graph.
@@ -9,12 +9,13 @@ import { SpatialMap } from '/api/spatial-map.js'
 //Static members
 const DG_PRIVATES = new WeakMap();
 export class DualGraph{
-	constructor(){
+	constructor(cubeMap){
 		DG_PRIVATES.set(this, {
 			faceHash: new Map(),
 			edgeHash: new Map(),
 			edgeMap: new SpatialMap(),
 			faceMap: new SpatialMap(),
+			cubeMap: cubeMap,
 			cutEdges: [],
 			edgeToCutTreeIndex: new Map(),
 			edgeToHinge: new Map(),
@@ -48,11 +49,11 @@ export class DualGraph{
 			* edgeData : Array(4)
 	*/
 	addFace(faceObj, cubeMap){
-		let newFaceNode = new FaceNode(faceObj.id, faceObj.position, faceObj.parentCubePosition);
+		let newFaceNode = new FaceNode(faceObj.id, faceObj.position, faceObj.normal, faceObj.parentCubePosition);
 
 		addEdges(this, newFaceNode, faceObj.edgeData);
 
-		findAdjacentFaces(this, newFaceNode, cubeMap);
+		findAdjacentFaces(this, newFaceNode);
 
 		DG_PRIVATES.get(this).faceHash.set(newFaceNode.ID, newFaceNode);
 	}
@@ -73,6 +74,11 @@ export class DualGraph{
 		});
 
 		let faceNode = this.getFace(faceID);
+
+		faceNode.neighbors.map((neighbor) => {
+			findAdjacentFaces(this, neighbor, );
+		});
+
 		faceNode.destroy();
 		DG_PRIVATES.get(this).faceHash.delete(faceID);
 	}
@@ -132,9 +138,10 @@ function removeEdgeFromMap(dualGraph, edgeNode){
 //Faces can be adjacent to each other only if they have incident edges and either
 //	a. their cubes are adjacent
 //	b. their cubes share a common neighbor.
-function findAdjacentFaces(dualGraph, newFaceNode, cubeMap){
-	let edgeNodes = newFaceNode.edges;
+function findAdjacentFaces(dualGraph, faceNode){
+	let edgeNodes = faceNode.edges;
 	let edgeMap = DG_PRIVATES.get(dualGraph).edgeMap;
+	let cubeMap = DG_PRIVATES.get(dualGraph).cubeMap;
 
 	//Look for edges incident to this faces' edges
 	edgeNodes.map((edgeNode) => {
@@ -143,13 +150,16 @@ function findAdjacentFaces(dualGraph, newFaceNode, cubeMap){
 		//If edges incident to this edge node exist, check if the faces' cubes fit the criteria enumerated above.
 		if(incidentEdges != null){
 			incidentEdges.map((incidentEdge) => {
-				if(incidentEdge.parent != newFaceNode){
+				if(incidentEdge.parent != faceNode){
 					let face2 = incidentEdge.parent;
 
 					let facesAreAdjacent = false;
 
-					if(newFaceNode.parentCubePosition.distanceTo(face2.parentCubePosition) <= 1){
-						setComponentRelationships(newFaceNode, face2, edgeNode, incidentEdge);
+					let normal1 = faceNode.normal;
+					let normal2 = face2.normal;
+
+					if(faceNode.parentCubePosition.distanceTo(face2.parentCubePosition) <= 1){
+						setComponentRelationships(faceNode, face2, edgeNode, incidentEdge);
 					}
 					else{
 						//Check if the two faces' cubes have a common neighbor.
@@ -157,8 +167,8 @@ function findAdjacentFaces(dualGraph, newFaceNode, cubeMap){
 
 						let commonNeighborDir = wordToDirection.get(wordToOppositeWord.get(face2Dir));
 
-						if(cubeMap.hasDataAtPosition(new THREE.Vector3().addVectors(newFaceNode.parentCubePosition, commonNeighborDir))){
-							setComponentRelationships(newFaceNode, face2, edgeNode, incidentEdge);
+						if(cubeMap.hasDataAtPosition(new THREE.Vector3().addVectors(faceNode.parentCubePosition, commonNeighborDir))){
+							setComponentRelationships(faceNode, face2, edgeNode, incidentEdge);
 						}
 					}
 				}

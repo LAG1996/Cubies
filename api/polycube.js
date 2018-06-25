@@ -193,8 +193,10 @@ export class Polycube {
 			faceCount: 0,
 			name: polycubeName,
 			cubeMap: new SpatialMap(),
-			dualGraph: new DualGraph(),
+			dualGraph: null,
 		});
+
+		P_PRIVATES.get(this).dualGraph = new DualGraph(P_PRIVATES.get(this).cubeMap);
 
 		//Map this polycube's name and id to itself
 		MAP_PNAME.set(polycubeName, this);
@@ -245,8 +247,7 @@ export class Polycube {
 			if(cubeInDirectionID != null){
 				let oppositeDirectionWord = wordToOppositeWord.get(dirWord);
 				let faceToRemoveID = faceIDCalculator[oppositeDirectionWord](cubeInDirectionID);
-
-				console.log("Removing face#" + faceToRemoveID + "(direction is " + oppositeDirectionWord + ")");
+				
 				dualGraph.removeFace(faceToRemoveID);
 
 				//Set this direction word as forebidden.
@@ -273,7 +274,7 @@ export class Polycube {
 				let edgeData = calculateEdgeData(faceID, scaledCubePosition, dirWord);
 
 				//Add this new information to the dual graph
-				dualGraph.addFace({id: faceID, position: facePosition, parentCubePosition: cubePosition, edgeData: edgeData}, P_PRIVATES.get(this).cubeMap);
+				dualGraph.addFace({id: faceID, position: facePosition, normal: dirVector, parentCubePosition: cubePosition, edgeData: edgeData}, P_PRIVATES.get(this).cubeMap);
 				
 				//Increment the face count
 				faceCount += 1;

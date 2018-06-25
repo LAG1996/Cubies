@@ -3,24 +3,6 @@ export class SpatialMap{
 		this.map = [];
 	}
 
-	get length(){
-		let count = 0;
-
-		for(var i in this.map){
-			for(var j in this.map[i]){
-				for(var k in this.map[i][j]){
-					let val = this.map[i][j][k];
-
-					if(val !== undefined && val != null){
-						count+=1;
-					}
-				}
-			}
-		}
-
-		return count;
-	}
-
 	getData(position){
 		if(this.hasDataAtPosition(position)){
 			return this.map[position.x][position.y][position.z];

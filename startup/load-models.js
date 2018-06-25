@@ -29,7 +29,7 @@ export const loadModels = function(templates){
 	importArrows();
 
 	function importCubeFace(){
-		objLoader.load('/imports/polycube-parts/cubeFace.obj', function (object) {
+		objLoader.load('./imports/polycube-parts/cubeFace.obj', function (object) {
 				templates.face = object.children[0];
 				templates.face.material.transparent = true;
 				hasFace = true;
@@ -41,7 +41,7 @@ export const loadModels = function(templates){
 	}
 
 	function importCubeEdge(){
-		objLoader.load('/imports/polycube-parts/cubeHinge.obj', function (object) {
+		objLoader.load('./imports/polycube-parts/cubeHinge.obj', function (object) {
 				templates.edge = object.children[0];
 				templates.edge.scale.set(1.25, 1, 1.25); //Scale up the edges a bit to make them easy to pick
 				hasEdge = true;
@@ -53,7 +53,7 @@ export const loadModels = function(templates){
 	}
 
 	function importArrows(){
-		objLoader.load("/imports/arrow-models/Arrow.obj", function (object){
+		objLoader.load("./imports/arrow-models/Arrow.obj", function (object){
 				arrowMesh = object.children[0];
 				hasArrow = true;
 			}, 

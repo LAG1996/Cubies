@@ -2,6 +2,10 @@ const Y_OFFSET = -0.115
 const XZ_OFFSET = 0
 const NTY_RAD = 90*(Math.PI/180);
 
+const degToRad = function(deg){
+	return deg*(Math.PI/180);
+}
+
 const up = new THREE.Vector3(0, 1, 0);
 const down = new THREE.Vector3(0, -1, 0);
 const left = new THREE.Vector3(-1, 0, 0);

@@ -3,12 +3,13 @@
 const FN_PRIVATES = new WeakMap();
 
 export class FaceNode{
-	constructor(faceID, facePosition, parentCubePosition){
+	constructor(faceID, facePosition, faceNormal, parentCubePosition){
 		//Defining private variables
 		FN_PRIVATES.set(this, {
 			id: faceID,
 			neighbors: [],
 			edges: [],
+			normal: faceNormal,
 			position: facePosition,
 			parentCubePosition: parentCubePosition
 		});
@@ -22,25 +23,32 @@ export class FaceNode{
 	}
 
 	get neighbors(){
-		return FN_PRIVATES.get(this).neighbors;
+		return [...FN_PRIVATES.get(this).neighbors];
 	}
 
 	get position(){
-		return FN_PRIVATES.get(this).position;
+		return FN_PRIVATES.get(this).position.clone();
+	}
+
+	get normal(){
+		return FN_PRIVATES.get(this).normal.clone();
 	}
 
 	get parentCubePosition(){
-		return FN_PRIVATES.get(this).parentCubePosition;
+		return FN_PRIVATES.get(this).parentCubePosition.clone();
 	}
 
 	get edges(){
-		return FN_PRIVATES.get(this).edges;
+		return [...FN_PRIVATES.get(this).edges];
 	}
 
 	//Add neighbors to the neighbor list. Release a warning if this face
 	//has more than 4 neighbors.
 	addNeighbor(faceNode){
 		let neighbors = FN_PRIVATES.get(this).neighbors;
+
+		if(neighbors.includes(faceNode)) return;
+
 		try{
 			if(neighbors.length >=4 ){
 				throw "Face #" + this.ID + " has more than 4 neighbors. The polycube face dual graph is not 4-regular.";
@@ -106,19 +114,19 @@ export class EdgeNode{
 	}
 
 	get position(){
-		return EN_PRIVATES.get(this).position;
+		return EN_PRIVATES.get(this).position.clone();
 	}
 
 	get neighbors(){
-		return EN_PRIVATES.get(this).neighbors;
+		return [...EN_PRIVATES.get(this).neighbors];
 	}
 
 	get endpoints(){
-		return EN_PRIVATES.get(this).endpoints;
+		return [...EN_PRIVATES.get(this).endpoints];
 	}
 
 	get axis(){
-		return EN_PRIVATES.get(this).axis;
+		return EN_PRIVATES.get(this).axis.clone();
 	}
 	
 	get incidentEdge(){
@@ -142,12 +150,16 @@ export class EdgeNode{
 	getAllNeighbors(){
 		let neighborNodes = [];
 
-		EN_PRIVATES.get(this).neighbors.forEach((neighbor) => {
+		EN_PRIVATES.get(this).neighbors.map((neighbor) => {
 			neighborNodes.push(neighbor);
+
+			if(!neighbor.isBoundary){
+				neighborNodes.push(neighbor);
+			}
 		});
 
 		if(!this.isBoundary){
-			this.incidentEdge.neighbors.forEach((neighbor) => {
+			this.incidentEdge.neighbors.map((neighbor) => {
 				neighborNodes.push(neighbor);
 
 				if(!neighbor.isBoundary)
@@ -159,8 +171,11 @@ export class EdgeNode{
 	}
 
 	addNeighbor(edgeNode){
+		let neighbors = EN_PRIVATES.get(this).neighbors;
+		if(neighbors.includes(edgeNode)) return;
+
 		try{
-			if(this.neighbors.length >= 8)
+			if(neighbors.length >= 8)
 				throw "Edge #" + this.ID + " has " + (this.neighbors.length + 1) + " neighbors. Edge graph is no longer of maximum degree 8."
 		}
 		catch(err){
@@ -168,7 +183,7 @@ export class EdgeNode{
 		}
 		finally{
 			//console.log("Edge #" + this.ID + ": setting edge #" + edgeNode.ID + " as a neighbor");
-			EN_PRIVATES.get(this).neighbors.push(edgeNode);
+			neighbors.push(edgeNode);
 		}
 	}
 
