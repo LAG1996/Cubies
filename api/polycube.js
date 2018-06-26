@@ -247,7 +247,7 @@ export class Polycube {
 			if(cubeInDirectionID != null){
 				let oppositeDirectionWord = wordToOppositeWord.get(dirWord);
 				let faceToRemoveID = faceIDCalculator[oppositeDirectionWord](cubeInDirectionID);
-				
+
 				dualGraph.removeFace(faceToRemoveID);
 
 				//Set this direction word as forebidden.
@@ -285,6 +285,25 @@ export class Polycube {
 		P_PRIVATES.get(this).faceCount = faceCount;
 
 		return true;
+	}
+
+	//Attempts to cut the dual graph at the specified edge. Returns true if successful. Returns false if the cut does not happen.
+	cutEdge(edgeID){
+		return P_PRIVATES.get(this).dualGraph.tryApplyCut(edgeID);
+	}
+
+	//Grabs a list of edges that were recently taped. Taping can occur in two different situations:
+	//1. A new cube is added such that an edge that is already cut has to take a new incident edge
+	//2. The user explicitly tapes two faces together.
+	getAndClearTapedEdges(){
+		let tapedEdges = [];
+		let cache = P_PRIVATES.get(this).dualGraph.tapedEdgesCache;
+
+		cache.map((edge) => {
+			tapedEdges.push(edge.ID);
+		})
+
+		return tapedEdges;
 	}
 
 	//getters

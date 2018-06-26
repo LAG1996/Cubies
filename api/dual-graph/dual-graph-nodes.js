@@ -1,5 +1,5 @@
 //Classes representing nodes of the face dual graph
-//Private static members for the FaceNode class
+//Private static members for both node classes.
 const NODE_PRIVATES = new WeakMap();
 
 export class FaceNode{
@@ -104,7 +104,9 @@ export class EdgeNode{
 			incidentEdge: null,
 			parent: parentFace,
 			hadTooManyNeighbors: false
-		})
+		});
+
+		this.visited = false;
 	}
 
 	//getters
@@ -146,6 +148,7 @@ export class EdgeNode{
 		NODE_PRIVATES.get(this).incidentEdge = edgeNode;
 	}
 
+	//Grabs all neighbors of this edge, and the incident edge, including edges incident to neighbor edges.
 	getAllNeighbors(){
 		let neighborNodes = [];
 

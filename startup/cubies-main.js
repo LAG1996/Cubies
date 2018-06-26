@@ -25,8 +25,8 @@ const CubiesState = {
 		doUpdateEdges: false
 	},
 	cache : {
-		hoverEdge: 0,
-		hoverFace: 0,
+		hoverEdgeID: 0,
+		hoverFaceID: 0,
 		focusPolycube: null
 	},
 	modes: {
@@ -49,6 +49,23 @@ const defaultMode = new Mode({
 	mouseMove : () => {
 		tryMouseOverHighlight();
 	},
+	mouseUp: () => {
+		//Do not do anything if we aren't hovering over an edge or one of the keys are pressed.
+		if(!CubiesState.flags.isOverEdge || CubiesState.flags.isControlDown || CubiesState.flags.isShiftDown) return;
+
+		let edgeToCut = CubiesState.cache.hoverEdgeID;
+		let focusPolycube = CubiesState.cache.focusPolycube;
+		let edgeToCutIncident = focusPolycube.getIncidentEdge(edgeToCut);
+		
+		//Tell the polycube to cut this edge
+		let isCutSuccessful = focusPolycube.cutEdge(edgeToCut);
+
+		//Check if this cut was successful. If not, then don't do anything.
+		if(!isCutSuccessful) return;
+
+		//Tell the polycube visualizer to reflect that this edge has been cut by showing the cut highlight
+		PolycubeVisualHandler.showCutHighlight(focusPolycube.ID, edgeToCut, edgeToCutIncident);
+	},
 	keyDown : () => {
 		//Update highlights to reflect the new key press.
 		tryMouseOverHighlight();
@@ -70,7 +87,7 @@ const addCubeMode = new Mode({
 	},
 	mouseMove: () => {
 		if(CubiesState.flags.isOverFace){
-			PolycubeVisualHandler.showPreviewCube(CubiesState.cache.focusPolycube.ID, CubiesState.cache.hoverFace);
+			PolycubeVisualHandler.showPreviewCube(CubiesState.cache.focusPolycube.ID, CubiesState.cache.hoverFaceID);
 		}
 		else{
 			PolycubeVisualHandler.hidePreviewCube();
@@ -78,7 +95,7 @@ const addCubeMode = new Mode({
 	},
 	mouseUp: () => {
 		if(CubiesState.flags.isOverFace){
-			let faceID = CubiesState.cache.hoverFace;
+			let faceID = CubiesState.cache.hoverFaceID;
 			let polycube = CubiesState.cache.focusPolycube;
 
 			let adjacentCubePosition = CubiesState.cache.focusPolycube.getFace(faceID).parentCubePosition;
@@ -88,6 +105,8 @@ const addCubeMode = new Mode({
 			
 			if(polycube.addCube(cubePosition)){
 				PolycubeVisualHandler.onNewCube(polycube, cubePosition);
+
+				PolycubeVisualHandler.hideCutHighlight(polycube.ID, ...polycube.getAndClearTapedEdges());
 			}
 		}
 
@@ -162,10 +181,10 @@ InputHandler.callbacks.onMouseMove = () => {
 	CubiesState.flags.isOverFace = false;
 	CubiesState.flags.isOverEdge = false;
 
-	if((CubiesState.cache.hoverFace = SceneHandler.pick("face", InputHandler.getMousePosition())) !== 0){
+	if((CubiesState.cache.hoverFaceID = SceneHandler.pick("face", InputHandler.getMousePosition())) !== 0){
 		CubiesState.flags.isOverFace = true;
 	}
-	else if((CubiesState.cache.hoverEdge = SceneHandler.pick("edge", InputHandler.getMousePosition())) !== 0){
+	else if((CubiesState.cache.hoverEdgeID = SceneHandler.pick("edge", InputHandler.getMousePosition())) !== 0){
 		CubiesState.flags.isOverEdge = true;
 	}
 
@@ -226,7 +245,7 @@ function tryMouseOverHighlight(polycubeID = CubiesState.cache.focusPolycube){
 	}
 }
 
-function doFaceHighlight(faceID = CubiesState.cache.hoverFace){
+function doFaceHighlight(faceID = CubiesState.cache.hoverFaceID){
 	let polycube = CubiesState.cache.focusPolycube;
 	if(!CubiesState.flags.isControlDown)
 		PolycubeVisualHandler.showFaceHighlight(polycube.ID, faceID, CubiesState.flags.isShiftDown);
@@ -235,7 +254,7 @@ function doFaceHighlight(faceID = CubiesState.cache.hoverFace){
 	}
 }
 
-function doEdgeHighlight(edgeID = CubiesState.cache.hoverEdge){
+function doEdgeHighlight(edgeID = CubiesState.cache.hoverEdgeID){
 	let polycube = CubiesState.cache.focusPolycube;
 	if(!CubiesState.flags.isControlDown)
 		PolycubeVisualHandler.showEdgeHighlight(polycube.ID, edgeID, polycube.getIncidentEdge(edgeID), CubiesState.flags.isShiftDown);

@@ -162,6 +162,29 @@ export const PolycubeVisualHandler = {
 			_visibleHighlights.push(highlight);
 		})
 	},
+	showCutHighlight(polycubeID, ...edgeIDs){
+
+		let polycube = _viewPolycubes.get(polycubeID);
+
+		edgeIDs.map((ID) => {
+			let edgeObj = polycube.getObjectByName(edgeName.withEdgeID(ID));
+
+			let cutHighlight = edgeObj.getObjectByName("cut");
+
+			cutHighlight.visible = true;
+		});
+	},
+	hideCutHighlight(polycubeID, ...edgeIDs){
+		let polycube = _viewPolycubes.get(polycubeID);
+
+		edgeIDs.map((ID) => {
+			let edgeObj = polycube.getObjectByName(edgeName.withEdgeID(ID));
+
+			let cutHighlight = edgeObj.getObjectByName("cut");
+
+			cutHighlight.visible = false;
+		})
+	},
 	//Shows the appropriate face mouse-over highlight
 	showFaceHighlight: (polycubeID, faceID, isShiftDown) => {
 		let polycube = _viewPolycubes.get(polycubeID);
@@ -297,21 +320,21 @@ function addCube(polycube, newCubeID, cubePosition){
 				comp.add(dualGraphHighlight);
 			}
 			else{
-				let cutHighlight = comp.clone();
+				let cutHighlight = _modelTemplates.edge.clone();
 				cutHighlight.material = _HIGHLIGHT_CUT;
 				cutHighlight.name = "cut";
 				cutHighlight.visible = false;
 				comp.add(cutHighlight);
 
-				let hingeHighlight = comp.clone();
+				let hingeHighlight = _modelTemplates.edge.clone();
 				hingeHighlight.material = _HIGHLIGHT_HINGE;
 				hingeHighlight.name = "hinge";
 				hingeHighlight.visible = false;
 				comp.add(hingeHighlight);
 
-				let adjacencyHighlight = comp.clone();
-				adjacencyHighlight.position.set(0, 0, 0);
-				adjacencyHighlight.rotation.set(0, 0, 0);
+				let adjacencyHighlight = _modelTemplates.edge.clone();
+				//adjacencyHighlight.position.set(0, 0, 0);
+				//adjacencyHighlight.rotation.set(0, 0, 0);
 				adjacencyHighlight.name = "adjacency";
 				adjacencyHighlight.visible = false;
 				comp.add(adjacencyHighlight);
