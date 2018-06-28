@@ -13,6 +13,7 @@ export class DualGraph{
 			faceHash: new Map(),
 			edgeHash: new Map(),
 			edgeMap: new SpatialMap(),
+			edgeEndpointMap: new SpatialMap(),
 			faceMap: new SpatialMap(),
 			cubeMap: cubeMap,
 			edgeIsCut: new Map(),
@@ -27,25 +28,23 @@ export class DualGraph{
 	//A cut is not successful if the given edge is already a boundary or if the cut would result in a disconnected dual graph.
 	tryApplyCut(edgeID){
 		let edgeNode = DG_PRIVATES.get(this).edgeHash.get(edgeID);
+		let edgeIsCut = DG_PRIVATES.get(this).edgeIsCut;
 
-		if(!edgeNode.isBoundary){
-			let edgeNodeIncident = edgeNode.incidentEdge;
+		if(!edgeNode.isCut){
+			let incidentEdgeNode = this.getIncidentEdge(edgeID);
 
-			DG_PRIVATES.get(this).edgeIsCut.set(edgeNode, true);
-			DG_PRIVATES.get(this).edgeIsCut.set(edgeNodeIncident, true);
+			edgeNode.isCut = true;
+			incidentEdgeNode.isCut = true;
 
-			let face1 = edgeNode.parent;
-			let face2 = edgeNodeIncident.parent;
+			let face1 = this.getFace(edgeNode.parentID);
+			let face2 = this.getFace(incidentEdgeNode.parentID);
 
-			face1.removeNeighbor(face2);
-			face2.removeNeighbor(face1);
+			face1.removeNeighbors(face2);
+			face2.removeNeighbors(face1);
 
 			computeCutTrees(this, edgeNode);
+			computeHingeLines(this, edgeNode);
 
-			console.log(DG_PRIVATES.get(this).cutTrees);
-
-			edgeNode.removeIncidentEdge();
-			edgeNodeIncident.removeIncidentEdge();
 			return true;
 		}
 
@@ -73,8 +72,35 @@ export class DualGraph{
 		return DG_PRIVATES.get(this).faceHash.get(faceID);
 	}
 
+	getFaceNeighbors(faceID){
+		let faceNode = DG_PRIVATES.get(this).faceHash.get(faceID);
+
+		return faceNode.neighbors;
+	}
+
 	getEdge(edgeID){
 		return DG_PRIVATES.get(this).edgeHash.get(edgeID);
+	}
+
+	getEdgeNeighbors(edgeID){
+		let edgeNode = DG_PRIVATES.get(this).edgeHash.get(edgeID);
+
+		let neighbors = [];
+
+		findAdjacentEdges(this, edgeNode, neighbors);
+		let incidentEdge = edgeNode.incidentEdge;
+		
+		if(incidentEdge != null){
+			findAdjacentEdges(this, incidentEdge, neighbors);
+		}
+		
+		return neighbors;
+	}
+
+	getIncidentEdge(edgeID){
+		let edgeNode = DG_PRIVATES.get(this).edgeHash.get(edgeID);
+
+		return edgeNode.incidentEdge;
 	}
 
 	getEdgesFromFace(faceID){
@@ -90,11 +116,15 @@ export class DualGraph{
 	addFace(faceObj, cubeMap){
 		let newFaceNode = new FaceNode(faceObj.id, faceObj.position, faceObj.normal, faceObj.parentCubePosition);
 
+		DG_PRIVATES.get(this).faceHash.set(newFaceNode.ID, newFaceNode);
 		addEdges(this, newFaceNode, faceObj.edgeData);
 
-		findAdjacentFaces(this, newFaceNode);
+		let faceNeighbors = findAdjacentFaces(this, newFaceNode);
 
-		DG_PRIVATES.get(this).faceHash.set(newFaceNode.ID, newFaceNode);
+		faceNeighbors.map((neighbor) => {
+			neighbor.addNeighbors(newFaceNode);
+			newFaceNode.addNeighbors(neighbor);
+		});
 	}
 
 	//Check if there is a face with the given ID.
@@ -110,14 +140,10 @@ export class DualGraph{
 			DG_PRIVATES.get(this).edgeHash.delete(edgeNode.ID);
 			DG_PRIVATES.get(this).edgeIsCut.delete(edgeNode);
 
-			removeEdgeFromMap(this, edgeNode);
+			removeEdgeFromMaps(this, edgeNode);
 		});
 
 		let faceNode = this.getFace(faceID);
-
-		faceNode.neighbors.map((neighbor) => {
-			findAdjacentFaces(this, neighbor, );
-		});
 
 		faceNode.destroy();
 		DG_PRIVATES.get(this).faceHash.delete(faceID);
@@ -141,16 +167,26 @@ export class DualGraph{
 */
 function addEdges(dualGraph, parentFace, edgeData){
 	edgeData.map((edge) => {
-		let newEdgeNode = new EdgeNode(edge.id, edge.position, edge.endpoints, edge.axis, parentFace);
-		DG_PRIVATES.get(dualGraph).edgeHash.set(newEdgeNode.ID, newEdgeNode);
+		let newEdgeNode = new EdgeNode(edge.id, edge.position, edge.endpoints, edge.axis, parentFace.ID);
+
 		parentFace.addEdge(newEdgeNode);
-		addEdgeToMap(dualGraph, newEdgeNode);
+		addEdgeToMaps(dualGraph, newEdgeNode);
+
+		DG_PRIVATES.get(dualGraph).edgeHash.set(newEdgeNode.ID, newEdgeNode);
+		
+		let incidentEdge = findIncidentEdge(dualGraph, newEdgeNode);
+
+		if(incidentEdge != null){
+			newEdgeNode.incidentEdge = incidentEdge;
+			incidentEdge.incidentEdge = newEdgeNode;
+		}
 	});
 }
 
-//Add the new edge to the edge spatial map.
-function addEdgeToMap(dualGraph, edgeNode){
+//Add the new edge to the corresponding spatial maps.
+function addEdgeToMaps(dualGraph, edgeNode){
 	let edgeMap = DG_PRIVATES.get(dualGraph).edgeMap;
+	let endpointMap = DG_PRIVATES.get(dualGraph).edgeEndpointMap;
 
 	if(!edgeMap.hasDataAtPosition(edgeNode.position)){
 		edgeMap.addToMap([edgeNode], edgeNode.position);
@@ -158,18 +194,44 @@ function addEdgeToMap(dualGraph, edgeNode){
 	else{
 		edgeMap.getData(edgeNode.position).push(edgeNode);
 	}
+
+	if(!endpointMap.hasDataAtPosition(edgeNode.endpoints[0])){
+		endpointMap.addToMap([edgeNode], edgeNode.endpoints[0]);
+	}
+	else{
+		endpointMap.getData(edgeNode.endpoints[0]).push(edgeNode);
+	}
+
+	if(!endpointMap.hasDataAtPosition(edgeNode.endpoints[1])){
+		endpointMap.addToMap([edgeNode], edgeNode.endpoints[1]);
+	}
+	else{
+		endpointMap.getData(edgeNode.endpoints[1]).push(edgeNode);
+	}
 }
 
-//Remove this edge from the edge spatial map.
-function removeEdgeFromMap(dualGraph, edgeNode){
+//Remove this edge from its corresponding spatial maps.
+function removeEdgeFromMaps(dualGraph, edgeNode){
 
 	let edgeMap = DG_PRIVATES.get(dualGraph).edgeMap;
+	let endpointMap = DG_PRIVATES.get(dualGraph).edgeEndpointMap;
 
 	if(edgeMap.hasDataAtPosition(edgeNode.position)){
 		let edgeList = edgeMap.getData(edgeNode.position);
 
 		edgeList.splice(edgeList.indexOf(edgeNode), 1);
+	}
 
+	if(endpointMap.hasDataAtPosition(edgeNode.endpoints[0])){
+		let edgeList = endpointMap.getData(edgeNode.endpoints[0]);
+
+		edgeList.splice(edgeList.indexOf(edgeNode), 1);	
+	}
+
+	if(endpointMap.hasDataAtPosition(edgeNode.endpoints[1])){
+		let edgeList = endpointMap.getData(edgeNode.endpoints[1]);
+
+		edgeList.splice(edgeList.indexOf(edgeNode), 1);	
 	}
 }
 
@@ -179,87 +241,101 @@ function removeEdgeFromMap(dualGraph, edgeNode){
 //	a. their cubes are adjacent
 //	b. their cubes share a common neighbor.
 function findAdjacentFaces(dualGraph, faceNode){
-	let edgeNodes = faceNode.edges;
 	let edgeMap = DG_PRIVATES.get(dualGraph).edgeMap;
 	let cubeMap = DG_PRIVATES.get(dualGraph).cubeMap;
 
-	//Look for edges incident to this faces' edges
-	edgeNodes.map((edgeNode) => {
-		let incidentEdges = edgeMap.getData(edgeNode.position);
+	let neighbors = [];
 
+	//Look for edges incident to this faces' edges
+	faceNode.edges.map((edgeNode) => {
+		let incidentEdges = edgeMap.getData(edgeNode.position);
+		
 		//If edges incident to this edge node exist, check if the faces' cubes fit the criteria enumerated above.
 		if(incidentEdges != null){
 			incidentEdges.map((incidentEdge) => {
-				if(incidentEdge.parent != faceNode){
-					let face2 = incidentEdge.parent;
-
-					let facesAreAdjacent = false;
-
+				if(incidentEdge.parentID != faceNode.ID){
+					let face2 = dualGraph.getFace(incidentEdge.parentID);
+		
 					let normal1 = faceNode.normal;
 					let normal2 = face2.normal;
-
-					if(faceNode.parentCubePosition.distanceTo(face2.parentCubePosition) <= 1){
-						setComponentRelationships(dualGraph, faceNode, face2, edgeNode, incidentEdge);
+		
+					if(cubesAreAdjacent(faceNode.parentCubePosition, face2.parentCubePosition)){
+						neighbors.push(face2);
 					}
 					else{
-						//Check if the two faces' cubes have a common neighbor.
-						let face2Dir = faceIDtoDirWord(face2.ID);
-
-						let commonNeighborDir = wordToDirection.get(wordToOppositeWord.get(face2Dir));
-
-						if(cubeMap.hasDataAtPosition(new THREE.Vector3().addVectors(faceNode.parentCubePosition, commonNeighborDir))){
-							setComponentRelationships(dualGraph, faceNode, face2, edgeNode, incidentEdge);
+						if(cubesShareCommonNeighbor(dualGraph, faceNode.parentCubePosition, face2.parentCubePosition)){
+							neighbors.push(face2);
 						}
 					}
 				}
 			})
 		}
+
 	});
+
+	return neighbors;
 }
 
-//Sets relationships between components of the dual graphs (i.e. adjacency and incidence)
-function setComponentRelationships(dualGraph, face1, face2, edge1, edge2){
+function findAdjacentEdges(dualGraph, edgeNode, neighborList){
+	let endpointMap = DG_PRIVATES.get(dualGraph).edgeEndpointMap;
 
-	//Set the two faces as neighbors
-	face1.addNeighbor(face2);
-	face2.addNeighbor(face1);
+	let edgeList = [...endpointMap.getData(edgeNode.endpoints[0]), ...endpointMap.getData(edgeNode.endpoints[1])];
 
-	let edgeIsCut = DG_PRIVATES.get(dualGraph).edgeIsCut;
-	let cutEdges = DG_PRIVATES.get(dualGraph).cutEdges;
+	edgeList.map((otherEdge) => {
+		if(otherEdge !== edgeNode && !otherEdge.position.equals(edgeNode.position)){
+			let face1 = dualGraph.getFace(edgeNode.parentID);
+			let face2 = dualGraph.getFace(otherEdge.parentID);
 
-	if(edgeIsCut.get(edge1) && edgeIsCut.get(edge2)) { return false; }
+			if(face1 === face2
+				|| dualGraph.getFaceNeighbors(face1.ID).includes(face2)
+				|| cubesAreAdjacent(face1.parentCubePosition, face2.parentCubePosition)
+				|| cubesShareCommonNeighbor(dualGraph, face1.parentCubePosition, face2.parentCubePosition)){
+				
+				if(!neighborList.includes(otherEdge)){
+					neighborList.push(otherEdge);
+					let incidentEdge = dualGraph.getIncidentEdge(otherEdge.ID);
 
-	if(edgeIsCut.get(edge1)){
-		DG_PRIVATES.get(dualGraph).tapedEdgesCache.push(edge1);
-	}
-	if(edgeIsCut.get(edge2)){
-		DG_PRIVATES.get(dualGraph).tapedEdgesCache.push(edge2);
-	}
-
-	edge1.incidentEdge = edge2;
-	edge2.incidentEdge = edge1;
-
-	edgeIsCut.set(edge1, false);
-	edgeIsCut.set(edge2, false);
-
-	setEdgeAdjacency(face1, face2);
-}
-
-function setEdgeAdjacency(face1, face2){
-	face1.edges.map((face1Edge) => {
-		face2.edges.map((face2Edge) => {
-			if(face1Edge.incidentEdge !== face2Edge){
-				if(face1Edge.endpoints[0].equals(face2Edge.endpoints[0])
-					|| face1Edge.endpoints[0].equals(face2Edge.endpoints[1])
-					|| face1Edge.endpoints[1].equals(face2Edge.endpoints[0])
-					|| face1Edge.endpoints[1].equals(face2Edge.endpoints[1])){
-
-					face1Edge.addNeighbor(face2Edge);
-					face2Edge.addNeighbor(face1Edge);
+					if(incidentEdge != null && !neighborList.includes(incidentEdge))
+						neighborList.push(incidentEdge)
 				}
 			}
-		});
+		}
 	});
+}
+
+function findIncidentEdge(dualGraph, edgeNode){
+
+	if(edgeNode.isCut){ return null; }
+
+	let edgeMap = DG_PRIVATES.get(dualGraph).edgeMap;
+
+	let edgeList = edgeMap.getData(edgeNode.position);
+
+	for(var e in edgeList){
+		let otherEdge = edgeList[e];
+
+		if(otherEdge !== edgeNode && findAdjacentFaces(dualGraph, dualGraph.getFace(otherEdge.parentID)).includes(dualGraph.getFace(edgeNode.parentID))){
+			return otherEdge;
+		}
+	}
+
+	return null;
+}
+
+function cubesAreAdjacent(cubePosition1, cubePosition2){
+	return cubePosition1.distanceTo(cubePosition2) <= 1;
+}
+
+function cubesShareCommonNeighbor(dualGraph, cubePosition1, cubePosition2){
+
+	for(var d in directions){
+		let dirVector = directions[d];
+		let cubePosition3 = new THREE.Vector3().addVectors(cubePosition1, dirVector);
+
+		if(DG_PRIVATES.get(dualGraph).cubeMap.hasDataAtPosition(cubePosition3) && cubesAreAdjacent(cubePosition2, cubePosition3))
+			return true;
+	}
+	return false;
 }
 
 //Computes cut trees around the newly cut edge.
@@ -268,24 +344,24 @@ function setEdgeAdjacency(face1, face2){
 //We also handle the case where two disjoint cut trees are bridged by the newly cut edge.
 function computeCutTrees(dualGraph, newlyCutEdge){
 	//Get all neigbhors of the edge and its incident edge
-	let neighbors = newlyCutEdge.getAllNeighbors();
-	let incidentEdge = newlyCutEdge.incidentEdge;
+	let neighbors = dualGraph.getEdgeNeighbors(newlyCutEdge.ID);
+	let incidentEdge = dualGraph.getIncidentEdge(newlyCutEdge.ID);
 
 	//Grab references to private variables.
 	let cutTrees = DG_PRIVATES.get(dualGraph).cutTrees;
 	let edgeToCutTreeIndex = DG_PRIVATES.get(dualGraph).edgeToCutTreeIndex;
 
 	//Search the neighbors. If a neighbor is cut, grab its cut tree index.
-	let cutTreeIndex = -1;
+	let cutTreeIndex = undefined;
 	for(var n in neighbors){
-		if(neighbors[n].isBoundary){
+		if(neighbors[n].isCut){
 			cutTreeIndex = edgeToCutTreeIndex.get(neighbors[n].ID);
 			break;
 		}
 	}
 
 	//If no neighbors are cut (i.e., the cut tree index is -1), just set our own. We are done.
-	if(cutTreeIndex === -1){
+	if(cutTreeIndex === undefined){
 		if(cutTrees.size === 0){
 			cutTrees.set(0, [newlyCutEdge, incidentEdge]);
 			edgeToCutTreeIndex.set(newlyCutEdge.ID, 0);
@@ -318,12 +394,12 @@ function computeCutTrees(dualGraph, newlyCutEdge){
 		let neighborNode = neighbors[n];
 		let neighborCutTreeIndex = edgeToCutTreeIndex.get(neighborNode.ID);
 
-		if(neighborNode.isBoundary && neighborCutTreeIndex !== cutTreeIndex){
+		if(neighborNode.isCut && neighborCutTreeIndex !== cutTreeIndex){
 			let cutTree = cutTrees.get(neighborCutTreeIndex);
 
 			//This neighbor is of a different cut tree, so we need to add it to this cut tree, and map it to this cut tree index.
 			cutTree.map((edgeNode) => {
-				cutTrees.get(cutTreeIndex).push(edgeNode.ID);
+				cutTrees.get(cutTreeIndex).push(edgeNode);
 				edgeToCutTreeIndex.set(edgeNode.ID, cutTreeIndex);
 			});
 
@@ -334,4 +410,75 @@ function computeCutTrees(dualGraph, newlyCutEdge){
 			break;
 		}
 	}
+}
+
+//Recomputes the cut tree around a removed edge.
+function recomputeCutTree(dualGraph, removedEdge){
+	let cutTrees = DG_PRIVATES.get(dualGraph).cutTrees;
+	let edgeToCutTreeIndex = DG_PRIVATES.get(dualGraph).edgeToCutTreeIndex;
+
+	let cutTreeIndex = edgeToCutTreeIndex.get(removedEdge.ID);
+	let cutTree = [...cutTrees.get(cutTreeIndex)];
+
+	cutTree.map((edge) => {
+		edgeToCutTreeIndex.delete(removedEdge);
+
+		console.log(edge);
+
+		computeCutTrees(dualGraph, edge);
+	});
+}
+
+//Computes hinging lines that portions of the polycube will rotate around
+function computeHingeLines(dualGraph, edgeNode){
+	let cutTrees = DG_PRIVATES.get(dualGraph).cutTrees;
+	let edgeToCutTreeIndex = DG_PRIVATES.get(dualGraph).edgeToCutTreeIndex;
+
+	let cutTreeIndex = edgeToCutTreeIndex.get(edgeNode.ID);
+	let cutTree = [...cutTrees.get(cutTreeIndex)];
+
+	let edgeNeighbors = dualGraph.getEdgeNeighbors(edgeNode.ID);
+
+	for(var e in cutTree){
+		let cutEdge = cutTree[e];
+		
+		if(cutEdge === edgeNode || cutEdge === edgeNode.incidentEdge){ continue; }
+		if(edgeNeighbors.includes(cutEdge)){ continue; }
+
+		if(edgesAreCollinear(edgeNode, cutEdge)){
+			console.log("Edges #" + edgeNode.ID + " and #" + cutEdge.ID + " are collinear");
+		}
+	}
+}
+
+function edgesAreCollinear(edge1, edge2){
+	let endpoints1 = edge1.endpoints;
+	let endpoints2 = edge2.endpoints;
+
+	//Add up `endpoints1` and `endpoints2`
+	let line1 = new THREE.Vector3().subVectors(endpoints1[0], endpoints1[1]);
+
+	let line2 = new THREE.Vector3().subVectors(endpoints1[0], endpoints2[0]);
+	let line3 = new THREE.Vector3().subVectors(endpoints1[0], endpoints2[1]);
+
+	line1 = toQ1Vector(line1).normalize();
+	line2 = toQ1Vector(line2).normalize();
+	line3 = toQ1Vector(line3).normalize();
+
+	return (line1.equals(line2) && line1.equals(line3));
+}
+
+function edgesArePerpendicular(edge1, edge2){
+	let endpoints1 = edge1.endpoints;
+	let endpoints2 = edge2.endpoints;
+
+	let line1 = new THREE.Vector3().subVectors(endpoints1[0], endpoints2[1]).normalize();
+	let line2 = new THREE.Vector3().subVectors(endpoints2[0], endpoints2[1]).normalize();
+
+	
+
+}
+
+function edgesAreParallel(edge1, edge2){
+
 }

@@ -372,7 +372,7 @@ export class Polycube {
 	}
 
 	getFaceNeighbors(faceID){
-		let neighbors = P_PRIVATES.get(this).dualGraph.getFace(faceID).neighbors;
+		let neighbors = P_PRIVATES.get(this).dualGraph.getFaceNeighbors(faceID);
 
 		let neighborIDs = [];
 		neighbors.map((neighbor) => {
@@ -383,8 +383,9 @@ export class Polycube {
 	}
 
 	getEdgeNeighbors(edgeID){
-		let neighbors = P_PRIVATES.get(this).dualGraph.getEdge(edgeID).getAllNeighbors();
+		//let neighbors = P_PRIVATES.get(this).dualGraph.getEdge(edgeID).getAllNeighbors();
 
+		let neighbors = P_PRIVATES.get(this).dualGraph.getEdgeNeighbors(edgeID);
 		let neighborIDs = [];
 
 		neighbors.map((neighbor) => {
@@ -395,7 +396,7 @@ export class Polycube {
 	}
 
 	getIncidentEdge(edgeID){
-		let incidentEdge = P_PRIVATES.get(this).dualGraph.getEdge(edgeID).incidentEdge;
+		let incidentEdge = P_PRIVATES.get(this).dualGraph.getIncidentEdge(edgeID);
 
 		if(incidentEdge != null){
 			return incidentEdge.ID;

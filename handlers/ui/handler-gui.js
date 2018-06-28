@@ -14,8 +14,8 @@ export const GUIHandler = {
 
 		$("#add-polycube").show();		
 	},
-	switchToPolycubeView: (_isAddCubeDisabled, polycubeName) => {
-		if(_isAddCubeDisabled){
+	switchToPolycubeView: (isAddCubeDisabled, polycubeName) => {
+		if(isAddCubeDisabled){
 			$("#add-cube-inactive").show();
 		}
 		else{
@@ -34,9 +34,13 @@ export const GUIHandler = {
 			default: $("#main-canvas").css("cursor", "default");
 		}	
 	},
-	toggleAddCubeButton: () => {
-		$("#add-cube-inactive").toggle();
-		$("#add-cube-active").toggle();
+	enableAddCubeButton: () => {
+		$("#add-cube-inactive").hide();
+		$("#add-cube-active").show();
+	},
+	disableAddCubeButton: () => {
+		$("#add-cube-inactive").show();
+		$("#add-cube-active").hide();
 	},
 	displayGUI: (display) => {
 		if(display){

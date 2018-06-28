@@ -65,6 +65,9 @@ const defaultMode = new Mode({
 
 		//Tell the polycube visualizer to reflect that this edge has been cut by showing the cut highlight
 		PolycubeVisualHandler.showCutHighlight(focusPolycube.ID, edgeToCut, edgeToCutIncident);
+
+		//Tell the toolbar handler to disable the add cube button
+		GUIHandler.disableAddCubeButton();
 	},
 	keyDown : () => {
 		//Update highlights to reflect the new key press.
@@ -240,6 +243,7 @@ function tryMouseOverHighlight(polycubeID = CubiesState.cache.focusPolycube){
 			doFaceHighlight();
 		}
 		else if(CubiesState.flags.isOverEdge){
+			console.log("Edge #" + CubiesState.cache.hoverEdgeID);
 			doEdgeHighlight();
 		}
 	}
