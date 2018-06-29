@@ -52,6 +52,11 @@ const toQ1Vector = function(vector){
 	return newVec;
 }
 
+const vectorIsOrthogonal = function(vector){
+	let vec = toQ1Vector(vector);
+	return (vec.equals(up) || vec.equals(right) || vec.equals(front));
+}
+
 //Maps a direction word to a function that gives the ID of a face based off the 
 const faceIDCalculator = {
 	"up": (cubeID) => { return (cubeID * 6) + 1;},

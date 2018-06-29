@@ -181,9 +181,27 @@ export const PolycubeVisualHandler = {
 			let edgeObj = polycube.getObjectByName(edgeName.withEdgeID(ID));
 
 			let cutHighlight = edgeObj.getObjectByName("cut");
+			let hingeHighlight = edgeObj.getObjectByName("hinge");
+
+			if(hingeHighlight.visible){
+				hingeHighlight.visible = false;
+			}
 
 			cutHighlight.visible = false;
 		})
+	},
+	showHingeLines(polycubeID, hingeLines){
+		let polycube = _viewPolycubes.get(polycubeID);
+
+		hingeLines.map((line) => {
+			line.map((edgeID) => {
+				let edgeObj = polycube.getObjectByName(edgeName.withEdgeID(edgeID));
+
+				let hingeHighlight = edgeObj.getObjectByName("hinge");
+
+				hingeHighlight.visible = true;
+			});
+		});
 	},
 	//Shows the appropriate face mouse-over highlight
 	showFaceHighlight: (polycubeID, faceID, isShiftDown) => {
@@ -333,8 +351,6 @@ function addCube(polycube, newCubeID, cubePosition){
 				comp.add(hingeHighlight);
 
 				let adjacencyHighlight = _modelTemplates.edge.clone();
-				//adjacencyHighlight.position.set(0, 0, 0);
-				//adjacencyHighlight.rotation.set(0, 0, 0);
 				adjacencyHighlight.name = "adjacency";
 				adjacencyHighlight.visible = false;
 				comp.add(adjacencyHighlight);

@@ -406,6 +406,23 @@ export class Polycube {
 		}
 	}
 
+	getHingeLines(edgeID){
+		let hingeLines = P_PRIVATES.get(this).dualGraph.getHingeLines(edgeID);
+
+		let hingeIDs = [];
+		hingeLines.map((lines) => {
+			let newLine = [];
+
+			lines.map((edge) => {
+				newLine.push(edge.ID);
+			});
+
+			hingeIDs.push(newLine);
+		});
+
+		return hingeIDs;
+	}
+
 	//Removes all references to this object
 	destroy(){
 		try{

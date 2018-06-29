@@ -17,8 +17,13 @@ export class DualGraph{
 			faceMap: new SpatialMap(),
 			cubeMap: cubeMap,
 			edgeIsCut: new Map(),
+
 			cutTrees: new Map(),
+			lastEditedCutTreeIndex: -1,
+
+			hingeLines: new Map(),
 			tapedEdgesCache: [],
+			cutTreeIndexToHingeLines: new Map(),
 			edgeToCutTreeIndex: new Map(),
 			edgeToHingeIndex: new Map(),
 		})
@@ -95,6 +100,22 @@ export class DualGraph{
 		}
 		
 		return neighbors;
+	}
+
+	getAllHingeLines(){
+		let hingeLines = DG_PRIVATES.get(this).hingeLines;
+
+		return hingeLines;
+	}
+
+	getHingeLines(edgeID){
+		let hingeLines = DG_PRIVATES.get(this).hingeLines.get(DG_PRIVATES.get(this).edgeToCutTreeIndex.get(edgeID));
+
+		return hingeLines;
+	}
+
+	isEdgeInHinge(edgeID){
+		return DG_PRIVATES.get(this).edgeToHingeIndex.has(edgeID);
 	}
 
 	getIncidentEdge(edgeID){
@@ -351,6 +372,9 @@ function computeCutTrees(dualGraph, newlyCutEdge){
 	let cutTrees = DG_PRIVATES.get(dualGraph).cutTrees;
 	let edgeToCutTreeIndex = DG_PRIVATES.get(dualGraph).edgeToCutTreeIndex;
 
+	let hingeLines = DG_PRIVATES.get(dualGraph).hingeLines;
+	let edgeToHingeIndex = DG_PRIVATES.get(dualGraph).edgeToHingeIndex;
+
 	//Search the neighbors. If a neighbor is cut, grab its cut tree index.
 	let cutTreeIndex = undefined;
 	for(var n in neighbors){
@@ -401,10 +425,16 @@ function computeCutTrees(dualGraph, newlyCutEdge){
 			cutTree.map((edgeNode) => {
 				cutTrees.get(cutTreeIndex).push(edgeNode);
 				edgeToCutTreeIndex.set(edgeNode.ID, cutTreeIndex);
+				edgeToHingeIndex.delete(edgeNode.ID);
 			});
 
 			//We lose the reference to the cut tree neighbor was part of, since it has been concatenated into the other one.
 			cutTrees.delete(neighborCutTreeIndex);
+
+			//Since we lost that reference, we'd also want to lose the reference to the hinge line this tree was a part of,
+			//if such a reference exists
+			hingeLines.delete(neighborCutTreeIndex);
+
 
 			//We can stop here since it is only possible for an edge to bridge at most two cut trees together.
 			break;
@@ -433,52 +463,277 @@ function recomputeCutTree(dualGraph, removedEdge){
 function computeHingeLines(dualGraph, edgeNode){
 	let cutTrees = DG_PRIVATES.get(dualGraph).cutTrees;
 	let edgeToCutTreeIndex = DG_PRIVATES.get(dualGraph).edgeToCutTreeIndex;
+	let hingeLines = DG_PRIVATES.get(dualGraph).hingeLines;
+	let edgeToHingeIndex = DG_PRIVATES.get(dualGraph).edgeToHingeIndex;
+	let cutTreeIndexToHingeLines = DG_PRIVATES.get(dualGraph).cutTreeIndexToHingeLines;
 
 	let cutTreeIndex = edgeToCutTreeIndex.get(edgeNode.ID);
 	let cutTree = [...cutTrees.get(cutTreeIndex)];
 
-	let edgeNeighbors = dualGraph.getEdgeNeighbors(edgeNode.ID);
+	let checkedHingeEndpoints = new WeakMap();
 
-	for(var e in cutTree){
-		let cutEdge = cutTree[e];
+	let cutTreeHingeLines = hingeLines.get(cutTreeIndex);
+	if(cutTreeHingeLines !== undefined)
+		cutTreeHingeLines.length = 0;
+	else
+		cutTreeHingeLines = [];
+
+	let hingeLineIndex = 0;
+
+	for(var e1 in cutTree){
+		for(var e2 in cutTree)
+		{
+			let cutEdge1 = cutTree[e1];
+			let cutEdge2 = cutTree[e2];
+
+			let edgeNeighbors = dualGraph.getEdgeNeighbors(cutEdge1.ID);
+			
+			if(checkedHingeEndpoints.has(cutEdge1) && checkedHingeEndpoints.get(cutEdge1).includes(cutEdge2)){ continue; }
+			if(cutEdge1 === cutEdge2 || cutEdge1 === cutEdge2.incidentEdge){ continue; }
+			if(edgeNeighbors.includes(cutEdge2)){ continue; }
 		
-		if(cutEdge === edgeNode || cutEdge === edgeNode.incidentEdge){ continue; }
-		if(edgeNeighbors.includes(cutEdge)){ continue; }
+			let hingeLineData = tryGenerateCollinearLine(dualGraph, cutEdge1, cutEdge2, cutTreeIndex, checkedHingeEndpoints, hingeLineIndex);
+		
+			if(!hingeLineData.generatedLine){
+				hingeLineData = tryGenerateParallelLines(dualGraph, cutEdge1, cutEdge2, cutTreeIndex, checkedHingeEndpoints, hingeLineIndex);
+			}
 
-		if(edgesAreCollinear(edgeNode, cutEdge)){
-			console.log("Edges #" + edgeNode.ID + " and #" + cutEdge.ID + " are collinear");
+			if(hingeLineData.generatedLine){
+				for(var l in hingeLineData.lines){
+					let hingeLine = hingeLineData.lines[l];
+
+					if(hingeLine.length === 0){ continue; }
+
+					cutTreeHingeLines[hingeLineIndex] = [];
+
+					console.log(hingeLine);
+
+					hingeLine.map((edge) => {
+						console.log("Adding edge #" + edge.ID + " to hinge #" + hingeLineIndex + " for cut tree #" + cutTreeIndex);
+
+						edgeToHingeIndex.set(edge.ID, hingeLineIndex);
+						cutTreeHingeLines[hingeLineIndex].push(edge);
+					});
+
+					hingeLineIndex += 1;
+				}
+			}
 		}
 	}
+
+	hingeLines.set(cutTreeIndex, cutTreeHingeLines);
+
+	console.log(hingeLines);
+}
+
+function tryGenerateCollinearLine(dualGraph, edge1, edge2, cutTreeIndex, checkedHingeEndpoints, hingeLineIndex){
+	if(!edgesAreCollinear(edge1, edge2)){ return { generatedLine: false }; }
+
+	console.log("Edges #" + edge1.ID + ",#" + edge1.incidentEdge.ID + " and #" 
+		+ edge2.ID + ",#" + edge2.incidentEdge.ID + " are collinear.");
+	
+	//Subscribe these two edges as endpoints so we can avoid rechecking them later.
+	subscribeEndpoints(edge1, edge2, checkedHingeEndpoints);
+
+	let dirVector = new THREE.Vector3().subVectors(edge2.position, edge1.position).normalize();
+	
+	let lineData = doHingeWalk(dualGraph, edge1, edge2, dirVector, edge1.position, cutTreeIndex, checkedHingeEndpoints);
+
+	if(lineData.endpoint == null){ return { generatedLine: false }; }
+
+	return { generatedLine: true, lines: [lineData.line] };
+}
+
+function tryGenerateParallelLines(dualGraph, edge1, edge2, cutTreeIndex, checkedHingeEndpoints, hingeLineIndex){
+	if(!edgesAreParallel(edge1, edge2)){ return { generatedLine: false }; }
+
+	console.log("Edges #" + edge1.ID + ",#" + edge1.incidentEdge.ID + " and #" 
+		+ edge2.ID + ",#" + edge2.incidentEdge.ID + " are parallel.");
+
+	subscribeEndpoints(edge1, edge2, checkedHingeEndpoints);
+
+	let dirVector = new THREE.Vector3().subVectors(edge2.position, edge1.position).normalize();
+
+	let lineData = [
+		doHingeWalk(dualGraph, edge1, edge2, dirVector, edge1.endpoints[0], cutTreeIndex, checkedHingeEndpoints),
+		doHingeWalk(dualGraph, edge1, edge2, dirVector, edge1.endpoints[1], cutTreeIndex, checkedHingeEndpoints)];
+
+	if(lineData[0].endpoint == null){ return { generatedLine: false }; }
+
+	return { generatedLine: true, lines: [lineData[0].line, lineData[1].line] };
+}
+
+function tryGeneratePerpendicularLine(dualGraph, edge1, edge2, cutTreeIndex, checkedHingeEndpoints){
+	if(!edgesArePerpendicular(edge1, edge2)){ return false; }
+
+	console.log("Edges #" + edge1.ID + ",#" + edge1.incidentEdge.ID + " and #" 
+		+ edge2.ID + ",#" + edge2.incidentEdge.ID + " are perpendicular.");
+
+	subscribeEndpoints(edge1, edge2, checkedHingeEndpoints);
+
+	let dirVector = new THREE.Vector3().subVectors(edge2.endpoints[0], edge1.endpoints[0]).normalize();
+	let startingEndpoint = edge1.endpoints[0];
+	if(!vectorIsOrthogonal(dirVector)){
+		dirVector = new THREE.Vector3().subVectors(edge2.endpoints[1], edge1.endpoints[0]).normalize();
+
+		if(!vectorIsOrthogonal(dirVector)){
+			dirVector = new THREE.Vector3().subVectors(edge2.endpoints[0], edge1.endpoints[1]).normalize();
+			startingEndpoint = edge1.endpoints[1];
+
+			if(!vectorIsOrthogonal(dirVector)){
+				dirVector = new THREE.Vector3().subVectors(edge2.endpoints[1], edge1.endpoints[1]).normalize();
+			}
+		}
+	}
+
+	doHingeWalk(dualGraph, edge1, edge2, dirVector, startingEndpoint, cutTreeIndex, checkedHingeEndpoints);
+
+
+	return true;
+}
+
+//Does a walk from the given starting position (i.e. `edge1` or one of its endpoints) along the given direction until reaching `edge2`.
+//Returns a line of edges encountered in that walk and whether this line found an endpoint (another cut in the given cut tree index)
+function doHingeWalk(dualGraph, edge1, edge2, dirVector, startingPosition, cutTreeIndex, checkedHingeEndpoints){
+	//Walk along the edge dual graph in that direction from `edge1` until we reach `edge2`.
+	let edgeMap = DG_PRIVATES.get(dualGraph).edgeMap;
+	let edge2Neighbors = dualGraph.getEdgeNeighbors(edge2.ID);
+
+	let visitedQueue = [];
+
+	let edgeLine = [];
+	let lineEndpoint = null;
+
+	//Walk along the dual graph from `edge 1`
+	let stepEdge = edge1;
+	while(!edge2Neighbors.includes(stepEdge)){
+		let stepEdgeNeighbors = dualGraph.getEdgeNeighbors(stepEdge.ID);
+		stepEdge.visited = true;
+
+		visitedQueue.push(stepEdge);
+
+		let foundNextEdge = false;
+		for(var N in stepEdgeNeighbors){
+			let neighbor = stepEdgeNeighbors[N];
+
+			if(neighbor.visited){ continue; }
+
+			let dir = new THREE.Vector3().subVectors(neighbor.position, startingPosition).normalize();
+
+			if(dir.equals(dirVector)){
+				stepEdge = neighbor;
+				foundNextEdge = true;
+				break;
+			}
+		}
+
+		if(!foundNextEdge){ break; }
+		
+		if(DG_PRIVATES.get(dualGraph).edgeToCutTreeIndex.get(stepEdge.ID) !== cutTreeIndex){
+			if(!stepEdge.isCut){
+				console.log("Grabbing edge #" + stepEdge.ID + ",#" + stepEdge.incidentEdge.ID);
+
+				edgeLine.push(stepEdge, stepEdge.incidentEdge);
+			}
+		}
+		else{
+			console.log("Hit cut #" + stepEdge.ID + ",#" + stepEdge.incidentEdge.ID +" in our path. Subscribing it to our list of endpoints");
+			lineEndpoint = stepEdge;
+			subscribeEndpoints(edge1, stepEdge, checkedHingeEndpoints);
+		}
+	}
+
+	if(edge2Neighbors.includes(stepEdge)){
+		lineEndpoint = edge2;
+	}
+
+	clearVisited(visitedQueue);
+
+	return { line: edgeLine, endpoint: lineEndpoint };
 }
 
 function edgesAreCollinear(edge1, edge2){
+	//If the edges have different orientation, they can't possibly be collinear.
+	if(!edge1.axis.equals(edge2.axis)){ return false; }
+
+	//Check if the edges are collinear (i.e., their endpoints are collinear)
 	let endpoints1 = edge1.endpoints;
 	let endpoints2 = edge2.endpoints;
 
-	//Add up `endpoints1` and `endpoints2`
-	let line1 = new THREE.Vector3().subVectors(endpoints1[0], endpoints1[1]);
+	let line = new THREE.Vector3().subVectors(endpoints1[0], endpoints2[1]);
+	line = toQ1Vector(line).normalize();
 
-	let line2 = new THREE.Vector3().subVectors(endpoints1[0], endpoints2[0]);
-	let line3 = new THREE.Vector3().subVectors(endpoints1[0], endpoints2[1]);
-
-	line1 = toQ1Vector(line1).normalize();
-	line2 = toQ1Vector(line2).normalize();
-	line3 = toQ1Vector(line3).normalize();
-
-	return (line1.equals(line2) && line1.equals(line3));
-}
-
-function edgesArePerpendicular(edge1, edge2){
-	let endpoints1 = edge1.endpoints;
-	let endpoints2 = edge2.endpoints;
-
-	let line1 = new THREE.Vector3().subVectors(endpoints1[0], endpoints2[1]).normalize();
-	let line2 = new THREE.Vector3().subVectors(endpoints2[0], endpoints2[1]).normalize();
-
-	
-
+	return edge1.axis.equals(line);
 }
 
 function edgesAreParallel(edge1, edge2){
+	//If the edges have different orientation, then they can't possibly be collinear.
+	if(!edge1.axis.equals(edge2.axis)){ return false; }
 
+	//Check if the lines are parallel (i.e., there is an orthogonal line that separates them)
+	let line = new THREE.Vector3().subVectors(edge1.position, edge2.position);
+	line = toQ1Vector(line).normalize();
+
+	return (vectorIsOrthogonal(line));
+}
+
+function edgesArePerpendicular(edge1, edge2){
+	//If the edges have the same orientation, then they can't possibly be perpendicular.
+	if(edge1.axis.equals(edge2.axis)){ return false; }
+
+	//Check if the edges are perpendicular.
+	//This check is done by taking the lines that can be drawn between the endpoints of the edges,
+	//and then comparing them to the alignment of each edge to see if any three endpoints are collinear.
+	//If so, returns true. Otherwise, returns false.
+
+	let endpoints1 = edge1.endpoints;
+	let endpoints2 = edge2.endpoints;
+
+	let line1 = toQ1Vector(new THREE.Vector3().subVectors(endpoints1[0], endpoints2[0])).normalize();
+	let line2 = toQ1Vector(new THREE.Vector3().subVectors(endpoints1[0], endpoints2[1])).normalize();
+
+	let line3 = toQ1Vector(new THREE.Vector3().subVectors(endpoints1[1], endpoints2[0])).normalize();
+	let line4 = toQ1Vector(new THREE.Vector3().subVectors(endpoints1[1], endpoints2[1])).normalize();
+
+	return (
+		edge1.axis.equals(line1) || edge1.axis.equals(line2) || edge1.axis.equals(line3) || edge1.axis.equals(line4)
+		|| edge2.axis.equals(line1) || !edge2.axis.equals(line2) || edge2.axis.equals(line3) || edge2.axis.equals(line4)
+	);
+}
+
+//Sets the given two edges as endpoints of some hinge line. This is really only used for caching for the hinging function.
+function subscribeEndpoints(edge1, edge2, checkedHingeEndpoints){
+	if(!checkedHingeEndpoints.has(edge1)){
+		checkedHingeEndpoints.set(edge1, []);
+	}
+
+	if(!checkedHingeEndpoints.has(edge2)){
+		checkedHingeEndpoints.set(edge2, []);
+	}
+
+	if(!checkedHingeEndpoints.has(edge1.incidentEdge)){
+		checkedHingeEndpoints.set(edge1.incidentEdge, []);
+	}
+
+	if(!checkedHingeEndpoints.has(edge2.incidentEdge)){
+		checkedHingeEndpoints.set(edge2.incidentEdge, []);
+	}
+
+	checkedHingeEndpoints.get(edge1).push(edge2);
+	checkedHingeEndpoints.get(edge2).push(edge1);
+
+	checkedHingeEndpoints.get(edge1.incidentEdge).push(edge2);
+	checkedHingeEndpoints.get(edge2).push(edge1.incidentEdge);
+
+	checkedHingeEndpoints.get(edge1).push(edge2.incidentEdge);
+	checkedHingeEndpoints.get(edge2.incidentEdge).push(edge1);
+
+	checkedHingeEndpoints.get(edge1.incidentEdge).push(edge2.incidentEdge);
+	checkedHingeEndpoints.get(edge2.incidentEdge).push(edge1.incidentEdge);
+}
+
+function clearVisited(visitedQueue){
+	visitedQueue.map((obj) => {
+		obj.visited = false;
+	})
 }

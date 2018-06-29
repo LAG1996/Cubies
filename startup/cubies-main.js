@@ -66,6 +66,9 @@ const defaultMode = new Mode({
 		//Tell the polycube visualizer to reflect that this edge has been cut by showing the cut highlight
 		PolycubeVisualHandler.showCutHighlight(focusPolycube.ID, edgeToCut, edgeToCutIncident);
 
+		//Tell the polycube visualizer to show any hinge lines that may have formed
+		PolycubeVisualHandler.showHingeLines(focusPolycube.ID, focusPolycube.getHingeLines(edgeToCut));
+
 		//Tell the toolbar handler to disable the add cube button
 		GUIHandler.disableAddCubeButton();
 	},
@@ -128,108 +131,6 @@ function interruptMode(){
 	CubiesState.modes.currentMode.endMode();
 }
 
-//Set the current mode to the default mode
-startMode(defaultMode);
-
-//Define GUI handler callbacks
-//Function for creating a polycube. Generates a new polycube object, hands the object to the visual handler for
-//generating an appropriate Object3D instance, and then hands that instance to the scene handler to render.
-GUIHandler.callbacks.onCreatePolycube = (polycubeName = Polycube.nextDefaultName()) => {
-
-	if(!Polycube.isNameTaken(polycubeName)){
-		let newPolycube = new Polycube(polycubeName);
-
-		PolycubeVisualHandler.onNewPolycube(newPolycube);
-
-		SceneHandler.addToViewScene(PolycubeVisualHandler.getViewPolycube(newPolycube.ID));
-		SceneHandler.addToPickingScene("face", PolycubeVisualHandler.getFacePickPolycube(newPolycube.ID));
-		SceneHandler.addToPickingScene("edge", PolycubeVisualHandler.getEdgePickPolycube(newPolycube.ID));
-
-		GUIHandler.switchToPolycubeView(false, polycubeName);
-
-		CubiesState.cache.focusPolycube = newPolycube;
-	}
-}
-
-GUIHandler.callbacks.onAddCube = () => {
-	startMode(addCubeMode);
-}
-
-GUIHandler.callbacks.onDeletePolycube = () => {
-	PolycubeVisualHandler.onDestroyPolycube(CubiesState.cache.focusPolycube.ID);
-	CubiesState.cache.focusPolycube.destroy();
-	CubiesState.cache.focusPolycube = null;
-	GUIHandler.switchToCreatePolycubeView(0);
-}
-
-//Define input handler function callbacks
-InputHandler.callbacks.onMouseDown = () => {
-}
-
-InputHandler.callbacks.onMouseUp = () => {
-
-	if(InputHandler.getMouseDeltaMagnitude() < 5){
-		
-		CubiesState.modes.currentMode.onMouseUp();
-
-		if(CubiesState.modes.inAddCube && !CubiesState.modes.isShiftDown){
-			startMode(defaultMode);
-		}
-	}
-}
-
-//Function for mouse hovering. 
-InputHandler.callbacks.onMouseMove = () => {
-
-	CubiesState.flags.isOverFace = false;
-	CubiesState.flags.isOverEdge = false;
-
-	if((CubiesState.cache.hoverFaceID = SceneHandler.pick("face", InputHandler.getMousePosition())) !== 0){
-		CubiesState.flags.isOverFace = true;
-	}
-	else if((CubiesState.cache.hoverEdgeID = SceneHandler.pick("edge", InputHandler.getMousePosition())) !== 0){
-		CubiesState.flags.isOverEdge = true;
-	}
-
-	CubiesState.modes.currentMode.onMouseMove();
-}
-
-//Function to handle key presses
-InputHandler.callbacks.onKeyDown = (key) => {
-	if(CubiesState.flags.isKeyDown) return;
-
-	CubiesState.flags.isKeyDown = true;
-
-	//Respond to either Shift or Control.
-	if(key === "Shift"){
-		CubiesState.flags.isControlDown = false;
-		CubiesState.flags.isShiftDown = true;
-	}
-	else if(key === "Control"){
-		CubiesState.flags.isKeyDown = true;
-
-		CubiesState.flags.isShiftDown = false;
-		CubiesState.flags.isControlDown = true;
-	}
-
-	CubiesState.modes.currentMode.onKeyDown();
-}
-
-//Function to handle when a key is let go.
-InputHandler.callbacks.onKeyUp = (key) => {
-	CubiesState.flags.isKeyDown = false;
-
-	if(key === "Shift"){
-		CubiesState.flags.isShiftDown = false;
-	}
-	else if(key === "Control"){
-		CubiesState.flags.isControlDown = false;
-	}
-
-	CubiesState.modes.currentMode.onKeyUp();
-}
-
-
 //Functions that update view
 //Function that draws mouse-over highlights on polycube components.
 function tryMouseOverHighlight(polycubeID = CubiesState.cache.focusPolycube){
@@ -276,6 +177,107 @@ export const CubiesMain = function(modelTemplates){
 
 	SceneHandler.setPickingScene("face");
 	SceneHandler.setPickingScene("edge");
+
+	//Set the current mode to the default mode
+	startMode(defaultMode);
+
+	//Define GUI handler callbacks
+	//Function for creating a polycube. Generates a new polycube object, hands the object to the visual handler for
+	//generating an appropriate Object3D instance, and then hands that instance to the scene handler to render.
+	GUIHandler.callbacks.onCreatePolycube = (polycubeName = Polycube.nextDefaultName()) => {
+
+		if(!Polycube.isNameTaken(polycubeName)){
+			let newPolycube = new Polycube(polycubeName);
+
+			PolycubeVisualHandler.onNewPolycube(newPolycube);
+
+			SceneHandler.addToViewScene(PolycubeVisualHandler.getViewPolycube(newPolycube.ID));
+			SceneHandler.addToPickingScene("face", PolycubeVisualHandler.getFacePickPolycube(newPolycube.ID));
+			SceneHandler.addToPickingScene("edge", PolycubeVisualHandler.getEdgePickPolycube(newPolycube.ID));
+
+			GUIHandler.switchToPolycubeView(false, polycubeName);
+
+			CubiesState.cache.focusPolycube = newPolycube;
+		}
+	}
+
+	GUIHandler.callbacks.onAddCube = () => {
+		startMode(addCubeMode);
+	}
+
+	GUIHandler.callbacks.onDeletePolycube = () => {
+		PolycubeVisualHandler.onDestroyPolycube(CubiesState.cache.focusPolycube.ID);
+		CubiesState.cache.focusPolycube.destroy();
+		CubiesState.cache.focusPolycube = null;
+		GUIHandler.switchToCreatePolycubeView(0);
+	}
+
+	//Define input handler function callbacks
+	InputHandler.callbacks.onMouseDown = () => {
+	}
+
+	InputHandler.callbacks.onMouseUp = () => {
+
+		if(InputHandler.getMouseDeltaMagnitude() < 5){
+			
+			CubiesState.modes.currentMode.onMouseUp();
+
+			if(CubiesState.modes.inAddCube && !CubiesState.modes.isShiftDown){
+				startMode(defaultMode);
+			}
+		}
+	}
+
+	//Function for mouse hovering. 
+	InputHandler.callbacks.onMouseMove = () => {
+
+		CubiesState.flags.isOverFace = false;
+		CubiesState.flags.isOverEdge = false;
+
+		if((CubiesState.cache.hoverFaceID = SceneHandler.pick("face", InputHandler.getMousePosition())) !== 0){
+			CubiesState.flags.isOverFace = true;
+		}
+		else if((CubiesState.cache.hoverEdgeID = SceneHandler.pick("edge", InputHandler.getMousePosition())) !== 0){
+			CubiesState.flags.isOverEdge = true;
+		}
+
+		CubiesState.modes.currentMode.onMouseMove();
+	}
+
+	//Function to handle key presses
+	InputHandler.callbacks.onKeyDown = (key) => {
+		if(CubiesState.flags.isKeyDown) return;
+
+		CubiesState.flags.isKeyDown = true;
+
+		//Respond to either Shift or Control.
+		if(key === "Shift"){
+			CubiesState.flags.isControlDown = false;
+			CubiesState.flags.isShiftDown = true;
+		}
+		else if(key === "Control"){
+			CubiesState.flags.isKeyDown = true;
+
+			CubiesState.flags.isShiftDown = false;
+			CubiesState.flags.isControlDown = true;
+		}
+
+		CubiesState.modes.currentMode.onKeyDown();
+	}
+
+	//Function to handle when a key is let go.
+	InputHandler.callbacks.onKeyUp = (key) => {
+		CubiesState.flags.isKeyDown = false;
+
+		if(key === "Shift"){
+			CubiesState.flags.isShiftDown = false;
+		}
+		else if(key === "Control"){
+			CubiesState.flags.isControlDown = false;
+		}
+
+		CubiesState.modes.currentMode.onKeyUp();
+	}
 
 	requestAnimationFrame(update);
 
