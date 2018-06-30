@@ -170,7 +170,9 @@ export const PolycubeVisualHandler = {
 			let edgeObj = polycube.getObjectByName(edgeName.withEdgeID(ID));
 
 			let cutHighlight = edgeObj.getObjectByName("cut");
+			let hingeHighlight = edgeObj.getObjectByName("hinge");
 
+			hingeHighlight.visible = false;
 			cutHighlight.visible = true;
 		});
 	},
@@ -181,11 +183,6 @@ export const PolycubeVisualHandler = {
 			let edgeObj = polycube.getObjectByName(edgeName.withEdgeID(ID));
 
 			let cutHighlight = edgeObj.getObjectByName("cut");
-			let hingeHighlight = edgeObj.getObjectByName("hinge");
-
-			if(hingeHighlight.visible){
-				hingeHighlight.visible = false;
-			}
 
 			cutHighlight.visible = false;
 		})
