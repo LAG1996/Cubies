@@ -6,7 +6,7 @@ let _viewPolycubes = new Map();
 let _edgePickPolycubes = new Map();
 let _facePickPolycubes = new Map();
 
-//Highlight materials when mousing over
+//Highlight materials when mousing over components
 const _HIGHLIGHT_MOUSE_SHIFT = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0xFFFF00});
 const _HIGHLIGHT_MOUSE = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0x00FF00});
 
@@ -17,8 +17,9 @@ const _HIGHLIGHT_CUT = new THREE.MeshBasicMaterial({transparent: true, opacity: 
 const _HIGHLIGHT_HINGE = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0x22EEDD});
 
 //Highlight materials for face dual graph partitions
-const _HIGHLIGHT_FACE_DUAL1 = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0xFF0000});
-const _HIGHLIGHT_FACE_DUAL2 = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color:0x0000FF});
+const _HIGHLIGHT_FACE_DUAL1 = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0xD769BF});
+const _HIGHLIGHT_FACE_DUAL2 = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0xFFE3A3});
+const _HIGHLIGHT_FACE_DUAL3 = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0x267C94})
 
 //Material for inactive parts in picking scenes.
 const _INACTIVE_PICK_PART_MAT = new THREE.MeshBasicMaterial({color : 0x000000});
@@ -239,6 +240,53 @@ export const PolycubeVisualHandler = {
 			_visibleHighlights.push(neighborFaceBody.children[0]);
 		});
 	},
+	//Draws dual graph decomposition
+	showDualGraphDecomposition: (polycubeID, decomposition) => {
+		let polycube = _viewPolycubes.get(polycubeID);
+
+		let mod3 = 0;
+		for(var p in decomposition){
+			let piece = decomposition[p];
+
+			for(var f in piece){
+				let faceID = piece[f];
+
+				let faceBody = polycube.getObjectByName(faceName.withFaceID(faceID)).getObjectByName("body");
+
+				if(mod3 === 0)
+					faceBody.children[0].material = _HIGHLIGHT_FACE_DUAL1;
+				else if(mod3 === 1)
+					faceBody.children[0].material = _HIGHLIGHT_FACE_DUAL2;
+				else if(mod3 === 2)
+					faceBody.children[0].material = _HIGHLIGHT_FACE_DUAL3;
+
+				faceBody.children[0].visible = true;
+			}
+
+			mod3 = (mod3 + 1) & 3;
+		}
+	},
+	//Hide the dual graph decomposition highlights.
+	//We need to keep in mind that mouse over highlights and preview cubes may be children in the polycube.
+	//In this case, we ignore them by simply checking if they have a component called "body". If it does, we just need to check if it has
+	//a child.
+	hideDualGraphDecomposition: (polycubeID) => {
+		let polycube = _viewPolycubes.get(polycubeID);
+
+		for(var f in polycube.children){
+			let face = polycube.children[f];
+
+			let faceBody = face.getObjectByName("body");
+
+			if(faceBody == null || faceBody === undefined) continue;
+
+			let faceBodyHighlight = faceBody.children[0];
+
+			if(faceBodyHighlight != null && faceBodyHighlight !== undefined)
+				faceBodyHighlight.visible = false;
+		}
+	},
+	//Draws a preview cube on top of the given face
 	showPreviewCube: (polycubeID, faceID) => {
 		let polycube = _viewPolycubes.get(polycubeID);
 
@@ -320,6 +368,8 @@ function addCube(polycube, newCubeID, cubePosition){
 
 	let scaledCubePosition = cubePosition.clone().multiplyScalar(2);
 
+	console.log(viewNewCube);
+
 	viewNewCube.children.map((face) => {
 		let position = new THREE.Vector3().addVectors(face.position, scaledCubePosition);
 		let rotation = face.getWorldRotation();
@@ -355,6 +405,8 @@ function addCube(polycube, newCubeID, cubePosition){
 				comp.name = edgeName.withFaceID(faceIDCalculator[face.name](newCubeID), comp.name);
 			}
 		})
+
+
 
 		face.name = faceName.withCubeID(newCubeID, face.name);
 		face.matrixAutoUpdate = false;

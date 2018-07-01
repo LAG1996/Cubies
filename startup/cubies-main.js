@@ -32,7 +32,7 @@ const CubiesState = {
 	modes: {
 		inDefault: false,
 		inAddCube: false,
-		inPickDualGraph: false,
+		inPickGraphPiece: false,
 		inPickHingeArrow: false,
 		currentMode: null
 	}
@@ -51,7 +51,7 @@ const defaultMode = new Mode({
 	},
 	mouseUp: () => {
 		//Do not do anything if we aren't hovering over an edge or one of the keys are pressed.
-		if(!CubiesState.flags.isOverEdge || CubiesState.flags.isControlDown || CubiesState.flags.isShiftDown) return;
+		if(!CubiesState.flags.isOverEdge || CubiesState.flags.isControlDown || CubiesState.flags.isShiftDown) { return; };
 
 		let edgeToCut = CubiesState.cache.hoverEdgeID;
 		let focusPolycube = CubiesState.cache.focusPolycube;
@@ -67,7 +67,7 @@ const defaultMode = new Mode({
 		PolycubeVisualHandler.showCutHighlight(focusPolycube.ID, edgeToCut, edgeToCutIncident);
 
 		//Tell the polycube visualizer to show any hinge lines that may have formed
-		PolycubeVisualHandler.showHingeLines(focusPolycube.ID, focusPolycube.getHingeLines(edgeToCut));
+		PolycubeVisualHandler.showHingeLines(focusPolycube.ID, focusPolycube.getCutTreeHingeLines(edgeToCut));
 
 		//Tell the toolbar handler to disable the add cube button
 		GUIHandler.disableAddCubeButton();
@@ -111,8 +111,6 @@ const addCubeMode = new Mode({
 			
 			if(polycube.addCube(cubePosition)){
 				PolycubeVisualHandler.onNewCube(polycube, cubePosition);
-
-				PolycubeVisualHandler.hideCutHighlight(polycube.ID, ...polycube.getAndClearTapedEdges());
 			}
 		}
 
@@ -120,15 +118,42 @@ const addCubeMode = new Mode({
 	}
 });
 
+const pickDualGraphPieceMode = new Mode({
+	startMode : (dualGraphDecomp) => {
+		CubiesState.modes.inPickGraphPiece = true;
+		GUIHandler.switchCursor("default");
+
+		//Hide the hinge highlight
+		PolycubeVisualHandler.hideHighlights();
+		//Hide the preview cube
+		PolycubeVisualHandler.hidePreviewCube();
+		//Show the dual graph decomposition
+		PolycubeVisualHandler.showDualGraphDecomposition(CubiesState.cache.focusPolycube.ID, dualGraphDecomp);
+	},
+	endMode: () => {
+		CubiesState.modes.inPickGraphPiece = false;
+
+		//Hide the dual graph decomposition
+		PolycubeVisualHandler.hideDualGraphDecomposition(CubiesState.cache.focusPolycube.ID);
+	},
+	mouseUp: () => {
+		//Don't do anything if we aren't hovering over a face
+		if(!CubiesState.flags.isOverFace){ return; }
+	}
+})
+
 //Functions that handle entering and exiting "modes in Cubies"
-function startMode(mode){
+function startMode(mode, args){
+	interruptMode();
+
 	CubiesState.modes.currentMode = mode;
 
-	CubiesState.modes.currentMode.startMode();
+	CubiesState.modes.currentMode.startMode(args);
 }
 
-function interruptMode(){
-	CubiesState.modes.currentMode.endMode();
+function interruptMode(args){
+	if(CubiesState.modes.currentMode != null)
+		CubiesState.modes.currentMode.endMode(args);
 }
 
 //Functions that update view
@@ -206,6 +231,8 @@ export const CubiesMain = function(modelTemplates){
 	}
 
 	GUIHandler.callbacks.onDeletePolycube = () => {
+		startMode(defaultMode);
+
 		PolycubeVisualHandler.onDestroyPolycube(CubiesState.cache.focusPolycube.ID);
 		CubiesState.cache.focusPolycube.destroy();
 		CubiesState.cache.focusPolycube = null;
@@ -219,11 +246,30 @@ export const CubiesMain = function(modelTemplates){
 	InputHandler.callbacks.onMouseUp = () => {
 
 		if(InputHandler.getMouseDeltaMagnitude() < 5){
-			
+
+			if(CubiesState.modes.inDefault){
+				if(CubiesState.flags.isShiftDown && CubiesState.flags.isOverEdge){
+					let dualGraphDecomp = CubiesState.cache.focusPolycube.getDualGraphDecomposition(CubiesState.cache.hoverEdgeID);
+
+					if(dualGraphDecomp != null){
+						startMode(pickDualGraphPieceMode, dualGraphDecomp);
+					}
+				}
+					
+			}
+			else if(CubiesState.modes.inAddCube){}
+			else if(CubiesState.modes.inPickGraphPiece){
+				if(!CubiesState.flags.isOverFace)
+					startMode(defaultMode);
+			}
+
 			CubiesState.modes.currentMode.onMouseUp();
 
-			if(CubiesState.modes.inAddCube && !CubiesState.modes.isShiftDown){
-				startMode(defaultMode);
+			if(CubiesState.modes.inDefault){}
+			else if(CubiesState.modes.inAddCube){
+				if(!CubiesState.flags.isShiftDown){
+					startMode(defaultMode);
+				}
 			}
 		}
 	}

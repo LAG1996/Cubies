@@ -292,20 +292,6 @@ export class Polycube {
 		return P_PRIVATES.get(this).dualGraph.tryApplyCut(edgeID);
 	}
 
-	//Grabs a list of edges that were recently taped. Taping can occur in two different situations:
-	//1. A new cube is added such that an edge that is already cut has to take a new incident edge
-	//2. The user explicitly tapes two faces together.
-	getAndClearTapedEdges(){
-		let tapedEdges = [];
-		let cache = P_PRIVATES.get(this).dualGraph.tapedEdgesCache;
-
-		cache.map((edge) => {
-			tapedEdges.push(edge.ID);
-		})
-
-		return tapedEdges;
-	}
-
 	//getters
 	get cubeCount(){
 		return P_PRIVATES.get(this).cubeCount;
@@ -383,14 +369,7 @@ export class Polycube {
 	}
 
 	getEdgeNeighbors(edgeID){
-		//let neighbors = P_PRIVATES.get(this).dualGraph.getEdge(edgeID).getAllNeighbors();
-
-		let neighbors = P_PRIVATES.get(this).dualGraph.getEdgeNeighbors(edgeID);
-		let neighborIDs = [];
-
-		neighbors.map((neighbor) => {
-			neighborIDs.push(neighbor.ID);
-		});
+		let neighborIDs = P_PRIVATES.get(this).dualGraph.getEdgeNeighbors(edgeID);
 
 		return neighborIDs;
 	}
@@ -406,21 +385,16 @@ export class Polycube {
 		}
 	}
 
-	getHingeLines(edgeID){
-		let hingeLines = P_PRIVATES.get(this).dualGraph.getHingeLines(edgeID);
+	getCutTreeHingeLines(edgeID){
+		return P_PRIVATES.get(this).dualGraph.getCutTreeHingeLines(edgeID);
+	}
 
-		let hingeIDs = [];
-		hingeLines.map((lines) => {
-			let newLine = [];
+	getIndividualHingeLine(edgeID){
+		return P_PRIVATES.get(this).dualGraph.getIndividualHingeLine(edgeID);
+	}
 
-			lines.map((edge) => {
-				newLine.push(edge.ID);
-			});
-
-			hingeIDs.push(newLine);
-		});
-
-		return hingeIDs;
+	getDualGraphDecomposition(edgeID){
+		return P_PRIVATES.get(this).dualGraph.getDualGraphDecomposition(edgeID);
 	}
 
 	//Removes all references to this object

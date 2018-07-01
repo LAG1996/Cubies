@@ -55,7 +55,8 @@ export class FaceNode{
 		let neighbors = NODE_PRIVATES.get(this).neighbors;
 
 		faceNodes.map((node) => {
-			neighbors.splice(neighbors.indexOf(node), 1);
+			if(neighbors.includes(node))
+				neighbors.splice(neighbors.indexOf(node), 1);
 		});
 	}
 
