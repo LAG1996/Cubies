@@ -17,9 +17,16 @@ const _HIGHLIGHT_CUT = new THREE.MeshBasicMaterial({transparent: true, opacity: 
 const _HIGHLIGHT_HINGE = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0x22EEDD});
 
 //Highlight materials for face dual graph partitions
-const _HIGHLIGHT_FACE_DUAL1 = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0xD769BF});
-const _HIGHLIGHT_FACE_DUAL2 = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0xFFE3A3});
-const _HIGHLIGHT_FACE_DUAL3 = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0x267C94})
+const _HIGHLIGHT_FACE_DUAL = [
+	new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0xFE9DA2}),
+	new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0xFFD670}),
+	new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0x74EB67}),
+	new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0x7081DB})
+]
+
+//Highlights for adjacency
+const _HIGHLIGHT_ADJ_PRIME = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0x4BD3C5});
+const _HIGHLIGHT_ADJ_SEC = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.5, color: 0xFFEA88});
 
 //Material for inactive parts in picking scenes.
 const _INACTIVE_PICK_PART_MAT = new THREE.MeshBasicMaterial({color : 0x000000});
@@ -138,7 +145,7 @@ export const PolycubeVisualHandler = {
 		let edge1Obj = polycube.getObjectByName(edgeName.withEdgeID(edge1ID));
 
 		let highlight1 = edge1Obj.getObjectByName("adjacency");
-		highlight1.material = _HIGHLIGHT_FACE_DUAL1;
+		highlight1.material = _HIGHLIGHT_ADJ_PRIME;
 		highlight1.visible = true;
 
 		_visibleHighlights.push(highlight1);
@@ -147,7 +154,7 @@ export const PolycubeVisualHandler = {
 			let edge2Obj = polycube.getObjectByName(edgeName.withEdgeID(edge2ID));
 
 			let highlight2 = edge2Obj.getObjectByName("adjacency");
-			highlight2.material = _HIGHLIGHT_FACE_DUAL1;
+			highlight2.material = _HIGHLIGHT_ADJ_PRIME;
 			highlight2.visible = true;
 
 			_visibleHighlights.push(highlight2);
@@ -157,7 +164,7 @@ export const PolycubeVisualHandler = {
 			let edgeObj = polycube.getObjectByName(edgeName.withEdgeID(neighborID));
 
 			let highlight = edgeObj.getObjectByName("adjacency");
-			highlight.material = _HIGHLIGHT_FACE_DUAL2;
+			highlight.material = _HIGHLIGHT_ADJ_SEC;
 			highlight.visible = true;
 
 			_visibleHighlights.push(highlight);
@@ -226,7 +233,7 @@ export const PolycubeVisualHandler = {
 
 		let mainFaceBody = polycube.getObjectByName(faceName.withFaceID(mainFaceID)).getObjectByName("body");
 
-		mainFaceBody.children[0].material = _HIGHLIGHT_FACE_DUAL1;
+		mainFaceBody.children[0].material = _HIGHLIGHT_ADJ_PRIME;
 		mainFaceBody.children[0].visible = true;
 
 		_visibleHighlights.push(mainFaceBody.children[0]);
@@ -234,7 +241,7 @@ export const PolycubeVisualHandler = {
 		faceNeighborIDs.map((neighborID) => {
 			let neighborFaceBody = polycube.getObjectByName(faceName.withFaceID(neighborID)).getObjectByName("body");
 
-			neighborFaceBody.children[0].material = _HIGHLIGHT_FACE_DUAL2;
+			neighborFaceBody.children[0].material = _HIGHLIGHT_ADJ_SEC;
 			neighborFaceBody.children[0].visible = true;
 
 			_visibleHighlights.push(neighborFaceBody.children[0]);
@@ -244,7 +251,7 @@ export const PolycubeVisualHandler = {
 	showDualGraphDecomposition: (polycubeID, decomposition) => {
 		let polycube = _viewPolycubes.get(polycubeID);
 
-		let mod3 = 0;
+		let dualIndex = 0;
 		for(var p in decomposition){
 			let piece = decomposition[p];
 
@@ -253,17 +260,12 @@ export const PolycubeVisualHandler = {
 
 				let faceBody = polycube.getObjectByName(faceName.withFaceID(faceID)).getObjectByName("body");
 
-				if(mod3 === 0)
-					faceBody.children[0].material = _HIGHLIGHT_FACE_DUAL1;
-				else if(mod3 === 1)
-					faceBody.children[0].material = _HIGHLIGHT_FACE_DUAL2;
-				else if(mod3 === 2)
-					faceBody.children[0].material = _HIGHLIGHT_FACE_DUAL3;
+				faceBody.children[0].material = _HIGHLIGHT_FACE_DUAL[dualIndex];
 
 				faceBody.children[0].visible = true;
 			}
 
-			mod3 = (mod3 + 1) & 3;
+			dualIndex = (dualIndex + 1) % _HIGHLIGHT_FACE_DUAL.length;
 		}
 	},
 	//Hide the dual graph decomposition highlights.

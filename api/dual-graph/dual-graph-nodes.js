@@ -92,6 +92,7 @@ export class EdgeNode{
 		});
 
 		this.isCut = false;
+		this.isHinge = false;
 		this.incidentEdge;
 		this.visited = false;
 	}
