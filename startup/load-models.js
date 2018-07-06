@@ -30,7 +30,7 @@ export const loadModels = function(templates){
 
 	function importCubeFace(){
 		objLoader.load('./imports/polycube-parts/cubeFace.obj', function (object) {
-				templates.face = object.children[0];
+				templates.face = object.children[0].clone();
 				templates.face.material.transparent = true;
 				hasFace = true;
 			}, 
@@ -42,7 +42,7 @@ export const loadModels = function(templates){
 
 	function importCubeEdge(){
 		objLoader.load('./imports/polycube-parts/cubeHinge.obj', function (object) {
-				templates.edge = object.children[0];
+				templates.edge = object.children[0].clone();
 				templates.edge.scale.set(1.25, 1, 1.25); //Scale up the edges a bit to make them easy to pick
 				hasEdge = true;
 			}, 
@@ -54,33 +54,13 @@ export const loadModels = function(templates){
 
 	function importArrows(){
 		objLoader.load("./imports/arrow-models/Arrow.obj", function (object){
-				arrowMesh = object.children[0];
+				templates.arrow = object.children[0].clone();
 				hasArrow = true;
 			}, 
 			function(xhr){},
 			function(xhr){
 				throw "INIT_ERROR: NO ARROW OBJECT FOUND"
 		})
-	}
-
-	function assembleArrows(){
-		let obj = new THREE.Group();
-				
-		let main_arrow = arrowMesh.clone();
-		main_arrow.name = "main";
-		main_arrow.material.color.setHex(0xFFFFFF);
-
-		let outline = arrowMesh.clone();
-		outline.name = "outline";
-		outline.scale.set(1.01, 1.1, 1.1);
-		outline.material.color.setHex(0x000000);
-		outline.material.side = THREE.BackSide;
-
-		obj.add(main_arrow);
-		obj.add(outline);
-
-		templates.arrow = obj;
-		templates.arrow.matrixAutoUpdate = false;
 	}
 
 	function assembleCubeTemplate(){

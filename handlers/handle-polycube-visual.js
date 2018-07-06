@@ -39,7 +39,7 @@ let _edgeHighlightPair = [null, null];
 let _faceHighlight = null;
 let _previewCube = null;
 
-export const setModelTemplates = function(templates){
+export const setPolyViewTemplates = function(templates){
 	_modelTemplates.cube = templates.cube.clone();
 	_modelTemplates.face = templates.face.clone();
 	_modelTemplates.edge = templates.edge.clone();
@@ -60,6 +60,8 @@ export const setModelTemplates = function(templates){
 	_edgeHighlightPair[1].visible = false;
 	_faceHighlight.visible = false;
 	_previewCube.visible = false;
+
+	return {edgeHighlightPair: _edgeHighlightPair, faceHighlight: _faceHighlight, previewCube: _previewCube}
 }
 
 export const PolycubeVisualHandler = {
@@ -98,6 +100,23 @@ export const PolycubeVisualHandler = {
 	getFacePickPolycube: (polycubeID) => {
 		return _facePickPolycubes.get(polycubeID);
 	},
+	getAllFaces: (polycubeID, ...faceIDs) => {
+		let viewPoly = this.getViewPolycube(polycubeID);
+		let edgePoly = this.getEdgePickPolycube(polycubeID);
+		let facePoly = this.getFacePickPolycube(polycubeID);
+
+		let faces = [];
+
+		faceIDs.map((ID) => {
+			let faceObjName = faceName.withFaceID(ID);
+
+			faces.push(viewPoly.getObjectByName(faceObjName));
+			faces.push(edgePoly.getObjectByName(faceObjName));
+			faces.push(facePoly.getObjectByName(faceObjName));
+		})
+
+		return faces;
+	},
 	//Handles edge mouse over highlight. Note that edges are allowed to be incident, so we should expect two IDs.
 	showEdgeHighlight: (polycubeID, edge1ID, edge2ID, isShiftDown) => {
 		let polycube = _viewPolycubes.get(polycubeID);
@@ -114,7 +133,7 @@ export const PolycubeVisualHandler = {
 		_edgeHighlightPair[0].updateMatrix();
 		_edgeHighlightPair[0].visible = true;
 
-		polycube.add(_edgeHighlightPair[0]);
+		//polycube.add(_edgeHighlightPair[0]);
 
 		_visibleHighlights.push(_edgeHighlightPair[0]);
 
@@ -133,7 +152,7 @@ export const PolycubeVisualHandler = {
 			_edgeHighlightPair[1].updateMatrix();
 			_edgeHighlightPair[1].visible = true;
 
-			polycube.add(_edgeHighlightPair[1]);
+			//polycube.add(_edgeHighlightPair[1]);
 
 			_visibleHighlights.push(_edgeHighlightPair[1]);
 
@@ -223,7 +242,7 @@ export const PolycubeVisualHandler = {
 		_faceHighlight.updateMatrix();
 		_faceHighlight.visible = true;
 
-		polycube.add(_faceHighlight);
+		//polycube.add(_faceHighlight);
 
 		_visibleHighlights.push(_faceHighlight);
 	},
@@ -300,7 +319,7 @@ export const PolycubeVisualHandler = {
 		_previewCube.updateMatrix();
 		_previewCube.visible = true;
 
-		polycube.add(_previewCube);
+		//polycube.add(_previewCube);
 	},
 	hidePreviewCube: () => {
 		_previewCube.visible = false;

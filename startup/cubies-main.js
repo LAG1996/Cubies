@@ -2,37 +2,42 @@
 import { GUIHandler } from '../handlers/ui/handler-gui.js';
 import { InputHandler } from '../handlers/ui/handler-input.js';
 import { SceneHandler } from '../handlers/handler-scene.js';
-import { PolycubeVisualHandler, setModelTemplates } from '../handlers/handle-polycube-visual.js';
+import { PolycubeVisualHandler, setPolyViewTemplates } from '../handlers/handle-polycube-visual.js';
+import { ArrowHandler, setArrowTemplates } from '../handlers/handle-hinge-arrow.js';
+import { HingeAnimHandler } from '../handlers/handle-hinging.js';
 
 //import polycube class
 import { Polycube } from '../api/polycube.js';
 
 //import mode handler class
-import { Mode } from '../handlers/modes/mode-handler.js';
+import { Mode } from '../handlers/modes/mode.js';
 
 //Cubies Main module. This module should contain all of Cubies' main functions. These functions should be simply
 //taking inputs and sending instructions to the appropriate handlers.
 const CubiesState = {
 	flags: {
 		showFaceDual: false,
-		showArrows: false,
+		areArrowsShowing: false,
 		isShiftDown: false,
 		isControlDown: false,
 		isKeyDown: false,
 		isOverEdge: false,
 		isOverFace: false,
+		didPickArrow: false,
+		doPickArrow: false,
 		doUpdateCuts: false,
 		doUpdateEdges: false
 	},
 	cache : {
 		hoverEdgeID: 0,
 		hoverFaceID: 0,
+		arrowData: null,
 		focusPolycube: null
 	},
 	modes: {
 		inDefault: false,
 		inAddCube: false,
-		inPickGraphPiece: false,
+		inHingeMode: false,
 		inPickHingeArrow: false,
 		currentMode: null
 	}
@@ -118,9 +123,11 @@ const addCubeMode = new Mode({
 	}
 });
 
-const pickDualGraphPieceMode = new Mode({
+const hingeMode = new Mode({
 	startMode : (dualGraphDecomp) => {
-		CubiesState.modes.inPickGraphPiece = true;
+		CubiesState.modes.inHingeMode = true;
+		CubiesState.flags.didPickArrow = false;
+		CubiesState.flags.arrowData = null;
 		GUIHandler.switchCursor("default");
 
 		//Hide the hinge highlight
@@ -131,29 +138,64 @@ const pickDualGraphPieceMode = new Mode({
 		PolycubeVisualHandler.showDualGraphDecomposition(CubiesState.cache.focusPolycube.ID, dualGraphDecomp);
 	},
 	endMode: () => {
-		CubiesState.modes.inPickGraphPiece = false;
+		CubiesState.modes.inHingeMode = false;
 
 		//Hide the dual graph decomposition
 		PolycubeVisualHandler.hideDualGraphDecomposition(CubiesState.cache.focusPolycube.ID);
+		//Hide hinge arrows
+		ArrowHandler.hideArrows();
+		CubiesState.flags.areArrowsShowing = false;
+		//Clear the arrow data from the cache
+		CubiesState.cache.arrowData = null;
 	},
 	mouseUp: () => {
-		//Don't do anything if we aren't hovering over a face
-		if(!CubiesState.flags.isOverFace){ return; }
+		//Don't do anything if we aren't hovering over a face or an arrow
+		if(!CubiesState.flags.isOverFace && !CubiesState.flags.areArrowsShowing){ return; }
+
+		if(CubiesState.flags.areArrowsShowing){
+			let arrowID = SceneHandler.pick("arrow", InputHandler.getMousePosition());
+
+			if(arrowID != 0){
+				CubiesState.cache.arrowData = ArrowHandler.getChosenArrowData(arrowID);
+				CubiesState.flags.didPickArrow = true;
+			}
+
+			CubiesState.flags.doPickArrow = false;
+		}
+
+		if(!CubiesState.flags.didPickArrow)
+		{			
+			let polycube = CubiesState.cache.focusPolycube;
+			let faceData = polycube.getFace(CubiesState.cache.hoverFaceID);
+
+			ArrowHandler.showArrowsAt(faceData.position.clone(), faceData.normal.clone());
+			CubiesState.flags.areArrowsShowing = true;
+			CubiesState.flags.doPickArrow = true;
+		}
+	}
+})
+
+const rotateMode = new Mode({
+	startMode: () => {
+
+	},
+	endMode: () => {
+
 	}
 })
 
 //Functions that handle entering and exiting "modes in Cubies"
-function startMode(mode, args){
+function startMode(mode, ...args){
 	interruptMode();
 
 	CubiesState.modes.currentMode = mode;
 
-	CubiesState.modes.currentMode.startMode(args);
+	CubiesState.modes.currentMode.startMode(...args);
 }
 
-function interruptMode(args){
+function interruptMode(...args){
 	if(CubiesState.modes.currentMode != null)
-		CubiesState.modes.currentMode.endMode(args);
+		CubiesState.modes.currentMode.endMode(...args);
 }
 
 //Functions that update view
@@ -195,13 +237,23 @@ function doEdgeHighlight(edgeID = CubiesState.cache.hoverEdgeID){
 //The main Cubies function - Represents the core function of our program.
 export const CubiesMain = function(modelTemplates){
 
-	setModelTemplates(modelTemplates);
+	let polycubeHighlights = setPolyViewTemplates(modelTemplates);
+	let hingeArrows = setArrowTemplates(modelTemplates.arrow);
+
 	//Tell the GUI handler to show the main nav.
 	GUIHandler.displayGUI(true);
 	GUIHandler.switchToCreatePolycubeView();
 
+	SceneHandler.addToViewScene(...polycubeHighlights.edgeHighlightPair, polycubeHighlights.faceHighlight, polycubeHighlights.previewCube);
+	SceneHandler.addToViewScene(hingeArrows.viewArrowPair);
+
 	SceneHandler.setPickingScene("face");
 	SceneHandler.setPickingScene("edge");
+	SceneHandler.setPickingScene("arrow");
+
+	SceneHandler.addToPickingScene("arrow", hingeArrows.pickArrowPair);
+
+	SceneHandler.printViewSceneData();
 
 	//Set the current mode to the default mode
 	startMode(defaultMode);
@@ -252,15 +304,32 @@ export const CubiesMain = function(modelTemplates){
 					let dualGraphDecomp = CubiesState.cache.focusPolycube.getDualGraphDecomposition(CubiesState.cache.hoverEdgeID);
 
 					if(dualGraphDecomp != null){
-						startMode(pickDualGraphPieceMode, dualGraphDecomp);
+						startMode(hingeMode, dualGraphDecomp);
 					}
 				}
 					
 			}
 			else if(CubiesState.modes.inAddCube){}
-			else if(CubiesState.modes.inPickGraphPiece){
-				if(!CubiesState.flags.isOverFace)
-					startMode(defaultMode);
+			else if(CubiesState.modes.inHingeMode){
+				
+				if(CubiesState.flags.areArrowsShowing){
+					
+					if(!CubiesState.flags.doPickArrow){
+						
+						if(CubiesState.flags.didPickArrow){}
+						else{
+							startMode(defaultMode);
+						}		
+					}
+					else if(!CubiesState.flags.isOverFace){
+						startMode(defaultMode);
+					}
+				}
+				else{
+					if(!CubiesState.flags.isOverFace){
+						startMode(defaultMode);
+					}
+				}
 			}
 
 			CubiesState.modes.currentMode.onMouseUp();
@@ -328,6 +397,7 @@ export const CubiesMain = function(modelTemplates){
 	requestAnimationFrame(update);
 
 	function update(){
+		HingeAnimHandler.continueAnimations();
 		SceneHandler.draw();
 		requestAnimationFrame(update);
 	}

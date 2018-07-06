@@ -64,6 +64,9 @@ export const SceneHandler = {
 	},
 	draw: () => {
 		_renderer.render(_mainScene, _camera);
+	},
+	printViewSceneData: () => {
+		console.log(_mainScene);
 	}
 }
 
