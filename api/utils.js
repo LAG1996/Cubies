@@ -126,6 +126,11 @@ const edgeIDtoDirWord = function(edgeID){
 	}
 }
 
+const objectNameToID = function(objectName){
+	let parsedArr = objectName.split(/\D/);
+	return parseInt(parsedArr[parsedArr.length - 1], 10);
+}
+
 const clearArray = function(array){
 	array.length = 0;
 }

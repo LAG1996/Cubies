@@ -7,6 +7,7 @@ export class Mode{
 		this.onMouseUp = args.mouseUp ? args.mouseUp : this.onMouseUp;
 		this.onKeyDown = args.keyDown ? args.keyDown : this.onKeyDown;
 		this.onKeyUp = args.keyUp ? args.keyUp : this.onKeyUp;
+		this.onUpdate = args.onUpdate ? args.onUpdate : this.onUpdate;
 	}
 
 	startMode(){}
@@ -22,4 +23,6 @@ export class Mode{
 	onKeyDown(){}
 
 	onKeyUp(){}
+
+	onUpdate(){}
 }

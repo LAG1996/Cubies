@@ -357,6 +357,10 @@ export class Polycube {
 		return P_PRIVATES.get(this).dualGraph.getFace(faceID);
 	}
 
+	getEdge(edgeID){
+		return P_PRIVATES.get(this).dualGraph.getEdge(edgeID);
+	}
+
 	getFaceNeighbors(faceID){
 		let neighbors = P_PRIVATES.get(this).dualGraph.getFaceNeighbors(faceID);
 
@@ -395,6 +399,10 @@ export class Polycube {
 
 	getDualGraphDecomposition(edgeID){
 		return P_PRIVATES.get(this).dualGraph.getDualGraphDecomposition(edgeID);
+	}
+
+	rotateData(faceIDs, hingeEdgeID, rads){
+		P_PRIVATES.get(this).dualGraph.rotateData(faceIDs, hingeEdgeID, rads);
 	}
 
 	//Removes all references to this object

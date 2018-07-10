@@ -40,14 +40,14 @@ export const setArrowTemplates = (arrowTemplate) => {
 	_viewArrowPair.add(whiteArrow);
 	_viewArrowPair.add(blackArrow);
 
-	let pickWhiteArrow = _viewArrowPair.getObjectByName("white arrow").clone();
-	let pickBlackArrow = _viewArrowPair.getObjectByName("black arrow").clone();
+	let pickWhiteArrow = whiteArrow.clone();
+	let pickBlackArrow = blackArrow.clone();
 
 	pickWhiteArrow.remove(pickWhiteArrow.getObjectByName("main"));
 	pickBlackArrow.remove(pickBlackArrow.getObjectByName("main"));
 
-	pickWhiteArrow.getObjectByName("outline").material = new THREE.MeshBasicMaterial({color: 1});
-	pickBlackArrow.getObjectByName("outline").material = new THREE.MeshBasicMaterial({color: 2});
+	pickWhiteArrow.children[0].material = new THREE.MeshBasicMaterial({color: 1});
+	pickBlackArrow.children[0].material = new THREE.MeshBasicMaterial({color: 2});
 
 	_pickArrowPair.add(pickWhiteArrow);
 	_pickArrowPair.add(pickBlackArrow);

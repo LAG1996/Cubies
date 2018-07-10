@@ -42,6 +42,15 @@ export class FaceNode{
 		return [...NODE_PRIVATES.get(this).neighbors]; 
 	}
 
+	//setters
+	set position(newPosition){
+		NODE_PRIVATES.get(this).position = newPosition.clone();
+	}
+
+	set normal(newNormal){
+		NODE_PRIVATES.get(this).normal = newNormal.clone();
+	}
+
 	addNeighbors(...faceNodes){
 
 		faceNodes.map((node) => {
@@ -116,6 +125,20 @@ export class EdgeNode{
 
 	get parentID(){
 		return NODE_PRIVATES.get(this).parentID;
+	}
+
+	//setters
+	set position(newPosition){
+		NODE_PRIVATES.get(this).position = newPosition.clone();
+	}
+
+	set axis(newAxis){
+		NODE_PRIVATES.get(this).axis = newAxis.clone();
+	}
+
+	setEndpoints(newEndpoint1, newEndpoint2){
+		NODE_PRIVATES.get(this).endpoints[0] = newEndpoint1.clone();
+		NODE_PRIVATES.get(this).endpoints[1] = newEndpoint2.clone();
 	}
 
 	//Delete all internal references to this node.

@@ -100,10 +100,10 @@ export const PolycubeVisualHandler = {
 	getFacePickPolycube: (polycubeID) => {
 		return _facePickPolycubes.get(polycubeID);
 	},
-	getAllFaces: (polycubeID, ...faceIDs) => {
-		let viewPoly = this.getViewPolycube(polycubeID);
-		let edgePoly = this.getEdgePickPolycube(polycubeID);
-		let facePoly = this.getFacePickPolycube(polycubeID);
+	getFaceObjs: (polycubeID, ...faceIDs) => {
+		let viewPoly = _viewPolycubes.get(polycubeID)
+		let edgePoly = _edgePickPolycubes.get(polycubeID);
+		let facePoly = _facePickPolycubes.get(polycubeID);
 
 		let faces = [];
 

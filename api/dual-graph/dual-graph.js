@@ -163,6 +163,81 @@ export class DualGraph {
 		return decomposeDualGraph(this, ...hingeLine);
 	}
 
+	//Rotates dual graph data, repositioning them in their respective hash maps
+	rotateData(faceIDs, hingeEdgeID, rads){
+		let faces = [];
+		let hingeEdge = this.getEdge(hingeEdgeID);
+
+		faceIDs.map((ID) => {
+			let face = this.getFace(ID);
+			faces.push(face);
+		});
+
+		let rotation = new THREE.Quaternion();
+		rotation = rotation.setFromAxisAngle(hingeEdge.axis, rads);
+
+		faces.map((face) => {
+			DG_PRIVATES.get(this).faceMap.removeData(face.position);
+
+			let sepVec = new THREE.Vector3().subVectors(face.position, hingeEdge.position);
+			sepVec.applyQuaternion(rotation);
+			sepVec.add(hingeEdge.position);
+
+			console.log("old position");
+			console.log(face.position);
+			face.position = toLatticeVector(sepVec);
+			console.log("new position");
+			console.log(face.position);
+
+			console.log("old normal:");
+			console.log(face.normal);
+
+			let normal = face.normal;
+
+			normal.applyQuaternion(rotation);
+			face.normal = toLatticeVector(normal).normalize();
+
+			console.log("new normal:");
+			console.log(face.normal);
+
+			DG_PRIVATES.get(this).faceMap.addToMap(face, face.position);
+
+			face.edges.map((edge) => {
+				removeEdgeFromMaps(this, edge);
+
+				let sepVec = new THREE.Vector3().subVectors(edge.position, hingeEdge.position);
+				sepVec.applyQuaternion(rotation);
+				sepVec.add(hingeEdge.position);
+
+				edge.position = toLatticeVector(sepVec);
+				edge.axis.applyQuaternion(rotation);
+				edge.axis = toQ1Vector(toLatticeVector(edge.axis).normalize());
+
+				let endpoint1 = edge.endpoints[0];
+				let endpoint2 = edge.endpoints[1];
+
+				sepVec = new THREE.Vector3().subVectors(endpoint1, edge.position);
+				sepVec.applyQuaternion(rotation);
+				sepVec.add(edge.position);
+
+				endpoint1.copy(sepVec.clone());
+
+				sepVec = new THREE.Vector3().subVectors(endpoint2, edge.position);
+				sepVec.applyQuaternion(rotation);
+				sepVec.add(edge.position);
+
+				endpoint2.copy(sepVec.clone());
+
+				endpoint1.copy(toLatticeVector(endpoint1));
+				endpoint2.copy(toLatticeVector(endpoint2));
+
+				edge.setEndpoints(endpoint1, endpoint2);
+
+				addEdgeToMaps(this, edge);
+			});
+		});
+	}
+
 	//Remove the face 
 	removeFace(faceID){
 		let edgeNodes = this.getFace(faceID).edges;
@@ -177,9 +252,12 @@ export class DualGraph {
 
 		let faceNode = this.getFace(faceID);
 
-		faceNode.destroy();
+		
+		DG_PRIVATES.get(this).faceMap.removeData(faceNode.position);
 		DG_PRIVATES.get(this).faceHash.delete(faceID);
 		DG_PRIVATES.get(this).faceCount -=1;
+
+		faceNode.destroy();
 	}
 
 	destroy(){
@@ -878,12 +956,9 @@ function subscribeEndpoints(edge1, edge2, checkedHingeEndpoints){
 //Returns an array of components of the dual graph. These components would be disjoint if the cuts were made.
 function decomposeDualGraph(dualGraph, ...edgeIDs){
 
-	console.log("Decomposing dual graph...");
-
 	let dualGraphPieces = [];
+	let pieceMap = {};
 	let visitedFaces = [];
-
-	console.log(edgeIDs);
 
 	//Make a cut at each edge given.
 	edgeIDs.map((ID) => {
@@ -911,6 +986,7 @@ function decomposeDualGraph(dualGraph, ...edgeIDs){
 
 				visitedFaces.push(face);
 				newDualGraphPiece.push(face.ID);
+				pieceMap[face.ID] = dualGraphPieces.length;
 		
 				for(var n in face.neighbors){
 					let neighbor = face.neighbors[n];
@@ -925,8 +1001,6 @@ function decomposeDualGraph(dualGraph, ...edgeIDs){
 		}
 	});
 
-	clearVisited(visitedFaces);
-
 	//Tape edges back together
 	edgeIDs.map((ID) => {
 		let edge = dualGraph.getEdge(ID);
@@ -934,9 +1008,9 @@ function decomposeDualGraph(dualGraph, ...edgeIDs){
 			tapeEdges(dualGraph, edge, edge.incidentEdge);
 	});
 
-	console.log(dualGraphPieces);
+	clearVisited(visitedFaces);
 
-	return dualGraphPieces;
+	return {decomp: [...dualGraphPieces], pieceMap: JSON.parse(JSON.stringify(pieceMap))};
 }
 
 function clearVisited(visitedQueue){
@@ -948,7 +1022,7 @@ function clearVisited(visitedQueue){
 function canDisconnectDualGraph(dualGraph, edgeToCut){
 	if(dualGraph.isEdgeInHinge(edgeToCut.ID)){
 		if(dualGraph.getIndividualHingeLine(edgeToCut.ID).length === 2){ console.log("Edge #" + edgeToCut.ID + " can disconnect dual graph (hinge size 2)"); return true; }
-		else if(decomposeDualGraph(dualGraph, edgeToCut.ID, edgeToCut.incidentEdge.ID).length > 1){ console.log("Edge #" + edgeToCut.ID + " can disconnect dual graph (face decomp)"); return true;  }
+		else if(decomposeDualGraph(dualGraph, edgeToCut.ID, edgeToCut.incidentEdge.ID).decomp.length > 1){ console.log("Edge #" + edgeToCut.ID + " can disconnect dual graph (face decomp)"); return true;  }
 	}
 	
 	return false;

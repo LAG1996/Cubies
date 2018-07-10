@@ -14,17 +14,15 @@ import { Mode } from '../handlers/modes/mode.js';
 
 //Cubies Main module. This module should contain all of Cubies' main functions. These functions should be simply
 //taking inputs and sending instructions to the appropriate handlers.
-const CubiesState = {
+const Cubies = {
 	flags: {
 		showFaceDual: false,
-		areArrowsShowing: false,
+		hasArrowData: false,
 		isShiftDown: false,
 		isControlDown: false,
 		isKeyDown: false,
 		isOverEdge: false,
 		isOverFace: false,
-		didPickArrow: false,
-		doPickArrow: false,
 		doUpdateCuts: false,
 		doUpdateEdges: false
 	},
@@ -32,34 +30,43 @@ const CubiesState = {
 		hoverEdgeID: 0,
 		hoverFaceID: 0,
 		arrowData: null,
-		focusPolycube: null
+		focusPolycube: null,
+		chosenHingeEdgeID: null,
+		chosenDecomp: [],
+		dualGraphDecompObj: null,
+		tapeFace1: null,
+		tapeFace2: null
 	},
 	modes: {
 		inDefault: false,
 		inAddCube: false,
 		inHingeMode: false,
-		inPickHingeArrow: false,
+		inPickArrow: false,
+		inTape: false,
 		currentMode: null
 	}
 }
 
+const CLOCK = new THREE.Clock();
+
+//Object representing Cubies' default behaviour
 const defaultMode = new Mode({
 	startMode : () => {
-		CubiesState.modes.inDefault = true;
+		Cubies.modes.inDefault = true;
 		GUIHandler.switchCursor("default");
 	},
 	endMode : () => {
-		CubiesState.modes.inDefault = false;
+		Cubies.modes.inDefault = false;
 	},
 	mouseMove : () => {
 		tryMouseOverHighlight();
 	},
 	mouseUp: () => {
 		//Do not do anything if we aren't hovering over an edge or one of the keys are pressed.
-		if(!CubiesState.flags.isOverEdge || CubiesState.flags.isControlDown || CubiesState.flags.isShiftDown) { return; };
+		if(!Cubies.flags.isOverEdge || Cubies.flags.isControlDown || Cubies.flags.isShiftDown) { return; };
 
-		let edgeToCut = CubiesState.cache.hoverEdgeID;
-		let focusPolycube = CubiesState.cache.focusPolycube;
+		let edgeToCut = Cubies.cache.hoverEdgeID;
+		let focusPolycube = Cubies.cache.focusPolycube;
 		let edgeToCutIncident = focusPolycube.getIncidentEdge(edgeToCut);
 		
 		//Tell the polycube to cut this edge
@@ -87,29 +94,30 @@ const defaultMode = new Mode({
 	}
 });
 
+//Object representing Cubies' behaviour when the user is adding a Cube
 const addCubeMode = new Mode({
 	startMode : () => {	
-		CubiesState.modes.inAddCube = true;
+		Cubies.modes.inAddCube = true;
 		GUIHandler.switchCursor("cell");
 	},
 	endMode : () => {
-		CubiesState.modes.inAddCube = false;
+		Cubies.modes.inAddCube = false;
 		GUIHandler.switchCursor("default");
 	},
 	mouseMove: () => {
-		if(CubiesState.flags.isOverFace){
-			PolycubeVisualHandler.showPreviewCube(CubiesState.cache.focusPolycube.ID, CubiesState.cache.hoverFaceID);
+		if(Cubies.flags.isOverFace){
+			PolycubeVisualHandler.showPreviewCube(Cubies.cache.focusPolycube.ID, Cubies.cache.hoverFaceID);
 		}
 		else{
 			PolycubeVisualHandler.hidePreviewCube();
 		}
 	},
 	mouseUp: () => {
-		if(CubiesState.flags.isOverFace){
-			let faceID = CubiesState.cache.hoverFaceID;
-			let polycube = CubiesState.cache.focusPolycube;
+		if(Cubies.flags.isOverFace){
+			let faceID = Cubies.cache.hoverFaceID;
+			let polycube = Cubies.cache.focusPolycube;
 
-			let adjacentCubePosition = CubiesState.cache.focusPolycube.getFace(faceID).parentCubePosition;
+			let adjacentCubePosition = Cubies.cache.focusPolycube.getFace(faceID).parentCubePosition;
 			let direction = wordToDirection.get(faceIDtoDirWord(faceID));
 
 			let cubePosition = new THREE.Vector3().addVectors(adjacentCubePosition, direction);
@@ -123,113 +131,166 @@ const addCubeMode = new Mode({
 	}
 });
 
+//Object representing Cubies' behaviour when the user is picking a piece of a polycube to unfold
 const hingeMode = new Mode({
-	startMode : (dualGraphDecomp) => {
-		CubiesState.modes.inHingeMode = true;
-		CubiesState.flags.didPickArrow = false;
-		CubiesState.flags.arrowData = null;
+	startMode : () => {
+		Cubies.modes.inHingeMode = true;
+		Cubies.flags.hasArrowData = false;
+		Cubies.cache.arrowData = null;
 		GUIHandler.switchCursor("default");
 
+		//Store the chosen hinging edge
+		Cubies.cache.chosenHingeEdgeID = Cubies.cache.hoverEdgeID;
 		//Hide the hinge highlight
 		PolycubeVisualHandler.hideHighlights();
 		//Hide the preview cube
 		PolycubeVisualHandler.hidePreviewCube();
 		//Show the dual graph decomposition
-		PolycubeVisualHandler.showDualGraphDecomposition(CubiesState.cache.focusPolycube.ID, dualGraphDecomp);
+		PolycubeVisualHandler.showDualGraphDecomposition(Cubies.cache.focusPolycube.ID, Cubies.cache.dualGraphDecompObj.decomp);
 	},
 	endMode: () => {
-		CubiesState.modes.inHingeMode = false;
+		Cubies.modes.inHingeMode = false;
 
-		//Hide the dual graph decomposition
-		PolycubeVisualHandler.hideDualGraphDecomposition(CubiesState.cache.focusPolycube.ID);
-		//Hide hinge arrows
+		//Hide the arrows
 		ArrowHandler.hideArrows();
-		CubiesState.flags.areArrowsShowing = false;
-		//Clear the arrow data from the cache
-		CubiesState.cache.arrowData = null;
+		//Hide the dual graph decomposition
+		PolycubeVisualHandler.hideDualGraphDecomposition(Cubies.cache.focusPolycube.ID);
 	},
 	mouseUp: () => {
 		//Don't do anything if we aren't hovering over a face or an arrow
-		if(!CubiesState.flags.isOverFace && !CubiesState.flags.areArrowsShowing){ return; }
+		if(!Cubies.flags.isOverFace && !Cubies.flags.inPickArrow){ return; }
 
-		if(CubiesState.flags.areArrowsShowing){
+		if(Cubies.flags.inPickArrow){
 			let arrowID = SceneHandler.pick("arrow", InputHandler.getMousePosition());
 
-			if(arrowID != 0){
-				CubiesState.cache.arrowData = ArrowHandler.getChosenArrowData(arrowID);
-				CubiesState.flags.didPickArrow = true;
+			if(arrowID !== 0){
+				console.log("Picked arrow #" + arrowID);
+				Cubies.flags.hasArrowData = true;
+				Cubies.cache.arrowData = ArrowHandler.getChosenArrowData(arrowID);
+
+				doRotate();
 			}
 
-			CubiesState.flags.doPickArrow = false;
+			Cubies.flags.inPickArrow = false;
 		}
 
-		if(!CubiesState.flags.didPickArrow)
+		if(!Cubies.flags.hasArrowData && Cubies.flags.isOverFace)
 		{			
-			let polycube = CubiesState.cache.focusPolycube;
-			let faceData = polycube.getFace(CubiesState.cache.hoverFaceID);
+			let polycube = Cubies.cache.focusPolycube;
+			let faceData = polycube.getFace(Cubies.cache.hoverFaceID);
+
+			let chosenDecompIndex = Cubies.cache.dualGraphDecompObj.pieceMap[Cubies.cache.hoverFaceID];
+			let chosenDecomp = Cubies.cache.dualGraphDecompObj.decomp[chosenDecompIndex];
+			console.log(chosenDecomp);
+			Cubies.cache.chosenDecomp = [...chosenDecomp];
 
 			ArrowHandler.showArrowsAt(faceData.position.clone(), faceData.normal.clone());
-			CubiesState.flags.areArrowsShowing = true;
-			CubiesState.flags.doPickArrow = true;
+			Cubies.flags.inPickArrow = true;
 		}
 	}
-})
+});
 
-const rotateMode = new Mode({
-	startMode: () => {
-
+//Object representing Cubies' behaviour when the user is trying to tape two faces together
+const tapeMode = new Mode({
+	startMode(face1){
+		Cubies.modes.inTape = true;
 	},
-	endMode: () => {
+	endMode(){
+		Cubies.modes.inTape = false;
 
+		Cubies.cache.tapeFace1 = null;
+		Cubies.cache.tapeFace2 = null;
+	},
+	mouseUp(){
+		if(!Cubies.flags.isOverFace){ return; }
+
+		let Cubies.cache.tapeFace2 = Cubies.cache.hoverFaceID;
+
+		//Check if taping was valid. If not, set `tapeFace2` back to null.
 	}
-})
+});
 
 //Functions that handle entering and exiting "modes in Cubies"
 function startMode(mode, ...args){
 	interruptMode();
 
-	CubiesState.modes.currentMode = mode;
+	console.log("Starting mode:");
+	console.log(mode);
 
-	CubiesState.modes.currentMode.startMode(...args);
+	Cubies.modes.currentMode = mode;
+
+	Cubies.modes.currentMode.startMode(...args);
 }
 
 function interruptMode(...args){
-	if(CubiesState.modes.currentMode != null)
-		CubiesState.modes.currentMode.endMode(...args);
+	if(Cubies.modes.currentMode != null)
+		Cubies.modes.currentMode.endMode(...args);
 }
 
 //Functions that update view
+function doRotate(){
+	let polycube = Cubies.cache.focusPolycube;
+	let chosenDecomp = Cubies.cache.chosenDecomp;
+	let edgeData = polycube.getEdge(Cubies.cache.chosenHingeEdgeID);
+	let faceData = polycube.getFace(chosenDecomp[0]);
+	let arrowData = Cubies.cache.arrowData;
+	
+	//Determine the radians given what arrow was pressed, the direction of the faces adjacent
+	let rads = THREE.Math.degToRad(90);
+	let dirMultiplier = arrowData.color === "white" ? 1 : -1;
+	
+	let cross = new THREE.Vector3().crossVectors(faceData.normal, edgeData.axis);
+	cross.normalize();
+	cross = toLatticeVector(cross);
+
+	let vecFromHinge = new THREE.Vector3().subVectors(faceData.position, edgeData.position);
+	vecFromHinge.normalize();
+	vecFromHinge = toLatticeVector(vecFromHinge);
+	
+	if(!cross.equals(vecFromHinge)){
+		dirMultiplier = -dirMultiplier;
+	}
+
+	rads = dirMultiplier * rads;
+
+	//Get all face objects from the different scene representations of our polycube
+	let faceObjs = PolycubeVisualHandler.getFaceObjs(polycube.ID, ...chosenDecomp);
+
+	polycube.rotateData(chosenDecomp, edgeData.ID, rads);
+	HingeAnimHandler.startAnimation(polycube.ID, faceObjs, edgeData, rads);
+}
+
 //Function that draws mouse-over highlights on polycube components.
-function tryMouseOverHighlight(polycubeID = CubiesState.cache.focusPolycube){
+function tryMouseOverHighlight(polycubeID = Cubies.cache.focusPolycube){
 	if(polycubeID != null && !InputHandler.isMouseDown()){
 		//Hide highlights
 		PolycubeVisualHandler.hideHighlights(polycubeID);
 
 		//Try hovering over a face. If that fails, try hovering over an edge. There is no reason for this particular ordering. The functions
 		//can be swapped.
-		if(CubiesState.flags.isOverFace){
+		if(Cubies.flags.isOverFace){
 			doFaceHighlight();
 		}
-		else if(CubiesState.flags.isOverEdge){
-			console.log("Edge #" + CubiesState.cache.hoverEdgeID);
+		else if(Cubies.flags.isOverEdge){
+			console.log("Edge #" + Cubies.cache.hoverEdgeID);
 			doEdgeHighlight();
 		}
 	}
 }
 
-function doFaceHighlight(faceID = CubiesState.cache.hoverFaceID){
-	let polycube = CubiesState.cache.focusPolycube;
-	if(!CubiesState.flags.isControlDown)
-		PolycubeVisualHandler.showFaceHighlight(polycube.ID, faceID, CubiesState.flags.isShiftDown);
+function doFaceHighlight(faceID = Cubies.cache.hoverFaceID){
+	let polycube = Cubies.cache.focusPolycube;
+	if(!Cubies.flags.isControlDown)
+		PolycubeVisualHandler.showFaceHighlight(polycube.ID, faceID, Cubies.flags.isShiftDown);
 	else{
 		PolycubeVisualHandler.showFaceAdjacencyHighlight(polycube.ID, faceID, polycube.getFaceNeighbors(faceID));
 	}
 }
 
-function doEdgeHighlight(edgeID = CubiesState.cache.hoverEdgeID){
-	let polycube = CubiesState.cache.focusPolycube;
-	if(!CubiesState.flags.isControlDown)
-		PolycubeVisualHandler.showEdgeHighlight(polycube.ID, edgeID, polycube.getIncidentEdge(edgeID), CubiesState.flags.isShiftDown);
+function doEdgeHighlight(edgeID = Cubies.cache.hoverEdgeID){
+	let polycube = Cubies.cache.focusPolycube;
+	if(!Cubies.flags.isControlDown)
+		PolycubeVisualHandler.showEdgeHighlight(polycube.ID, edgeID, polycube.getIncidentEdge(edgeID), Cubies.flags.isShiftDown);
 	else
 		PolycubeVisualHandler.showEdgeAdjacencyHighlight(polycube.ID, edgeID, polycube.getIncidentEdge(edgeID), polycube.getEdgeNeighbors(edgeID));
 }
@@ -274,7 +335,7 @@ export const CubiesMain = function(modelTemplates){
 
 			GUIHandler.switchToPolycubeView(false, polycubeName);
 
-			CubiesState.cache.focusPolycube = newPolycube;
+			Cubies.cache.focusPolycube = newPolycube;
 		}
 	}
 
@@ -285,9 +346,9 @@ export const CubiesMain = function(modelTemplates){
 	GUIHandler.callbacks.onDeletePolycube = () => {
 		startMode(defaultMode);
 
-		PolycubeVisualHandler.onDestroyPolycube(CubiesState.cache.focusPolycube.ID);
-		CubiesState.cache.focusPolycube.destroy();
-		CubiesState.cache.focusPolycube = null;
+		PolycubeVisualHandler.onDestroyPolycube(Cubies.cache.focusPolycube.ID);
+		Cubies.cache.focusPolycube.destroy();
+		Cubies.cache.focusPolycube = null;
 		GUIHandler.switchToCreatePolycubeView(0);
 	}
 
@@ -299,44 +360,55 @@ export const CubiesMain = function(modelTemplates){
 
 		if(InputHandler.getMouseDeltaMagnitude() < 5){
 
-			if(CubiesState.modes.inDefault){
-				if(CubiesState.flags.isShiftDown && CubiesState.flags.isOverEdge){
-					let dualGraphDecomp = CubiesState.cache.focusPolycube.getDualGraphDecomposition(CubiesState.cache.hoverEdgeID);
+			//handle click-based mode switching
+			let switchedMode = false;
+			if(Cubies.modes.inDefault){
+				if(Cubies.flags.isShiftDown){
 
-					if(dualGraphDecomp != null){
-						startMode(hingeMode, dualGraphDecomp);
+					if(Cubies.flags.isOverEdge){
+						let dualGraphDecomp = Cubies.cache.focusPolycube.getDualGraphDecomposition(Cubies.cache.hoverEdgeID);
+						if(dualGraphDecomp != null){
+							console.log(dualGraphDecomp);
+							Cubies.cache.dualGraphDecompObj = JSON.parse(JSON.stringify(dualGraphDecomp));
+							startMode(hingeMode);
+							switchedMode = true;
+						}
 					}
-				}
-					
-			}
-			else if(CubiesState.modes.inAddCube){}
-			else if(CubiesState.modes.inHingeMode){
-				
-				if(CubiesState.flags.areArrowsShowing){
-					
-					if(!CubiesState.flags.doPickArrow){
-						
-						if(CubiesState.flags.didPickArrow){}
-						else{
-							startMode(defaultMode);
-						}		
-					}
-					else if(!CubiesState.flags.isOverFace){
-						startMode(defaultMode);
-					}
-				}
-				else{
-					if(!CubiesState.flags.isOverFace){
-						startMode(defaultMode);
+					else if(Cubies.flags.isOverFace){
+
 					}
 				}
 			}
+			else if(Cubies.modes.inHingeMode){
+				if(!Cubies.flags.isOverFace && !Cubies.flags.inPickArrow){
+					startMode(defaultMode);
+					switchedMode = true;
+				}
+			}
+			else if(Cubies.modes.inTape){
+				if(!Cubies.flags.isOverFace || !Cubies.flags.isShiftDown){
+					startMode(defaultMode);
+					switchedMode = true;
+				}
+			}
 
-			CubiesState.modes.currentMode.onMouseUp();
+			if(switchedMode){ return; }
 
-			if(CubiesState.modes.inDefault){}
-			else if(CubiesState.modes.inAddCube){
-				if(!CubiesState.flags.isShiftDown){
+			Cubies.modes.currentMode.onMouseUp();
+
+			//Handle post-click mode switching
+			if(Cubies.modes.inAddCube){
+				if(!Cubies.flags.isShiftDown){
+					startMode(defaultMode);
+				}
+			}
+			else if(Cubies.modes.inHingeMode){
+				if(Cubies.flags.hasArrowData || !Cubies.flags.isOverFace){
+					startMode(defaultMode);
+				}
+			}
+			else if(Cubies.modes.inTape){
+				if(Cubies.cache.tapeFace2 != null){
 					startMode(defaultMode);
 				}
 			}
@@ -346,58 +418,62 @@ export const CubiesMain = function(modelTemplates){
 	//Function for mouse hovering. 
 	InputHandler.callbacks.onMouseMove = () => {
 
-		CubiesState.flags.isOverFace = false;
-		CubiesState.flags.isOverEdge = false;
+		Cubies.flags.isOverFace = false;
+		Cubies.flags.isOverEdge = false;
 
-		if((CubiesState.cache.hoverFaceID = SceneHandler.pick("face", InputHandler.getMousePosition())) !== 0){
-			CubiesState.flags.isOverFace = true;
+		if((Cubies.cache.hoverFaceID = SceneHandler.pick("face", InputHandler.getMousePosition())) !== 0){
+			Cubies.flags.isOverFace = true;
 		}
-		else if((CubiesState.cache.hoverEdgeID = SceneHandler.pick("edge", InputHandler.getMousePosition())) !== 0){
-			CubiesState.flags.isOverEdge = true;
+		else if((Cubies.cache.hoverEdgeID = SceneHandler.pick("edge", InputHandler.getMousePosition())) !== 0){
+			Cubies.flags.isOverEdge = true;
 		}
 
-		CubiesState.modes.currentMode.onMouseMove();
+		Cubies.modes.currentMode.onMouseMove();
 	}
 
 	//Function to handle key presses
 	InputHandler.callbacks.onKeyDown = (key) => {
-		if(CubiesState.flags.isKeyDown) return;
+		if(Cubies.flags.isKeyDown) return;
 
-		CubiesState.flags.isKeyDown = true;
+		Cubies.flags.isKeyDown = true;
 
 		//Respond to either Shift or Control.
 		if(key === "Shift"){
-			CubiesState.flags.isControlDown = false;
-			CubiesState.flags.isShiftDown = true;
+			Cubies.flags.isControlDown = false;
+			Cubies.flags.isShiftDown = true;
 		}
 		else if(key === "Control"){
-			CubiesState.flags.isKeyDown = true;
+			Cubies.flags.isKeyDown = true;
 
-			CubiesState.flags.isShiftDown = false;
-			CubiesState.flags.isControlDown = true;
+			Cubies.flags.isShiftDown = false;
+			Cubies.flags.isControlDown = true;
 		}
 
-		CubiesState.modes.currentMode.onKeyDown();
+		Cubies.modes.currentMode.onKeyDown();
 	}
 
 	//Function to handle when a key is let go.
 	InputHandler.callbacks.onKeyUp = (key) => {
-		CubiesState.flags.isKeyDown = false;
+		Cubies.flags.isKeyDown = false;
 
 		if(key === "Shift"){
-			CubiesState.flags.isShiftDown = false;
+			Cubies.flags.isShiftDown = false;
 		}
 		else if(key === "Control"){
-			CubiesState.flags.isControlDown = false;
+			Cubies.flags.isControlDown = false;
 		}
 
-		CubiesState.modes.currentMode.onKeyUp();
+		Cubies.modes.currentMode.onKeyUp();
 	}
 
 	requestAnimationFrame(update);
 
+	//Handles any operations at the end of every frame
 	function update(){
-		HingeAnimHandler.continueAnimations();
+		let deltaTime = CLOCK.getDelta();
+
+		HingeAnimHandler.continueAnimations(deltaTime);
+
 		SceneHandler.draw();
 		requestAnimationFrame(update);
 	}
