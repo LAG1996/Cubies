@@ -405,6 +405,10 @@ export class Polycube {
 		P_PRIVATES.get(this).dualGraph.rotateData(faceIDs, hingeEdgeID, rads);
 	}
 
+	tapeFaces(faceID1, faceID2){
+		P_PRIVATES.get(this).dualGraph.tapeFaces(faceID1, faceID2);
+	}
+
 	//Removes all references to this object
 	destroy(){
 		try{

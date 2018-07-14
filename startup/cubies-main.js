@@ -164,7 +164,6 @@ const hingeMode = new Mode({
 			let arrowID = SceneHandler.pick("arrow", InputHandler.getMousePosition());
 
 			if(arrowID !== 0){
-				console.log("Picked arrow #" + arrowID);
 				Cubies.flags.hasArrowData = true;
 				Cubies.cache.arrowData = ArrowHandler.getChosenArrowData(arrowID);
 
@@ -181,7 +180,6 @@ const hingeMode = new Mode({
 
 			let chosenDecompIndex = Cubies.cache.dualGraphDecompObj.pieceMap[Cubies.cache.hoverFaceID];
 			let chosenDecomp = Cubies.cache.dualGraphDecompObj.decomp[chosenDecompIndex];
-			console.log(chosenDecomp);
 			Cubies.cache.chosenDecomp = [...chosenDecomp];
 
 			ArrowHandler.showArrowsAt(faceData.position.clone(), faceData.normal.clone());
@@ -204,18 +202,19 @@ const tapeMode = new Mode({
 	mouseUp(){
 		if(!Cubies.flags.isOverFace){ return; }
 
-		let Cubies.cache.tapeFace2 = Cubies.cache.hoverFaceID;
+		Cubies.cache.tapeFace2 = Cubies.cache.hoverFaceID;
 
 		//Check if taping was valid. If not, set `tapeFace2` back to null.
+		if(!Cubies.cache.focusPolycube.tapeFaces(Cubies.cache.tapeFace1, Cubies.cache.tapeFace2))
+		{
+			Cubies.cache.tapeFace2 = null;
+		}
 	}
 });
 
 //Functions that handle entering and exiting "modes in Cubies"
 function startMode(mode, ...args){
 	interruptMode();
-
-	console.log("Starting mode:");
-	console.log(mode);
 
 	Cubies.modes.currentMode = mode;
 
@@ -272,7 +271,6 @@ function tryMouseOverHighlight(polycubeID = Cubies.cache.focusPolycube){
 			doFaceHighlight();
 		}
 		else if(Cubies.flags.isOverEdge){
-			console.log("Edge #" + Cubies.cache.hoverEdgeID);
 			doEdgeHighlight();
 		}
 	}
@@ -368,7 +366,6 @@ export const CubiesMain = function(modelTemplates){
 					if(Cubies.flags.isOverEdge){
 						let dualGraphDecomp = Cubies.cache.focusPolycube.getDualGraphDecomposition(Cubies.cache.hoverEdgeID);
 						if(dualGraphDecomp != null){
-							console.log(dualGraphDecomp);
 							Cubies.cache.dualGraphDecompObj = JSON.parse(JSON.stringify(dualGraphDecomp));
 							startMode(hingeMode);
 							switchedMode = true;
