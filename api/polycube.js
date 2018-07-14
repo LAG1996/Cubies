@@ -373,7 +373,12 @@ export class Polycube {
 	}
 
 	getEdgeNeighbors(edgeID){
-		let neighborIDs = P_PRIVATES.get(this).dualGraph.getEdgeNeighbors(edgeID);
+		let neighbors = P_PRIVATES.get(this).dualGraph.getEdgeNeighbors(edgeID);
+
+		let neighborIDs = [];
+		neighbors.map((neighbor) => {
+			neighborIDs.push(neighbor.ID);
+		});
 
 		return neighborIDs;
 	}

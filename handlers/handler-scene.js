@@ -21,10 +21,10 @@ $("#main-canvas").append(_renderer.domElement);
 	-a far clipping plane that is 1000 units away from the screen
 */
 const _camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
-_camera.position.z = -10;
+_camera.position.z = 10;
 _camera.position.y = 10;
 _camera.position.x = 10;
-_camera.lookAt(0, 0, 0);
+//_camera.lookAt(0, 0, 0);
 const cameraControls = new THREE.OrbitControls(_camera, _renderer.domElement);
 
 //Set the main scene. Add a grid to the scene.
@@ -32,6 +32,7 @@ const _mainScene = new THREE.Scene();
 {
 	const grid = new THREE.GridHelper(10, 5, 0x000000);
 	grid.position.y = -1;
+	grid.add(new THREE.AxisHelper(50));
 	_mainScene.add(grid);
 }
 

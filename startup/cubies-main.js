@@ -232,10 +232,12 @@ function doRotate(){
 	let chosenDecomp = Cubies.cache.chosenDecomp;
 	let edgeData = polycube.getEdge(Cubies.cache.chosenHingeEdgeID);
 	let faceData = polycube.getFace(chosenDecomp[0]);
+	console.log(faceData.normal);
 	let arrowData = Cubies.cache.arrowData;
 	
 	//Determine the radians given what arrow was pressed, the direction of the faces adjacent
 	let rads = THREE.Math.degToRad(90);
+	console.log(arrowData.color);
 	let dirMultiplier = arrowData.color === "white" ? 1 : -1;
 	
 	let cross = new THREE.Vector3().crossVectors(faceData.normal, edgeData.axis);
@@ -422,6 +424,7 @@ export const CubiesMain = function(modelTemplates){
 			Cubies.flags.isOverFace = true;
 		}
 		else if((Cubies.cache.hoverEdgeID = SceneHandler.pick("edge", InputHandler.getMousePosition())) !== 0){
+			console.log(Cubies.cache.hoverEdgeID);
 			Cubies.flags.isOverEdge = true;
 		}
 

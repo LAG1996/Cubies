@@ -18,7 +18,6 @@ export class DualGraph {
 			edgeEndpointMap: new SpatialMap(),
 			faceMap: new SpatialMap(),
 			cubeMap: cubeMap,
-			edgeIsCut: new Map(),
 
 			cutTrees: new Map(),
 
@@ -35,7 +34,6 @@ export class DualGraph {
 	//A cut is not successful if the given edge is already a boundary or if the cut would result in a disconnected dual graph.
 	tryApplyCut(edgeID){
 		let edgeNode = DG_PRIVATES.get(this).edgeHash.get(edgeID);
-		let edgeIsCut = DG_PRIVATES.get(this).edgeIsCut;
 
 		if(!edgeNode.isCut && !canDisconnectDualGraph(this, edgeNode)){
 			
@@ -83,7 +81,7 @@ export class DualGraph {
 	getEdgeNeighbors(edgeID){
 		let edgeNode = DG_PRIVATES.get(this).edgeHash.get(edgeID);
 
-		let neighbors = [];
+		/*let neighbors = [];
 
 		findAdjacentEdges(this, edgeNode, neighbors);
 		let incidentEdge = edgeNode.incidentEdge;
@@ -92,7 +90,9 @@ export class DualGraph {
 			findAdjacentEdges(this, incidentEdge, neighbors);
 		}
 		
-		return neighbors;
+		return neighbors;*/
+
+		return [...edgeNode.neighbors, ...edgeNode.incidentEdge.neighbors];
 	}
 
 	getAllHingeLines(){
@@ -145,6 +145,27 @@ export class DualGraph {
 			newFaceNode.addNeighbors(neighbor);
 		});
 
+		//Set edge adjacencies
+		newFaceNode.edges.map((edgeNode) => {
+			let endpointMap = DG_PRIVATES.get(this).edgeEndpointMap;
+
+			let edgeList = [...endpointMap.getData(edgeNode.endpoints[0]), ...endpointMap.getData(edgeNode.endpoints[1])];
+
+			edgeList.map((otherEdge) => {
+				if(!otherEdge.position.equals(edgeNode.position)){
+					let otherFace = this.getFace(otherEdge.parentID);
+
+					if(newFaceNode === otherFace
+						|| newFaceNode.neighbors.includes(otherFace)
+						|| cubesAreAdjacent(newFaceNode.parentCubePosition, otherFace.parentCubePosition)
+						|| cubesShareCommonNeighbor(this, newFaceNode.parentCubePosition, otherFace.parentCubePosition)){
+
+						addEdgeNeighbor(edgeNode, otherEdge);
+					}
+				}
+			})
+		});
+
 		DG_PRIVATES.get(this).faceCount += 1;
 	}
 
@@ -188,7 +209,8 @@ export class DualGraph {
 			let normal = face.normal;
 
 			normal.applyQuaternion(rotation);
-			face.normal = toLatticeVector(normal).normalize();
+			normal.normalize();
+			face.normal = toLatticeVector(normal);
 
 			DG_PRIVATES.get(this).faceMap.addToMap(face, face.position);
 
@@ -200,28 +222,17 @@ export class DualGraph {
 				sepVec.add(hingeEdge.position);
 
 				edge.position = toLatticeVector(sepVec);
-				edge.axis.applyQuaternion(rotation);
-				edge.axis = toQ1Vector(toLatticeVector(edge.axis).normalize());
 
-				let endpoint1 = edge.endpoints[0];
-				let endpoint2 = edge.endpoints[1];
+				let newAxis = edge.axis.clone();
+				newAxis.applyQuaternion(rotation);
+				newAxis.normalize();
+				edge.axis = toQ1Vector(toLatticeVector(newAxis));
 
-				sepVec = new THREE.Vector3().subVectors(endpoint1, edge.position);
-				sepVec.applyQuaternion(rotation);
-				sepVec.add(edge.position);
+				let endpoint1 = new THREE.Vector3().addVectors(edge.position, newAxis);
+				let endpoint2 = new THREE.Vector3().addVectors(edge.position, newAxis.multiplyScalar(-1));
 
-				endpoint1.copy(sepVec.clone());
 
-				sepVec = new THREE.Vector3().subVectors(endpoint2, edge.position);
-				sepVec.applyQuaternion(rotation);
-				sepVec.add(edge.position);
-
-				endpoint2.copy(sepVec.clone());
-
-				endpoint1.copy(toLatticeVector(endpoint1));
-				endpoint2.copy(toLatticeVector(endpoint2));
-
-				edge.setEndpoints(endpoint1, endpoint2);
+				edge.setEndpoints(toLatticeVector(endpoint1), toLatticeVector(endpoint2));
 
 				addEdgeToMaps(this, edge);
 			});
@@ -251,7 +262,10 @@ export class DualGraph {
 
 		edgeNodes.map((edgeNode) => { 
 			DG_PRIVATES.get(this).edgeHash.delete(edgeNode.ID);
-			DG_PRIVATES.get(this).edgeIsCut.delete(edgeNode);
+
+			edgeNode.neighbors.map((neighborEdge) => {
+				removeEdgeNeighbor(edgeNode, neighborEdge);
+			})
 
 			removeEdgeFromMaps(this, edgeNode);
 			DG_PRIVATES.get(this).edgeCount -= 1;
@@ -412,6 +426,46 @@ function tryGetEdgeOfIncidence(dualGraph, faceNode1, faceNode2){
 	return null;
 }
 
+function addEdgeNeighbor(edgeNode1, edgeNode2){
+	edgeNode1.addNeighbors(edgeNode2);
+	edgeNode2.addNeighbors(edgeNode1);
+
+	if(edgeNode1.incidentEdge != null){
+		edgeNode1.incidentEdge.addNeighbors(edgeNode2);
+		edgeNode2.addNeighbors(edgeNode1.incidentEdge);
+	}
+
+	if(edgeNode2.incidentEdge != null){
+		edgeNode1.addNeighbors(edgeNode2.incidentEdge);
+		edgeNode2.incidentEdge.addNeighbors(edgeNode1);
+	}
+
+	if(edgeNode1.incidentEdge != null && edgeNode2.incidentEdge != null){
+		edgeNode1.incidentEdge.addNeighbors(edgeNode2.incidentEdge);
+		edgeNode2.incidentEdge.addNeighbors(edgeNode1.incidentEdge);
+	}
+}
+
+function removeEdgeNeighbor(edgeNode1, edgeNode2){
+	edgeNode1.removeNeighbors(edgeNode2);
+	edgeNode2.removeNeighbors(edgeNode1);
+
+	if(edgeNode1.incidentEdge != null){
+		edgeNode1.incidentEdge.removeNeighbors(edgeNode2);
+		edgeNode2.removeNeighbors(edgeNode1.incidentEdge);
+	}
+
+	if(edgeNode2.incidentEdge != null){
+		edgeNode1.removeNeighbors(edgeNode2.incidentEdge);
+		edgeNode2.incidentEdge.removeNeighbors(edgeNode1);
+	}
+
+	if(edgeNode1.incidentEdge != null && edgeNode2.incidentEdge != null){
+		edgeNode1.incidentEdge.removeNeighbors(edgeNode2.incidentEdge);
+		edgeNode2.incidentEdge.removeNeighbors(edgeNode1.incidentEdge);
+	}
+}
+
 function findAdjacentEdges(dualGraph, edgeNode, neighborList){
 	let endpointMap = DG_PRIVATES.get(dualGraph).edgeEndpointMap;
 
@@ -435,35 +489,6 @@ function findAdjacentEdges(dualGraph, edgeNode, neighborList){
 	});
 }
 
-
-function findStrictAdjacentEdges(dualGraph, edgeNode){
-
-	let neighborList = [];
-
-	let endpointMap = DG_PRIVATES.get(dualGraph).edgeEndpointMap;
-
-	let edgeList = [...endpointMap.getData(edgeNode.endpoints[0]), ...endpointMap.getData(edgeNode.endpoints[1])];
-
-	edgeList.map((otherEdge) => {
-		if(!otherEdge.position.equals(edgeNode.position)){
-			let face1 = dualGraph.getFace(edgeNode.parentID);
-			let face2 = dualGraph.getFace(otherEdge.parentID);
-
-			if(face1 === face2
-				|| face1.neighbors.includes(face2)
-				|| cubesAreAdjacent(face1.parentCubePosition, face2.parentCubePosition)
-				|| cubesShareCommonNeighbor(dualGraph, face1.parentCubePosition, face2.parentCubePosition)){
-
-				if(!neighborList.includes(otherEdge.ID)){
-					neighborList.push(otherEdge.ID);
-				}
-			}
-		}
-	})
-
-}
-
-function findLooseAdjacentEdges(dualGraph, edgeNode){}
 
 function findIncidentEdge(dualGraph, edgeNode){
 
@@ -534,7 +559,7 @@ function tapeEdges(dualGraph, edge1, edge2){
 //We also handle the case where two disjoint cut trees are bridged by the newly cut edge.
 function computeCutTrees(dualGraph, newlyCutEdge){
 	//Get all neigbhors of the edge and its incident edge
-	let neighborIDs = dualGraph.getEdgeNeighbors(newlyCutEdge.ID);
+	let neighbors = dualGraph.getEdgeNeighbors(newlyCutEdge.ID);
 	let incidentEdge = dualGraph.getIncidentEdge(newlyCutEdge.ID);
 
 	//Grab references to private variables.
@@ -547,8 +572,8 @@ function computeCutTrees(dualGraph, newlyCutEdge){
 
 	//Search the neighbors. If a neighbor is cut, grab its cut tree index.
 	let cutTreeIndex = undefined;
-	for(var n in neighborIDs){
-		let neighbor = dualGraph.getEdge(neighborIDs[n]);
+	for(var n in neighbors){
+		let neighbor = neighbors[n];
 		if(neighbor.isCut){
 			cutTreeIndex = edgeIDToCutTreeIndex.get(neighbor.ID);
 			break;
@@ -585,8 +610,8 @@ function computeCutTrees(dualGraph, newlyCutEdge){
 	edgeIDToCutTreeIndex.set(incidentEdge.ID, cutTreeIndex);
 
 	//Check all neighbors. If there are any cut neighbors of a different cut tree, then we need to join that tree to this one.
-	for(var n in neighborIDs){
-		let neighborNode = dualGraph.getEdge(neighborIDs[n]);
+	for(var n in neighbors){
+		let neighborNode = neighbors[n];
 		let neighborCutTreeIndex = edgeIDToCutTreeIndex.get(neighborNode.ID);
 
 		if(neighborNode.isCut && neighborCutTreeIndex !== cutTreeIndex){
@@ -690,7 +715,7 @@ function computeHingeLines(dualGraph, edgeNode){
 			
 			if(checkedHingeEndpoints.has(cutEdge1) && checkedHingeEndpoints.get(cutEdge1).includes(cutEdge2)){ continue; }
 			if(cutEdge1 === cutEdge2 || cutEdge1 === cutEdge2.incidentEdge){ continue; }
-			if(edgeNeighbors.includes(cutEdge2.ID)){ continue; }
+			if(edgeNeighbors.includes(cutEdge2)){ continue; }
 		
 			let hingeLineData = tryGenerateCollinearLine(dualGraph, cutEdge1, cutEdge2, cutTreeIndex, checkedHingeEndpoints, hingeLineIndex);
 		
@@ -726,24 +751,24 @@ function computeHingeLines(dualGraph, edgeNode){
 							let otherCutTreeIndex = cutTreeIndex;
 
 							if(otherHingeLine === undefined){
-								console.log("Merging lines from different cut trees");
+								//console.log("Merging lines from different cut trees");
 								otherCutTreeIndex = hingeEdgeIDToCutTreeIndex.get(edgeID);
 								otherHingeLine = hingeLines.get(hingeEdgeIDToCutTreeIndex.get(edgeID))[otherHingeLineIndex];
 							}
 
 							if(otherHingeLine.length >= hingeLine.length){
 
-								console.log("Do merge");
+								//console.log("Do merge");
 								foundOldHinge = true;
 								
 								for(var e in hingeLine){
 
 									let edgeToMoveID = hingeLine[e]; 
 
-									console.log("Can edge#" + edgeToMoveID + " be merged?");
+									//console.log("Can edge#" + edgeToMoveID + " be merged?");
 									if(otherHingeLine.includes(edgeToMoveID)){ continue; }
 
-									console.log("Moving #" + edgeToMoveID + " to hinge #" + otherHingeLineIndex);
+									//console.log("Moving #" + edgeToMoveID + " to hinge #" + otherHingeLineIndex);
 
 									hingeEdgeIDToHingeIndex.set(edgeToMoveID, otherHingeLineIndex);
 									hingeEdgeIDToCutTreeIndex.set(edgeToMoveID, otherCutTreeIndex);
@@ -763,8 +788,8 @@ function computeHingeLines(dualGraph, edgeNode){
 
 							dualGraph.getEdge(edgeID).isHinge = true;
 
-							console.log("Make new line #" + hingeLineIndex);
-							console.log(hingeLine);
+							//console.log("Make new line #" + hingeLineIndex);
+							//console.log(hingeLine);
 
 							cutTreeHingeLines[hingeLineIndex].push(edgeID);
 							
@@ -774,7 +799,7 @@ function computeHingeLines(dualGraph, edgeNode){
 						}
 					}
 
-					console.log(cutTreeHingeLines);
+					//console.log(cutTreeHingeLines);
 
 					hingeLineIndex += 1;
 				}
@@ -788,8 +813,8 @@ function computeHingeLines(dualGraph, edgeNode){
 function tryGenerateCollinearLine(dualGraph, edge1, edge2, cutTreeIndex, checkedHingeEndpoints, hingeLineIndex){
 	if(!edgesAreCollinear(edge1, edge2)){ return { generatedLine: false }; }
 
-	//console.log("Edges #" + edge1.ID + ",#" + edge1.incidentEdge.ID + " and #" 
-	//	+ edge2.ID + ",#" + edge2.incidentEdge.ID + " are collinear.");
+	//console.log("Edges #" + edge1.ID + " and #" 
+		//+ edge2.ID + " are collinear.");
 	
 	//Subscribe these two edges as endpoints so we can avoid rechecking them later.
 	subscribeEndpoints(edge1, edge2, checkedHingeEndpoints);
@@ -806,8 +831,8 @@ function tryGenerateCollinearLine(dualGraph, edge1, edge2, cutTreeIndex, checked
 function tryGenerateParallelLines(dualGraph, edge1, edge2, cutTreeIndex, checkedHingeEndpoints, hingeLineIndex){
 	if(!edgesAreParallel(edge1, edge2)){ return { generatedLine: false }; }
 
-	//console.log("Edges #" + edge1.ID + ",#" + edge1.incidentEdge.ID + " and #" 
-	//	+ edge2.ID + ",#" + edge2.incidentEdge.ID + " are parallel.");
+	//console.log("Edges #" + edge1.ID + " and #" 
+		//+ edge2.ID + " are parallel.");
 
 	subscribeEndpoints(edge1, edge2, checkedHingeEndpoints);
 
@@ -825,8 +850,8 @@ function tryGenerateParallelLines(dualGraph, edge1, edge2, cutTreeIndex, checked
 function tryGeneratePerpendicularLine(dualGraph, edge1, edge2, cutTreeIndex, checkedHingeEndpoints){
 	if(!edgesArePerpendicular(edge1, edge2)){ return { generatedLine: false }; }
 
-	//console.log("Edges #" + edge1.ID + ",#" + edge1.incidentEdge.ID + " and #" 
-	//	+ edge2.ID + ",#" + edge2.incidentEdge.ID + " are perpendicular.");
+	//console.log("Edges #" + edge1.ID + " and #" 
+		//+ edge2.ID + " are perpendicular.");
 
 	subscribeEndpoints(edge1, edge2, checkedHingeEndpoints);
 
@@ -869,20 +894,30 @@ function doHingeWalk(dualGraph, edge1, edge2, dirVector, startingPosition, cutTr
 
 	let cutsTouchedSoFar = [edge1, edge2];
 
+	//console.log("Walking from ")
+	//console.log(startingPosition);
+	//console.log("in the direction");
+	//console.log(dirVector);
+
 	//Walk along the dual graph from `edge 1`
 	let stepEdge = edge1;
-	while(!edge2Neighbors.includes(stepEdge.ID)){
-		let stepEdgeNeighborIDs = dualGraph.getEdgeNeighbors(stepEdge.ID);
+	while(!edge2Neighbors.includes(stepEdge)){
+		let stepEdgeNeighbors = dualGraph.getEdgeNeighbors(stepEdge.ID);
 
 		let foundNextEdge = false;
-		for(var N in stepEdgeNeighborIDs){
-			let neighbor = dualGraph.getEdge(stepEdgeNeighborIDs[N]);
+		for(var N in stepEdgeNeighbors){
+			let neighbor = stepEdgeNeighbors[N];
 
 			if(neighbor.visited){ continue; }
 
+			
+
 			let dir = new THREE.Vector3().subVectors(neighbor.position, startingPosition).normalize();
+			
 
 			if(dir.equals(dirVector)){
+				//console.log("Found step edge at ")
+				//console.log(neighbor.position);
 				neighbor.visited = true;
 				neighbor.incidentEdge.visited = true;
 
@@ -920,7 +955,7 @@ function doHingeWalk(dualGraph, edge1, edge2, dirVector, startingPosition, cutTr
 		}
 	}
 
-	if(edge2Neighbors.includes(stepEdge.ID)){
+	if(edge2Neighbors.includes(stepEdge)){
 		lineEndpoint = edge2;
 	}
 
@@ -988,17 +1023,19 @@ function subscribeEndpoints(edge1, edge2, checkedHingeEndpoints){
 		checkedHingeEndpoints.set(edge2, []);
 	}
 
+	/*
 	if(!checkedHingeEndpoints.has(edge1.incidentEdge)){
 		checkedHingeEndpoints.set(edge1.incidentEdge, []);
 	}
 
 	if(!checkedHingeEndpoints.has(edge2.incidentEdge)){
 		checkedHingeEndpoints.set(edge2.incidentEdge, []);
-	}
+	}*/
 
 	checkedHingeEndpoints.get(edge1).push(edge2);
 	checkedHingeEndpoints.get(edge2).push(edge1);
 
+/*
 	checkedHingeEndpoints.get(edge1.incidentEdge).push(edge2);
 	checkedHingeEndpoints.get(edge2).push(edge1.incidentEdge);
 
@@ -1006,7 +1043,7 @@ function subscribeEndpoints(edge1, edge2, checkedHingeEndpoints){
 	checkedHingeEndpoints.get(edge2.incidentEdge).push(edge1);
 
 	checkedHingeEndpoints.get(edge1.incidentEdge).push(edge2.incidentEdge);
-	checkedHingeEndpoints.get(edge2.incidentEdge).push(edge1.incidentEdge);
+	checkedHingeEndpoints.get(edge2.incidentEdge).push(edge1.incidentEdge);*/
 }
 
 //Decomposes the dual graph by cutting away at edges given by the `edgeIDs` parameter.

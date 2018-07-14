@@ -98,6 +98,7 @@ export class EdgeNode{
 			axis: edgeAxis,
 			position: edgePosition,
 			parentID: parentFaceID,
+			neighbors: []
 		});
 
 		this.isCut = false;
@@ -127,6 +128,10 @@ export class EdgeNode{
 		return NODE_PRIVATES.get(this).parentID;
 	}
 
+	get neighbors(){
+		return [...NODE_PRIVATES.get(this).neighbors];
+	}
+
 	//setters
 	set position(newPosition){
 		NODE_PRIVATES.get(this).position = newPosition.clone();
@@ -134,6 +139,24 @@ export class EdgeNode{
 
 	set axis(newAxis){
 		NODE_PRIVATES.get(this).axis = newAxis.clone();
+	}
+
+	addNeighbors(...edgeNodes){
+
+		edgeNodes.map((node) => {
+			if(!NODE_PRIVATES.get(this).neighbors.includes(node))
+				NODE_PRIVATES.get(this).neighbors.push(node);
+		});
+		
+	}
+
+	removeNeighbors(...edgeNodes){
+		let neighbors = NODE_PRIVATES.get(this).neighbors;
+
+		edgeNodes.map((node) => {
+			if(neighbors.includes(node))
+				neighbors.splice(neighbors.indexOf(node), 1);
+		});
 	}
 
 	setEndpoints(newEndpoint1, newEndpoint2){
