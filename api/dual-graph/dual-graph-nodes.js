@@ -9,8 +9,8 @@ export class FaceNode{
 			id: faceID,
 			edges: [],
 			neighbors: [],
-			normal: faceNormal,
-			position: facePosition,
+			normal: faceNormal.clone(),
+			position: facePosition.clone(),
 			parentCubePosition: parentCubePosition,
 		});
 
@@ -44,11 +44,11 @@ export class FaceNode{
 
 	//setters
 	set position(newPosition){
-		NODE_PRIVATES.get(this).position = newPosition.clone();
+		NODE_PRIVATES.get(this).position.copy(newPosition.clone());
 	}
 
 	set normal(newNormal){
-		NODE_PRIVATES.get(this).normal = newNormal.clone();
+		NODE_PRIVATES.get(this).normal.copy(newNormal.clone());
 	}
 
 	addNeighbors(...faceNodes){
@@ -134,11 +134,11 @@ export class EdgeNode{
 
 	//setters
 	set position(newPosition){
-		NODE_PRIVATES.get(this).position = newPosition.clone();
+		NODE_PRIVATES.get(this).position.copy(newPosition.clone());
 	}
 
 	set axis(newAxis){
-		NODE_PRIVATES.get(this).axis = newAxis.clone();
+		NODE_PRIVATES.get(this).axis.copy(newAxis.clone());
 	}
 
 	addNeighbors(...edgeNodes){

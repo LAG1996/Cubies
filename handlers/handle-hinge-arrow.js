@@ -79,6 +79,9 @@ export const ArrowHandler = {
 		else if(faceNormal.equals(right)){
 			_viewArrowPair.setRotationFromAxisAngle(right, THREE.Math.degToRad(90));
 		}
+		else{
+			throw "Bad face normal"
+		}
 
 		_pickArrowPair.rotation.copy(_viewArrowPair.rotation);
 

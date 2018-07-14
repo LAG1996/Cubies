@@ -33,7 +33,7 @@ const Cubies = {
 		focusPolycube: null,
 		chosenHingeEdgeID: null,
 		chosenDecomp: [],
-		dualGraphDecompObj: null,
+		dualGraphDecompObj: {pieceMap: null, decomp: null, decompIndex: -1},
 		tapeFace1: null,
 		tapeFace2: null
 	},
@@ -180,6 +180,8 @@ const hingeMode = new Mode({
 
 			let chosenDecompIndex = Cubies.cache.dualGraphDecompObj.pieceMap[Cubies.cache.hoverFaceID];
 			let chosenDecomp = Cubies.cache.dualGraphDecompObj.decomp[chosenDecompIndex];
+
+			Cubies.cache.dualGraphDecompObj.decompIndex = chosenDecompIndex;
 			Cubies.cache.chosenDecomp = [...chosenDecomp];
 
 			ArrowHandler.showArrowsAt(faceData.position.clone(), faceData.normal.clone());
@@ -231,24 +233,35 @@ function doRotate(){
 	let polycube = Cubies.cache.focusPolycube;
 	let chosenDecomp = Cubies.cache.chosenDecomp;
 	let edgeData = polycube.getEdge(Cubies.cache.chosenHingeEdgeID);
-	let faceData = polycube.getFace(chosenDecomp[0]);
-	console.log(faceData.normal);
+	
+	if(Cubies.cache.dualGraphDecompObj.decompIndex !== Cubies.cache.dualGraphDecompObj.pieceMap[edgeData.parentID])
+		edgeData = edgeData.incidentEdge;
+
+	let faceData = polycube.getFace(edgeData.parentID);
+
+	console.log(faceData.ID);
+	console.log(faceData.position);
+	console.log(edgeData.position);
+	console.log(edgeData.axis);
 	let arrowData = Cubies.cache.arrowData;
 	
 	//Determine the radians given what arrow was pressed, the direction of the faces adjacent
 	let rads = THREE.Math.degToRad(90);
-	console.log(arrowData.color);
+	//console.log(arrowData.color);
 	let dirMultiplier = arrowData.color === "white" ? 1 : -1;
 	
 	let cross = new THREE.Vector3().crossVectors(faceData.normal, edgeData.axis);
 	cross.normalize();
 	cross = toLatticeVector(cross);
 
-	let vecFromHinge = new THREE.Vector3().subVectors(faceData.position, edgeData.position);
-	vecFromHinge.normalize();
-	vecFromHinge = toLatticeVector(vecFromHinge);
+	let dirFromHinge = new THREE.Vector3().subVectors(faceData.position, edgeData.position);
+	dirFromHinge.normalize();
+	dirFromHinge = toLatticeVector(dirFromHinge);
+
+	//console.log(cross);
+	//console.log(dirFromHinge);
 	
-	if(!cross.equals(vecFromHinge)){
+	if(!cross.equals(dirFromHinge)){
 		dirMultiplier = -dirMultiplier;
 	}
 

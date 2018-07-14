@@ -204,7 +204,14 @@ export class DualGraph {
 			sepVec.applyQuaternion(rotation);
 			sepVec.add(hingeEdge.position);
 
+			console.log("Rotating face #" + face.ID);
+			console.log("face position before:")
+			console.log(face.position);
+
 			face.position = toLatticeVector(sepVec);
+
+			console.log("face position after:")
+			console.log(face.position);
 
 			let normal = face.normal;
 

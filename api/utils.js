@@ -37,7 +37,9 @@ const toLatticeVector = function(vector){
 
 	let lattPos = vector.clone();
 
-	lattPos.round();
+	lattPos.x = Math.round(lattPos.x);
+	lattPos.y = Math.round(lattPos.y);
+	lattPos.z = Math.round(lattPos.z);
 
 	return lattPos;
 }
