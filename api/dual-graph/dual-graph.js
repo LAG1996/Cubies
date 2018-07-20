@@ -39,7 +39,7 @@ export class DualGraph {
 			
 			cutEdge(this, edgeNode);
 			computeCutTrees(this, edgeNode);
-			computeHingeLines(this, edgeNode);
+			computeHingeLines(this, DG_PRIVATES.get(this).edgeIDToCutTreeIndex.get(edgeNode.ID));
 
 			return true;
 		}
@@ -204,14 +204,7 @@ export class DualGraph {
 			sepVec.applyQuaternion(rotation);
 			sepVec.add(hingeEdge.position);
 
-			console.log("Rotating face #" + face.ID);
-			console.log("face position before:")
-			console.log(face.position);
-
 			face.position = toLatticeVector(sepVec);
-
-			console.log("face position after:")
-			console.log(face.position);
 
 			let normal = face.normal;
 
@@ -252,15 +245,27 @@ export class DualGraph {
 		let face1 = this.getFace(faceID1);
 		let face2 = this.getFace(faceID2);
 
-		let incidentEdges = tryGetEdgeOfIncidence(face1, face2);
+		let incidentEdges = tryGetEdgeOfIncidence(this, face1, face2);
 
-		if(incidentEdges != null){
+		if(incidentEdges == null || (!incidentEdges[0].isCut && !incidentEdges[0].isCut)){ return null; }
 
-			return true;
+		console.log("Taping " + incidentEdges[0].ID + " and " + incidentEdges[1].ID);
+
+		tapeEdges(this, incidentEdges[0], incidentEdges[1]);
+
+		let newCutTreeIndices = trySplitCutTree(this, incidentEdges[0]);
+
+		let cutEdges = [];
+
+		for(var index of newCutTreeIndices){
+			computeHingeLines(this, index);
+
+			cutEdges.push(DG_PRIVATES.get(this).cutTrees.get(index)[0])
 		}
-		else{
-			return false;
-		}
+
+		console.log(newCutTreeIndices)
+
+		return { cutEdges: [...cutEdges], tapedEdges: [incidentEdges[0].ID, incidentEdges[1].ID]};
 	}
 
 	//Remove the face 
@@ -424,8 +429,8 @@ function tryGetEdgeOfIncidence(dualGraph, faceNode1, faceNode2){
 			let otherEdge = edgesAtPosition[ep];
 
 			if(otherEdge !== edge){
-				if(otherEdge.parentFaceID === faceNode2.ID)
-					return {incidentEdge1: edge, incidentEdge2: otherEdge};
+				if(otherEdge.parentID === faceNode2.ID)
+					return [edge, otherEdge];
 			}
 		}
 	}
@@ -655,25 +660,76 @@ function computeCutTrees(dualGraph, newlyCutEdge){
 	}
 }
 
-//Recomputes the cut tree around a removed edge.
-function recomputeCutTree(dualGraph, removedEdge){
+//Given an edge node, split the cut tree it was a part of (assuming it was part of a cut tree).
+//Returns the indices of the resulting cut trees
+function trySplitCutTree(dualGraph, edgeNode){
 	let cutTrees = DG_PRIVATES.get(dualGraph).cutTrees;
 	let edgeIDToCutTreeIndex = DG_PRIVATES.get(dualGraph).edgeIDToCutTreeIndex;
 
-	let cutTreeIndex = edgeIDToCutTreeIndex.get(removedEdge.ID);
-	let cutTree = [...cutTrees.get(cutTreeIndex)];
+	//Check if this edge even belongs to a cut tree. If not, then do nothing.
+	if(!edgeIDToCutTreeIndex.has(edgeNode.ID)){ return []; }
 
-	cutTree.map((edge) => {
-		edgeIDToCutTreeIndex.delete(removedEdge);
+	let cutTreeIndex1 = edgeIDToCutTreeIndex.get(edgeNode.ID);
+	edgeIDToCutTreeIndex.delete(edgeNode.ID);
 
-		computeCutTrees(dualGraph, edge);
-	});
+	//Split the list of this edge's neighbors into two halves corresponding to its two endpoints
+	let neighbors = dualGraph.getEdgeNeighbors(edgeNode.ID);
+	let neighborHalf1 = [];
+	let neighborHalf2 = [];
+
+	for(var neighbor of neighbors){
+		if(!neighbor.isCut){ continue; }
+		if((neighbor.endpoints[0].equals(edgeNode.endpoints[0]) || neighbor.endpoints[1].equals(edgeNode.endpoints[0]))){
+			neighborHalf1.push(neighbor);
+		}
+		else{
+			neighborHalf2.push(neighbor);
+		}
+	}
+
+	//Check if the two halves are part of this cut tree. If so, we have to split. If not, then do nothing.
+	if(neighborHalf1.length > 0 && neighborHalf2.length > 0){
+		//Handle splitting
+		let newCutTree1 = [];
+		let newCutTree2 = [];
+
+		//Find a new index for cut tree 2
+		let cutTreeIndex2 = 0;
+		for(var i = 0; i <= cutTrees.size; i++){
+			if(!cutTrees.has(i)){
+				cutTreeIndex2 = i;
+			}
+		}
+
+		for(var neighbor of neighborHalf1){
+			newCutTree1.push(neighbor.ID);
+		}
+
+		//Add the neighbors of neighborHalf2 to the new cut tree
+		for(var neighbor of neighborHalf2){
+			newCutTree2.push(neighbor.ID);
+			edgeIDToCutTreeIndex.set(neighbor.ID, cutTreeIndex2);
+		}
+
+		//Change the old cut tree to half #1
+		cutTrees.set(cutTreeIndex1, [...newCutTree1]);
+		//Add in half #2 as the new cut tree
+		cutTrees.set(cutTreeIndex2, [...newCutTree2]);
+
+		return [cutTreeIndex1, cutTreeIndex2];
+	}
+	else{
+		let cutTree = cutTrees.get(cutTreeIndex1);
+
+		cutTree.splice(cutTree.indexOf(edgeNode.ID), 1);
+		cutTree.splice(cutTree.indexOf(edgeNode.incidentEdge.ID), 1);
+
+		return [cutTreeIndex1];
+	}
 }
 
-//Computes hinging lines that portions of the polycube will rotate around
-function computeHingeLines(dualGraph, edgeNode){
-	console.log("Hinge lines after cut #" + edgeNode.ID + ",#" + edgeNode.incidentEdge.ID);
-
+//Given a cut tree's index, compute hinge lines corresponding to its edges
+function computeHingeLines(dualGraph, cutTreeIndex){
 	let cutTrees = DG_PRIVATES.get(dualGraph).cutTrees;
 	let edgeIDToCutTreeIndex = DG_PRIVATES.get(dualGraph).edgeIDToCutTreeIndex;
 	let hingeLines = DG_PRIVATES.get(dualGraph).hingeLines;
@@ -681,16 +737,11 @@ function computeHingeLines(dualGraph, edgeNode){
 	let hingeEdgeIDToCutTreeIndex = DG_PRIVATES.get(dualGraph).hingeEdgeIDToCutTreeIndex;
 	//let edgeToHingeLineIndex = new Map();
 
-	//console.log(hingeEdgeIDToHingeIndex)
-
-	let cutTreeIndex = edgeIDToCutTreeIndex.get(edgeNode.ID);
 	let cutTree = [...cutTrees.get(cutTreeIndex)];
-
-	console.log("Cut Tree Index: " + cutTreeIndex);
 
 	let checkedHingeEndpoints = new WeakMap();
 
-	let cutTreeHingeLines = dualGraph.getCutTreeHingeLines(edgeNode.ID);
+	let cutTreeHingeLines = hingeLines.get(cutTreeIndex);
 	if(cutTreeHingeLines !== undefined){
 		cutTreeHingeLines.map((lines) => {
 			lines.map((edgeID) => {
@@ -707,16 +758,14 @@ function computeHingeLines(dualGraph, edgeNode){
 	else
 		cutTreeHingeLines = [];
 
-	console.log(cutTreeHingeLines);
-	console.log(hingeEdgeIDToHingeIndex);
-
+	console.log(cutTree);
 	let hingeLineIndex = 0;
 
-	for(var e1 in cutTree){
-		for(var e2 in cutTree)
+	for(var e1 of cutTree){
+		for(var e2 of cutTree)
 		{
-			let cutEdge1 = dualGraph.getEdge(cutTree[e1]);
-			let cutEdge2 = dualGraph.getEdge(cutTree[e2]);
+			let cutEdge1 = dualGraph.getEdge(e1);
+			let cutEdge2 = dualGraph.getEdge(e2);
 
 			let edgeNeighbors = dualGraph.getEdgeNeighbors(cutEdge1.ID);
 			
@@ -795,8 +844,8 @@ function computeHingeLines(dualGraph, edgeNode){
 
 							dualGraph.getEdge(edgeID).isHinge = true;
 
-							//console.log("Make new line #" + hingeLineIndex);
-							//console.log(hingeLine);
+							console.log("Make new line #" + hingeLineIndex);
+							console.log(hingeLine);
 
 							cutTreeHingeLines[hingeLineIndex].push(edgeID);
 							

@@ -39,6 +39,8 @@ let _edgeHighlightPair = [null, null];
 let _faceHighlight = null;
 let _previewCube = null;
 
+const _hingeHighlights = [];
+
 export const setPolyViewTemplates = function(templates){
 	_modelTemplates.cube = templates.cube.clone();
 	_modelTemplates.face = templates.face.clone();
@@ -223,8 +225,17 @@ export const PolycubeVisualHandler = {
 
 				let hingeHighlight = edgeObj.getObjectByName("hinge");
 
+				_hingeHighlights.push(hingeHighlight);
+
 				hingeHighlight.visible = true;
 			});
+		});
+	},
+	hideHingeLines(polycubeID){
+		let polycube = _viewPolycubes.get(polycubeID);
+
+		_hingeHighlights.map((hingeHighlight) => {
+				hingeHighlight.visible = false;
 		});
 	},
 	//Shows the appropriate face mouse-over highlight
@@ -242,9 +253,11 @@ export const PolycubeVisualHandler = {
 		_faceHighlight.updateMatrix();
 		_faceHighlight.visible = true;
 
+		_visibleHighlights.push(_faceHighlight);
+
 		//polycube.add(_faceHighlight);
 
-		_visibleHighlights.push(_faceHighlight);
+		
 	},
 	//Highlight mode meant for debugging. Shows the face and its neighbors.
 	showFaceAdjacencyHighlight: (polycubeID, mainFaceID, faceNeighborIDs) => {

@@ -411,7 +411,7 @@ export class Polycube {
 	}
 
 	tapeFaces(faceID1, faceID2){
-		P_PRIVATES.get(this).dualGraph.tapeFaces(faceID1, faceID2);
+		return P_PRIVATES.get(this).dualGraph.tryTapeFaces(faceID1, faceID2);
 	}
 
 	//Removes all references to this object

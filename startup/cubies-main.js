@@ -192,8 +192,10 @@ const hingeMode = new Mode({
 
 //Object representing Cubies' behaviour when the user is trying to tape two faces together
 const tapeMode = new Mode({
-	startMode(face1){
+	startMode(){
 		Cubies.modes.inTape = true;
+		Cubies.cache.tapeFace1 = Cubies.cache.hoverFaceID;
+		PolycubeVisualHandler.hideHighlights();
 	},
 	endMode(){
 		Cubies.modes.inTape = false;
@@ -207,9 +209,17 @@ const tapeMode = new Mode({
 		Cubies.cache.tapeFace2 = Cubies.cache.hoverFaceID;
 
 		//Check if taping was valid. If not, set `tapeFace2` back to null.
-		if(!Cubies.cache.focusPolycube.tapeFaces(Cubies.cache.tapeFace1, Cubies.cache.tapeFace2))
+		let result = Cubies.cache.focusPolycube.tapeFaces(Cubies.cache.tapeFace1, Cubies.cache.tapeFace2)
+		if(result == null)
 		{
 			Cubies.cache.tapeFace2 = null;
+		}
+		else{
+			PolycubeVisualHandler.hideCutHighlight(Cubies.cache.focusPolycube.ID, result.tapedEdges[0], result.tapedEdges[1]);
+			PolycubeVisualHandler.hideHingeLines(Cubies.cache.focusPolycube.ID);
+			for(var res of result.cutEdges){
+				PolycubeVisualHandler.showHingeLines(Cubies.cache.focusPolycube.ID, Cubies.cache.focusPolycube.getCutTreeHingeLines(res));
+			}
 		}
 	}
 });
@@ -239,10 +249,6 @@ function doRotate(){
 
 	let faceData = polycube.getFace(edgeData.parentID);
 
-	console.log(faceData.ID);
-	console.log(faceData.position);
-	console.log(edgeData.position);
-	console.log(edgeData.axis);
 	let arrowData = Cubies.cache.arrowData;
 	
 	//Determine the radians given what arrow was pressed, the direction of the faces adjacent
@@ -257,9 +263,6 @@ function doRotate(){
 	let dirFromHinge = new THREE.Vector3().subVectors(faceData.position, edgeData.position);
 	dirFromHinge.normalize();
 	dirFromHinge = toLatticeVector(dirFromHinge);
-
-	//console.log(cross);
-	//console.log(dirFromHinge);
 	
 	if(!cross.equals(dirFromHinge)){
 		dirMultiplier = -dirMultiplier;
@@ -387,7 +390,10 @@ export const CubiesMain = function(modelTemplates){
 						}
 					}
 					else if(Cubies.flags.isOverFace){
-
+						if(Cubies.flags.isShiftDown){
+							startMode(tapeMode);
+							switchedMode = true;
+						}
 					}
 				}
 			}
@@ -437,7 +443,7 @@ export const CubiesMain = function(modelTemplates){
 			Cubies.flags.isOverFace = true;
 		}
 		else if((Cubies.cache.hoverEdgeID = SceneHandler.pick("edge", InputHandler.getMousePosition())) !== 0){
-			console.log(Cubies.cache.hoverEdgeID);
+			//console.log(Cubies.cache.hoverEdgeID);
 			Cubies.flags.isOverEdge = true;
 		}
 
