@@ -12,6 +12,9 @@ import { Polycube } from '../api/polycube.js';
 //import mode handler class
 import { Mode } from '../handlers/modes/mode.js';
 
+//import tutorial flags
+import { TutorialFlags } from '../handlers/handle-tutorial.js';
+
 //Cubies Main module. This module should contain all of Cubies' main functions. These functions should be simply
 //taking inputs and sending instructions to the appropriate handlers.
 const Cubies = {
@@ -24,7 +27,8 @@ const Cubies = {
 		isOverEdge: false,
 		isOverFace: false,
 		doUpdateCuts: false,
-		doUpdateEdges: false
+		doUpdateEdges: false,
+		inTutorial: false
 	},
 	cache : {
 		hoverEdgeID: 0,
@@ -64,6 +68,7 @@ const defaultMode = new Mode({
 	mouseUp: () => {
 		//Do not do anything if we aren't hovering over an edge or one of the keys are pressed.
 		if(!Cubies.flags.isOverEdge || Cubies.flags.isControlDown || Cubies.flags.isShiftDown) { return; };
+		if(Cubies.flags.inTutorial && !TutorialFlags.inAddCube){ return; }
 
 		let edgeToCut = Cubies.cache.hoverEdgeID;
 		let focusPolycube = Cubies.cache.focusPolycube;
@@ -238,6 +243,16 @@ function interruptMode(...args){
 		Cubies.modes.currentMode.endMode(...args);
 }
 
+function tryDeletePolycube(){
+
+	if(Cubies.cache.focusPolycube == null){ return;}
+
+	PolycubeVisualHandler.onDestroyPolycube(Cubies.cache.focusPolycube.ID);
+	Cubies.cache.focusPolycube.destroy();
+	Cubies.cache.focusPolycube = null;
+	GUIHandler.switchToCreatePolycubeView(0);
+}
+
 //Functions that update view
 function doRotate(){
 	let polycube = Cubies.cache.focusPolycube;
@@ -359,13 +374,16 @@ export const CubiesMain = function(modelTemplates){
 		startMode(addCubeMode);
 	}
 
+	GUIHandler.callbacks.onTutorialClick = () => {
+		Cubies.flags.inTutorial = !Cubies.flags.inTutorial;
+
+		tryDeletePolycube();
+	}
+
 	GUIHandler.callbacks.onDeletePolycube = () => {
 		startMode(defaultMode);
 
-		PolycubeVisualHandler.onDestroyPolycube(Cubies.cache.focusPolycube.ID);
-		Cubies.cache.focusPolycube.destroy();
-		Cubies.cache.focusPolycube = null;
-		GUIHandler.switchToCreatePolycubeView(0);
+		tryDeletePolycube();
 	}
 
 	//Define input handler function callbacks
