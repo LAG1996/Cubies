@@ -10,7 +10,7 @@ Cubies is a research tool made to make thinking about [polycube](https://en.wiki
 - unfold/fold polycubes
 - tape faces back together
 
-You can check [Cubies](http://andrewwinslow.com/cubies) out for yourself right now!
+You can check [Cubies](https://lag1996.github.io/Cubies/) out for yourself right now!
 
 ## What's *in* Cubies?
 
