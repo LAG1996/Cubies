@@ -8,13 +8,25 @@
 	position:absolute;
 }
 
-#tutorial-part{
+
+#tutorial-gui{
+	margin-top: 3em;
+	width: 24rem;
+	}
+
+#tutorial-title{
+	margin-top: 1em;
+	margin-left: .5em;
+}
+
+#tutorial-prompt{
 	padding-right: 2rem;
 	text-align: right;
+	color: #FEFEFE;
 }
 
 #tutorial-panel-row{
-	width: 25rem;
+	width: 2em;
 }
 
 #load-polycube{

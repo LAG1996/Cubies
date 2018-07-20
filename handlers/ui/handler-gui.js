@@ -51,10 +51,9 @@ export const GUIHandler = {
 		else{
 			$("#gui").hide();
 		}
-	}
+	},
+	inTutorial: false
 }
-
-let inTutorial = false;
 $("#exit-tutorial-btn").hide();
 
 //Bind events to buttons
@@ -63,15 +62,15 @@ $("#add-cube-active").on("click", function(){ GUIHandler.callbacks.onAddCube();}
 $("#load-polycube").on("click", function(){ GUIHandler.callbacks.onLoadPoly(); });
 $(".tutorial-btn").on("click", function(){
 
-	if(inTutorial){
+	GUIHandler.inTutorial = !GUIHandler.inTutorial;
+
+	if(GUIHandler.inTutorial){
 		$("#enter-tutorial-btn").hide();
 		$("#exit-tutorial-btn").show();
-		inTutorial = false;
 	}
 	else{
 		$("#exit-tutorial-btn").hide();
 		$("#enter-tutorial-btn").show();
-		inTutorial = true;
 	}
 
 	GUIHandler.callbacks.onTutorialClick();

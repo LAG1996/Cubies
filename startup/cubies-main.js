@@ -13,7 +13,7 @@ import { Polycube } from '../api/polycube.js';
 import { Mode } from '../handlers/modes/mode.js';
 
 //import tutorial flags
-import { TutorialFlags } from '../handlers/handle-tutorial.js';
+import { TutorialHandler, TutorialFlags } from '../handlers/handle-tutorial.js';
 
 //Cubies Main module. This module should contain all of Cubies' main functions. These functions should be simply
 //taking inputs and sending instructions to the appropriate handlers.
@@ -376,6 +376,13 @@ export const CubiesMain = function(modelTemplates){
 
 	GUIHandler.callbacks.onTutorialClick = () => {
 		Cubies.flags.inTutorial = !Cubies.flags.inTutorial;
+
+		if(Cubies.flags.inTutorial){
+			TutorialHandler.startTutorial();
+		}
+		else{
+			TutorialHandler.stopTutorial();
+		}
 
 		tryDeletePolycube();
 	}
