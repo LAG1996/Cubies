@@ -402,8 +402,6 @@ function addCube(polycube, newCubeID, cubePosition){
 
 	let scaledCubePosition = cubePosition.clone().multiplyScalar(2);
 
-	console.log(viewNewCube);
-
 	viewNewCube.children.map((face) => {
 		let position = new THREE.Vector3().addVectors(face.position, scaledCubePosition);
 		let rotation = face.getWorldRotation();
