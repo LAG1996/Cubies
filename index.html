@@ -1,4 +1,4 @@
-<!doctype <!DOCTYPE html>>
+<!doctype <!DOCTYPE html>
 <html>
 	<head>
 		<title>Cubies: The Polycube Editor</title>
@@ -20,79 +20,26 @@
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
 
 		<div id = "main-canvas"></div>
-		<div id = "gui">
+		<div id = "gui" class = "fixed-top">
 
-		<nav class = "navbar fixed-top navbar-light" id = "option-nav">
-
+			<ul class = "nav" id = "option-nav">
+				<li class = "nav-item">
 				<button id = "add-polycube" class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#modalAddPolycube">New Polycube</button>
+				</li>
+				<li class = "nav-item"><button id = "add-cube-active" class = "btn btn-outline-warning mr-2 ml-2 btn-poly-mode">Add Cube</button></li>
+				<li class = "nav-item"><button id = "add-cube-inactive" class = "btn btn-outline-secondary mr-2 ml-2 btn-poly-mode">Add Cube</button></li>	
 				
-				<button id = "add-cube-active" class = "btn btn-outline-warning mr-2 ml-2 btn-poly-mode">Add Cube</button>
-				<button id = "add-cube-inactive" class = "btn btn-outline-secondary mr-2 ml-2 btn-poly-mode">Add Cube</button>	
-				
-				<button class = "btn btn-outline-light btn-poly-mode" id = "save-polycube">Save</button>
-				<button id = "delete-polycube" class = "btn btn-outline-light mr-2 ml-2  btn-poly-mode">Destroy</button>
+				<li class = "nav-item"><button class = "btn btn-outline-light btn-poly-mode" id = "save-polycube">Save</button></li>
+				<li class = "nav-item"><button id = "delete-polycube" class = "btn btn-outline-light mr-2 ml-2  btn-poly-mode">Destroy</button></li>
 
-				<button class = "btn btn-outline-info tutorial-btn" id = "enter-tutorial-btn">Tutorial</button>
-				<button class = "btn btn-outline-danger tutorial-btn" id = "exit-tutorial-btn">Exit Tutorial</button>
-
-		</nav>
-
-		<script src = "/imports/api/detectmobilebrowser.js"></script>
-		<script type="text/javascript">
-			$(".btn-poly-mode").hide();
-
-			if(window.mobileCheck()){
-				$("#enter-tutorial-btn").hide();
-			}
-
-			$("#exit-tutorial-btn").hide();
-		</script>
-
-		<!--Add polycube modal-->
-		<div id = "modalAddPolycube" class="modal fade" tabindex="-1" role="dialog">
-		  <div class="modal-dialog modal-lg" role="document">
-		    <div class="modal-content">
-		      <div class="modal-header">
-		        <h5 class="modal-title">Add a Polycube</h5>
-		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-		          <span aria-hidden="true">&times;</span>
-		        </button>
-		      </div>
-		      <div class="modal-body">
-		      	<!--<label type = "button" for = "load_polycube" class = "btn btn-dark">Load polycube from file...</label>
-		      	<input type = "file" id = "load_polycube" style = "display: none"></input>
-		      	<p class = "text-center">-OR-</p>-->
-		      	<h3>Name the polycube and create from scratch:</h3>
-		      	<form>
-  					<div class="form-group">
-  					  <label for="name">Name</label>
-  					  <input type="text" class="form-control" id="poly_name" aria-describedby="poly_name" placeholder="Enter polycube name">
-  					</div>
-  					<button class="btn btn-outline-success" type = "button" id = "create-polycube" data-dismiss="modal">Create</button>
-  				</form>
-
-  					<p class = "text-center">-OR-</p>
-  					<!--<h3>Pick from one of these templates!</h3>-->
-
-
-  					<div id = "poly_prev"></div>
-					<div class = "row" id = "prev_row_template"></div>
-					<div class = "col-4" id = "prev_card_template" style = "display: none">
-						<div class = "card">
-							<div id = "prev_container"></div>
-							<div class = "card-body">
-								<button class = "btn btn-outline-success select_prev_btn" id = "select_prev_btn" data-dismiss="modal">I am a card</button>
-							</div>
-						</div>
-					</div>
-
-		      <div class="modal-footer">
-		      </div>
-		    </div>
-		  </div>
+				<li class = "nav-item"><button class = "btn btn-outline-info tutorial-btn" id = "enter-tutorial-btn">Tutorial</button></li>
+				<li class = "nav-item"><button class = "btn btn-outline-danger tutorial-btn" id = "exit-tutorial-btn">Exit Tutorial</button></li>
+			</ul>
+			
+			<script type = "text/javascript">
+				$("#exit-tutorial-btn").hide();
+			</script>
 		</div>
-	</div>
-</div>
 
 			<div id = "tutorial-gui" class = "fixed-top">
 				<div class = "card">
@@ -136,4 +83,49 @@
 		<!--start Cubies-->
 		<script type = "module" src = "./startup/runCubies.js"></script>
 	</body>
+
+	<!--Add polycube modal-->
+	<div id = "modalAddPolycube" class="modal fade" tabindex="-1" role="dialog">
+	  <div class="modal-dialog modal-lg" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title">Add a Polycube</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	      	<!--<label type = "button" for = "load_polycube" class = "btn btn-dark">Load polycube from file...</label>
+	      	<input type = "file" id = "load_polycube" style = "display: none"></input>
+	      	<p class = "text-center">-OR-</p>-->
+	      	<h3>Name the polycube and create from scratch:</h3>
+	      	<form>
+  				<div class="form-group">
+  				  <label for="name">Name</label>
+  				  <input type="text" class="form-control" id="poly_name" aria-describedby="poly_name" placeholder="Enter polycube name">
+  				</div>
+  				<button class="btn btn-outline-success" type = "button" id = "create-polycube" data-dismiss="modal">Create</button>
+  			</form>
+
+  				<p class = "text-center">-OR-</p>
+  				<!--<h3>Pick from one of these templates!</h3>-->
+
+
+  				<div id = "poly_prev"></div>
+				<div class = "row" id = "prev_row_template"></div>
+				<div class = "col-4" id = "prev_card_template" style = "display: none">
+					<div class = "card">
+						<div id = "prev_container"></div>
+						<div class = "card-body">
+							<button class = "btn btn-outline-success select_prev_btn" id = "select_prev_btn" data-dismiss="modal">I am a card</button>
+						</div>
+					</div>
+				</div>
+
+	      <div class="modal-footer">
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	</div>
 </html>

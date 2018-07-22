@@ -11,6 +11,8 @@ $gui-pad-bot: 1em;
 }
 
 #option-nav{
+	padding-top: $gui-pad-top;
+	padding-bottom: $gui-pad-bot;
 	background: #434343;
 }
 

@@ -1,11 +1,6 @@
 #main-canvas {
   position: relative; }
 
-#gui {
-  width: 100%;
-  top: 0;
-  position: absolute; }
-
 #option-nav {
   padding-top: 1em;
   padding-bottom: 1em;
