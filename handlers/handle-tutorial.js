@@ -1,17 +1,30 @@
 //Flags for the tutorial
-export const TutorialFlags = {
+export const TutorialStateFlags = {
 	inCreatePoly: false,
 	inAddCube: false,
 	inCut: false,
 	inHinge: false,
+	inPickDecomp: false,
 	inUnfold: false,
 	inFold: false,
 	inTape: false
 };
 
-export const TutorialCache = {
-
+export const TutorialConditionCache = {
+	chosenDecompIndex: null,
 };
+
+export const TutorialConditionFlags = {
+	didCreatePoly: false,
+	didAddCube: false,
+	didCut: false,
+	didHinge: false,
+	didPickHinge: false,
+	didPickDecomp: false,
+	didPickWhite: false,
+	didPickBlack: false,
+	didTape: false
+}
 
 export const PromptNameToIndex = {}
 
@@ -19,12 +32,18 @@ const _tutorialPrompts = [];
 let _currentPromptIndex = 0;
 
 class TutorialPrompt{
-	constructor(promptTitle, promptText, flag, showNext){
+	constructor(promptTitle, promptText, flag, showNext, videoLink, startFunc, conditionFunc){
 		this.title = promptTitle;
 		this.prompt = promptText;
 		this.flag = flag;
 		this.showNext = showNext;
+		this.onStartPrompt = startFunc;
+		this.isConditionSatisfied = conditionFunc;
+		this.videoLink = videoLink;
 	}
+
+	onStartPrompt(){}
+	isConditionSatisfied(){}
 }
 
 const promptTextList = [
@@ -52,6 +71,7 @@ const promptTitleList = [
 	"Cutting",
 	"More Cuts",
 	"Hinging",
+	"Picking a Side",
 	"Unfolding",
 	"Folding",
 	"Taping",
@@ -67,9 +87,11 @@ const activatedFlags = [
 	"inCut",
 	"inCut",
 	"inHinge",
+	"inPickDecomp",
 	"inUnfold",
 	"inFold",
-	"inTape"
+	"inTape",
+	""
 ]
 
 const showNextBtn = [
@@ -84,12 +106,61 @@ const showNextBtn = [
 	false,
 	false,
 	false,
+	false,
 	false
+]
+
+const promptVidLinks = [
+	"",
+	"",
+	"https://www.youtube.com/embed/wHrjtLwg9HI",
+	"https://www.youtube.com/embed/wE2twl3uUIs",
+	"https://www.youtube.com/embed/wE2twl3uUIs",
+	"https://www.youtube.com/embed/AjvPU5pNs6w",
+	"https://www.youtube.com/embed/AjvPU5pNs6w",
+	"https://www.youtube.com/embed/Gybbu--Otik",
+	"https://www.youtube.com/embed/Gybbu--Otik",
+	"https://www.youtube.com/embed/yyIBv2EsYTM",
+	"https://www.youtube.com/embed/yyIBv2EsYTM",
+	"https://www.youtube.com/embed/qSTWIABPV6o",
+	""
+]
+
+const promptStartFuncs = [
+	() => { $("#add-polycube").hide(); },
+	() => {},
+	() => { $("#add-polycube").show(); },
+	() => { $("#save-polycube").hide(); $("#delete-polycube").hide(); },
+	() => { },
+	() => { },
+	() => { },
+	() => { },
+	() => { },
+	() => { },
+	() => { },
+	() => { },
+	() => { },
+]
+
+const promptConditionFuncs = [
+	() => { return true; },
+	() => { return true; },
+	() => { return TutorialConditionFlags.didCreatePoly; },
+	() => { return TutorialConditionFlags.didAddCube; },
+	() => { return true; },
+	() => { return TutorialConditionFlags.didCut; },
+	() => { return TutorialConditionFlags.didHinge; },
+	() => { return TutorialConditionFlags.didPickHinge; },
+	() => { return TutorialConditionFlags.didPickDecomp; },
+	() => { return TutorialConditionFlags.didPickWhite; },
+	() => { return TutorialConditionFlags.didPickBlack; },
+	() => { return TutorialConditionFlags.didTape; }
 ]
 
 for(var index in promptTextList)
 {
-	_tutorialPrompts.push(new TutorialPrompt(promptTitleList[index], promptTextList[index], activatedFlags[index], showNextBtn[index]));
+	_tutorialPrompts.push(new TutorialPrompt(promptTitleList[index], promptTextList[index], activatedFlags[index], showNextBtn[index], 
+		promptVidLinks[index], promptStartFuncs[index], promptConditionFuncs[index]));
 }
 
 
@@ -102,31 +173,51 @@ export const TutorialHandler = {
 		setPromptGUI(firstPrompt.title, firstPrompt.prompt, firstPrompt.showNext);
 
 		$("#tutorial-gui").show();
+		$("#tutorial-example-btn").hide();
+		firstPrompt.onStartPrompt();
 
 	},
-	goToNextPrompt: () => {
+
+	tryGoToNextPrompt: () => {
+
+		//Check the current prompt. If it's condition is satisfied, continue. Otherwise, return false.
+		if(!_tutorialPrompts[_currentPromptIndex].isConditionSatisfied()){
+			return false;
+		}
+
 		_currentPromptIndex += 1;
 
 		let nextPrompt = _tutorialPrompts[_currentPromptIndex];
 
-		setPromptGUI(nextPrompt.title, nextPrompt.prompt, nextPrompt.showNext);
+		setPromptGUI(nextPrompt.title, nextPrompt.prompt, nextPrompt.showNext, nextPrompt.videoLink);
 
-		for(var flag in TutorialFlags){
-			TutorialFlags[flag] = false;
+		for(var flag in TutorialStateFlags){
+			TutorialStateFlags[flag] = false;
 		}
 
-		TutorialFlags[nextPrompt.flag] = true;
+		TutorialStateFlags[nextPrompt.flag] = true;
+		nextPrompt.onStartPrompt();
+
+		return true;
 	},
 	stopTutorial: () => {
 		$("#tutorial-gui").hide();
+
+		for(var flag in TutorialConditionFlags){
+			TutorialConditionFlags[flag] = false;
+		}
+
+		for(var obj in TutorialConditionCache){
+			TutorialConditionCache[obj] = null;
+		}
 	}
 }
 
 $("#tutorial-next-btn").on("click", () => {
-	TutorialHandler.goToNextPrompt();
+	TutorialHandler.tryGoToNextPrompt();
 });
 
-function setPromptGUI(promptTitle, promptText, showsNextBtn){
+function setPromptGUI(promptTitle, promptText, showsNextBtn, videoLink){
 
 	$("#tutorial-title").text(promptTitle);
 	$("#tutorial-prompt").text(promptText);
@@ -135,4 +226,12 @@ function setPromptGUI(promptTitle, promptText, showsNextBtn){
 		$("#tutorial-next-btn").show();
 	else
 		$("#tutorial-next-btn").hide();
+
+	/*if(videoLink !== ""){
+		$("#tutorial-example-btn").show();
+		$("#example-vid").attr("src", videoLink);
+	}
+	else{
+		$("#tutorial-example-btn").hide();
+	}*/
 }

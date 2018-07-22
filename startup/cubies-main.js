@@ -13,7 +13,7 @@ import { Polycube } from '../api/polycube.js';
 import { Mode } from '../handlers/modes/mode.js';
 
 //import tutorial flags
-import { TutorialHandler, TutorialFlags } from '../handlers/handle-tutorial.js';
+import { TutorialHandler, TutorialStateFlags, TutorialConditionFlags, TutorialConditionCache } from '../handlers/handle-tutorial.js';
 
 //Cubies Main module. This module should contain all of Cubies' main functions. These functions should be simply
 //taking inputs and sending instructions to the appropriate handlers.
@@ -68,7 +68,7 @@ const defaultMode = new Mode({
 	mouseUp: () => {
 		//Do not do anything if we aren't hovering over an edge or one of the keys are pressed.
 		if(!Cubies.flags.isOverEdge || Cubies.flags.isControlDown || Cubies.flags.isShiftDown) { return; };
-		if(Cubies.flags.inTutorial && !TutorialFlags.inAddCube){ return; }
+		if(Cubies.flags.inTutorial && !TutorialStateFlags.inCut){ return; }
 
 		let edgeToCut = Cubies.cache.hoverEdgeID;
 		let focusPolycube = Cubies.cache.focusPolycube;
@@ -80,11 +80,22 @@ const defaultMode = new Mode({
 		//Check if this cut was successful. If not, then don't do anything.
 		if(!isCutSuccessful) return;
 
+		if(Cubies.flags.inTutorial){
+			TutorialConditionFlags.didCut = true;
+			TutorialHandler.tryGoToNextPrompt();
+		}
+
 		//Tell the polycube visualizer to reflect that this edge has been cut by showing the cut highlight
 		PolycubeVisualHandler.showCutHighlight(focusPolycube.ID, edgeToCut, edgeToCutIncident);
 
 		//Tell the polycube visualizer to show any hinge lines that may have formed
-		PolycubeVisualHandler.showHingeLines(focusPolycube.ID, focusPolycube.getCutTreeHingeLines(edgeToCut));
+		let hingeLines = focusPolycube.getCutTreeHingeLines(edgeToCut);
+
+		if(Cubies.flags.inTutorial && hingeLines.length > 0){
+			TutorialConditionFlags.didHinge = true;
+			TutorialHandler.tryGoToNextPrompt();
+		}
+		PolycubeVisualHandler.showHingeLines(focusPolycube.ID, hingeLines);
 
 		//Tell the toolbar handler to disable the add cube button
 		GUIHandler.disableAddCubeButton();
@@ -129,6 +140,11 @@ const addCubeMode = new Mode({
 			
 			if(polycube.addCube(cubePosition)){
 				PolycubeVisualHandler.onNewCube(polycube, cubePosition);
+
+				if(Cubies.flags.inTutorial){
+					TutorialConditionFlags.didAddCube = true;
+					TutorialHandler.tryGoToNextPrompt();
+				}
 			}
 		}
 
@@ -155,6 +171,7 @@ const hingeMode = new Mode({
 	},
 	endMode: () => {
 		Cubies.modes.inHingeMode = false;
+		Cubies.flags.inPickArrow = false;
 
 		//Hide the arrows
 		ArrowHandler.hideArrows();
@@ -172,10 +189,26 @@ const hingeMode = new Mode({
 				Cubies.flags.hasArrowData = true;
 				Cubies.cache.arrowData = ArrowHandler.getChosenArrowData(arrowID);
 
-				doRotate();
+				if(Cubies.flags.inTutorial){
+					if(TutorialStateFlags.inUnfold && Cubies.cache.arrowData.color === "white"){
+						TutorialConditionFlags.didPickWhite = true;
+						TutorialHandler.tryGoToNextPrompt();
+						doRotate();
+					}
+					else if(TutorialStateFlags.inFold && Cubies.cache.arrowData.color === "black"){
+						TutorialConditionFlags.didPickBlack = true;
+						TutorialHandler.tryGoToNextPrompt();
+						doRotate();
+					}
+				}
+				else{
+					doRotate();
+				}
 			}
-
-			Cubies.flags.inPickArrow = false;
+			
+			if(!Cubies.flags.inTutorial){
+				Cubies.flags.inPickArrow = false;
+			}
 		}
 
 		if(!Cubies.flags.hasArrowData && Cubies.flags.isOverFace)
@@ -189,8 +222,25 @@ const hingeMode = new Mode({
 			Cubies.cache.dualGraphDecompObj.decompIndex = chosenDecompIndex;
 			Cubies.cache.chosenDecomp = [...chosenDecomp];
 
-			ArrowHandler.showArrowsAt(faceData.position.clone(), faceData.normal.clone());
-			Cubies.flags.inPickArrow = true;
+			if(Cubies.flags.inTutorial){
+
+				if(TutorialStateFlags.inPickDecomp){
+					TutorialConditionFlags.didPickDecomp = true;
+					TutorialConditionCache.chosenDecompIndex = chosenDecompIndex;
+					TutorialHandler.tryGoToNextPrompt();
+					
+					ArrowHandler.showArrowsAt(faceData.position.clone(), faceData.normal.clone());
+					Cubies.flags.inPickArrow = true;
+				}
+				else if(TutorialStateFlags.inFold && TutorialConditionCache.chosenDecompIndex === chosenDecompIndex){
+					ArrowHandler.showArrowsAt(faceData.position.clone(), faceData.normal.clone());
+					Cubies.flags.inPickArrow = true;
+				}
+			}
+			else{
+				ArrowHandler.showArrowsAt(faceData.position.clone(), faceData.normal.clone());
+				Cubies.flags.inPickArrow = true;
+			}
 		}
 	}
 });
@@ -200,13 +250,14 @@ const tapeMode = new Mode({
 	startMode(){
 		Cubies.modes.inTape = true;
 		Cubies.cache.tapeFace1 = Cubies.cache.hoverFaceID;
-		PolycubeVisualHandler.hideHighlights();
 	},
 	endMode(){
 		Cubies.modes.inTape = false;
 
 		Cubies.cache.tapeFace1 = null;
 		Cubies.cache.tapeFace2 = null;
+
+		PolycubeVisualHandler.hideHighlights();
 	},
 	mouseUp(){
 		if(!Cubies.flags.isOverFace){ return; }
@@ -224,6 +275,11 @@ const tapeMode = new Mode({
 			PolycubeVisualHandler.hideHingeLines(Cubies.cache.focusPolycube.ID);
 			for(var res of result.cutEdges){
 				PolycubeVisualHandler.showHingeLines(Cubies.cache.focusPolycube.ID, Cubies.cache.focusPolycube.getCutTreeHingeLines(res));
+			}
+
+			if(Cubies.flags.inTutorial){
+				TutorialConditionFlags.didTape = true;
+				TutorialHandler.tryGoToNextPrompt();
 			}
 		}
 	}
@@ -245,11 +301,13 @@ function interruptMode(...args){
 
 function tryDeletePolycube(){
 
-	if(Cubies.cache.focusPolycube == null){ return;}
+	if(Cubies.cache.focusPolycube != null){
+		PolycubeVisualHandler.onDestroyPolycube(Cubies.cache.focusPolycube.ID);
+		Cubies.cache.focusPolycube.destroy();
+		Cubies.cache.focusPolycube = null;
+	}
 
-	PolycubeVisualHandler.onDestroyPolycube(Cubies.cache.focusPolycube.ID);
-	Cubies.cache.focusPolycube.destroy();
-	Cubies.cache.focusPolycube = null;
+	ArrowHandler.hideArrows();
 	GUIHandler.switchToCreatePolycubeView(0);
 }
 
@@ -345,8 +403,6 @@ export const CubiesMain = function(modelTemplates){
 
 	SceneHandler.addToPickingScene("arrow", hingeArrows.pickArrowPair);
 
-	SceneHandler.printViewSceneData();
-
 	//Set the current mode to the default mode
 	startMode(defaultMode);
 
@@ -367,6 +423,11 @@ export const CubiesMain = function(modelTemplates){
 			GUIHandler.switchToPolycubeView(false, polycubeName);
 
 			Cubies.cache.focusPolycube = newPolycube;
+
+			if(TutorialStateFlags.inCreatePoly){
+				TutorialConditionFlags.didCreatePoly = true;
+				TutorialHandler.tryGoToNextPrompt();
+			}
 		}
 	}
 
@@ -377,14 +438,14 @@ export const CubiesMain = function(modelTemplates){
 	GUIHandler.callbacks.onTutorialClick = (inTutorial) => {
 		Cubies.flags.inTutorial = inTutorial;
 
+		tryDeletePolycube();
+
 		if(Cubies.flags.inTutorial){
 			TutorialHandler.startTutorial();
 		}
 		else{
 			TutorialHandler.stopTutorial();
-		}
-
-		tryDeletePolycube();
+		}	
 	}
 
 	GUIHandler.callbacks.onDeletePolycube = () => {
@@ -406,15 +467,21 @@ export const CubiesMain = function(modelTemplates){
 			if(Cubies.modes.inDefault){
 				if(Cubies.flags.isShiftDown){
 
-					if(Cubies.flags.isOverEdge){
+					if(((Cubies.flags.inTutorial && (TutorialStateFlags.inHinge || TutorialStateFlags.inFold)) || !Cubies.flags.inTutorial) && Cubies.flags.isOverEdge){
 						let dualGraphDecomp = Cubies.cache.focusPolycube.getDualGraphDecomposition(Cubies.cache.hoverEdgeID);
 						if(dualGraphDecomp != null){
+
+							if(Cubies.flags.inTutorial){
+								TutorialConditionFlags.didPickHinge = true;
+								TutorialHandler.tryGoToNextPrompt();
+							}
+
 							Cubies.cache.dualGraphDecompObj = JSON.parse(JSON.stringify(dualGraphDecomp));
 							startMode(hingeMode);
 							switchedMode = true;
 						}
 					}
-					else if(Cubies.flags.isOverFace){
+					else if(((Cubies.flags.inTutorial && TutorialStateFlags.inTape) || !Cubies.flags.inTutorial) && Cubies.flags.isOverFace){
 						if(Cubies.flags.isShiftDown){
 							startMode(tapeMode);
 							switchedMode = true;
@@ -422,7 +489,7 @@ export const CubiesMain = function(modelTemplates){
 					}
 				}
 			}
-			else if(Cubies.modes.inHingeMode){
+			else if(!Cubies.flags.inTutorial && Cubies.modes.inHingeMode){
 				if(!Cubies.flags.isOverFace && !Cubies.flags.inPickArrow){
 					startMode(defaultMode);
 					switchedMode = true;
@@ -446,7 +513,7 @@ export const CubiesMain = function(modelTemplates){
 				}
 			}
 			else if(Cubies.modes.inHingeMode){
-				if(Cubies.flags.hasArrowData || !Cubies.flags.isOverFace){
+				if(Cubies.flags.hasArrowData || (!Cubies.flags.inTutorial && !Cubies.flags.isOverFace)){
 					startMode(defaultMode);
 				}
 			}

@@ -61,9 +61,9 @@
 					<div class = "card-footer">
 						<div class = "row">
 							<div class = "col-8">
-								<!--<button class = "btn btn-outline-warning" data-toggle = "modal" data-target = "#tutorial-modal">
+								<button id = "tutorial-example-btn" class = "btn btn-outline-warning" data-toggle = "modal" data-target = "#example-modal">
 									See An Example
-								</button>-->
+								</button>
 							</div>
 							<div class = "col-4">
 								<button class = "btn btn-outline-success" id = "tutorial-next-btn">Next</button>
@@ -136,5 +136,32 @@
 	    </div>
 	  </div>
 	</div>
+	</div>
+
+	<!--Example modal-->
+	<div id = "example-modal" class="modal" tabindex="-1" role="dialog">
+	  <div class="modal-dialog modal-lg" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title">Example</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class = "modal-body">
+	      	<div class="embed-responsive embed-responsive-16by9">
+	      		<iframe id = "example-vid" width="560" height="315" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+	      		<!--<iframe id = "add_cube_vid" width="560" height="315" src="https://www.youtube.com/embed/wE2twl3uUIs" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+	      		<iframe id = "add_cut_vid" width="560" height="315" src="https://www.youtube.com/embed/AjvPU5pNs6w" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+	      		<iframe id = "crease_pick_vid" width="560" height="315" src="https://www.youtube.com/embed/Gybbu--Otik" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+	      		<iframe id = "fold_unfold_vid" width="560" height="315" src="https://www.youtube.com/embed/yyIBv2EsYTM" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+			    <iframe id = "tape_vid" width="560" height="315" src="https://www.youtube.com/embed/qSTWIABPV6o" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>-->
+			</div>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Close</button>
+	      </div>
+	    </div>
+	  </div>
 	</div>
 </html>
