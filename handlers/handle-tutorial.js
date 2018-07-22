@@ -226,12 +226,4 @@ function setPromptGUI(promptTitle, promptText, showsNextBtn, videoLink){
 		$("#tutorial-next-btn").show();
 	else
 		$("#tutorial-next-btn").hide();
-
-	/*if(videoLink !== ""){
-		$("#tutorial-example-btn").show();
-		$("#example-vid").attr("src", videoLink);
-	}
-	else{
-		$("#tutorial-example-btn").hide();
-	}*/
 }

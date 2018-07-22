@@ -448,6 +448,18 @@ export const CubiesMain = function(modelTemplates){
 		}	
 	}
 
+	GUIHandler.callbacks.onLoadPolycube = (file, isServerSide) => {
+		console.log("Loading ");
+		
+
+		if(isServerSide){
+			//Handle loading polycube templates from the server
+		}
+		else{
+			//Handle loading saved polycube data from the client 
+		}
+	}
+
 	GUIHandler.callbacks.onDeletePolycube = () => {
 		startMode(defaultMode);
 

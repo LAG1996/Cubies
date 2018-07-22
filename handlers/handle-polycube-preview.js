@@ -5,7 +5,7 @@
 */
 
 
-function PolyCubePreview(controller){
+/*function PolyCubePreview(controller){
 
 	//Save the controller
 	var myController = controller
@@ -104,7 +104,7 @@ function PolyCubePreview(controller){
 			}
 		}
 	 }))*/
-
+/*
 	function GeneratePreviewCard(polycube_name)
 	{
 		let card = $("#prev_card_template").clone()
@@ -277,4 +277,4 @@ function PreviewHandler(bg_color = 0xFFFFE6, polycube){
 
 		return myScene.children[1]
 	}
-}
+}*/

@@ -6,7 +6,7 @@ export const GUIHandler = {
 		onSavePolycube: () => {},
 		onTutorialClick: () => {},
 		onDeletePolycube: () => {},
-		onLoadPoly: () => {}
+		onLoadPolycube: () => {}
 	},
 	switchToCreatePolycubeView: () => {
 		$("#add-cube-active").hide();
@@ -58,7 +58,12 @@ export const GUIHandler = {
 //Bind events to buttons
 $("#create-polycube").on("click", function(){ GUIHandler.callbacks.onCreatePolycube();});
 $("#add-cube-active").on("click", function(){ GUIHandler.callbacks.onAddCube();});
-$("#load-polycube").on("click", function(){ GUIHandler.callbacks.onLoadPoly(); });
+$("#load-polycube").on("change", function(evt){ 
+	GUIHandler.callbacks.onLoadPolycube(event.target.files[0], false);
+
+	$("#load-polycube").val("");
+	$("#modalAddPolycube").modal("hide"); 
+});
 $(".tutorial-btn").on("click", function(){
 
 	GUIHandler.inTutorial = !GUIHandler.inTutorial;
