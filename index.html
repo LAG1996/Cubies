@@ -1,4 +1,4 @@
-<!doctype <!DOCTYPE html>
+<!doctype <!DOCTYPE html>>
 <html>
 	<head>
 		<title>Cubies: The Polycube Editor</title>
@@ -22,19 +22,20 @@
 		<div id = "main-canvas"></div>
 		<div id = "gui">
 
-		<ul class = "nav" id = "option-nav">
-			<li class = "nav-item">
-			<button id = "add-polycube" class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#modalAddPolycube">New Polycube</button>
-			</li>
-			<li class = "nav-item"><button id = "add-cube-active" class = "btn btn-outline-warning mr-2 ml-2 btn-poly-mode">Add Cube</button></li>
-			<li class = "nav-item"><button id = "add-cube-inactive" class = "btn btn-outline-secondary mr-2 ml-2 btn-poly-mode">Add Cube</button></li>	
-			
-			<li class = "nav-item"><button class = "btn btn-outline-light btn-poly-mode" id = "save-polycube">Save</button></li>
-			<li class = "nav-item"><button id = "delete-polycube" class = "btn btn-outline-light mr-2 ml-2  btn-poly-mode">Destroy</button></li>
+		<nav class = "navbar fixed-top navbar-light" id = "option-nav">
 
-			<li class = "nav-item"><button class = "btn btn-outline-info tutorial-btn" id = "enter-tutorial-btn">Tutorial</button></li>
-			<li class = "nav-item"><button class = "btn btn-outline-danger tutorial-btn" id = "exit-tutorial-btn">Exit Tutorial</button></li>
-		</ul>
+				<button id = "add-polycube" class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#modalAddPolycube">New Polycube</button>
+				
+				<button id = "add-cube-active" class = "btn btn-outline-warning mr-2 ml-2 btn-poly-mode">Add Cube</button>
+				<button id = "add-cube-inactive" class = "btn btn-outline-secondary mr-2 ml-2 btn-poly-mode">Add Cube</button>	
+				
+				<button class = "btn btn-outline-light btn-poly-mode" id = "save-polycube">Save</button>
+				<button id = "delete-polycube" class = "btn btn-outline-light mr-2 ml-2  btn-poly-mode">Destroy</button>
+
+				<button class = "btn btn-outline-info tutorial-btn" id = "enter-tutorial-btn">Tutorial</button>
+				<button class = "btn btn-outline-danger tutorial-btn" id = "exit-tutorial-btn">Exit Tutorial</button>
+
+		</nav>
 
 		<script src = "/imports/api/detectmobilebrowser.js"></script>
 		<script type="text/javascript">
