@@ -1,0 +1,34 @@
+#main-canvas {
+  position: relative; }
+
+#gui {
+  width: 100%;
+  top: 0;
+  position: absolute; }
+
+#option-nav {
+  padding-top: 1em;
+  padding-bottom: 1em;
+  background: #434343; }
+
+#tutorial-gui {
+  margin-top: 4em;
+  width: 24rem; }
+  #tutorial-gui .card {
+    background: transparent;
+    background-color: #434343; }
+
+#tutorial-title {
+  margin-top: 1em;
+  margin-left: .5em; }
+
+#tutorial-prompt {
+  padding-right: 2rem;
+  text-align: right;
+  color: #FEFEFE; }
+
+#tutorial-panel-row {
+  width: 2em; }
+
+#load-polycube {
+  visibility: hidden; }

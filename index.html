@@ -15,62 +15,37 @@
 		<!--import Bootstrap Javascript functions-->
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
 
-		<link rel="stylesheet" href = "/view/style/index.css">
+		<link rel="stylesheet" href = "/style/build/css/style.css">
 	</head>
 
 	<body>
 		<div id = "main-canvas"></div>
 		<div id = "gui">
-			<!--
-			<div class = "row fixed-top" id = "tutorial_panel_row">
-				<div class = "col-4">
-					<div class = "mt-5 card bg-dark" id = "tutorial_panel">
-						<div class = "card-head">
-							<div class = "row">
-								<div class = "col-6"></div>
-								<div class = "col-6"><h2 class="text-info mr-2">Tutorial</h2></div>
-							</div>
-							<p class="lead text-white" id = "tutorial_part">Part goes here</p>
-						</div>
-						<div class = "card-body">
-							<p class="text-white" id = "tutorial_prompt">Tutorial prompts go here</p>
-						</div>
-						<div class = "card-footer">
-							<div class = "row">
-								<div class = "col-8"><button class = "btn btn-outline-warning" data-toggle = "modal" data-target = "#example_modal" id = "tutorial_example">See An Example</button></div>
-								<div class = "col-4"><button class = "btn btn-outline-success" id = "tutorial_next">Next</button></div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>-->
 
-			<nav class = "navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id = "nav">
-				<a href = "#" class = "navbar-brand">Cubies</a>
-				<div class = "navbar-header">
-					<button type = "button" class = "navbar-toggler" data-toggle = "collapse" data-target = "#nav" aria-expanded = "false" aria-controls = "navbar">
-						<span class = "navbar-toggler-icon"></span>
-					</button>
-				</div>
-				<div id = "wv_navbar" class = "collapse navbar-collapse">
-					<ul class = "navbar-nav mr-auto">
-							<li class = "nav-item">
-								<li class = "nav-item"><button id = "add-polycube" class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#modalAddPolycube">New Polycube</button></li>
-							</li>
-							<li class = "nav-item"><button id = "add-cube-active" class = "btn btn-outline-warning mr-2 ml-2" id = "add-cube-active">Add Cube</button></li>
-							<li class = "nav-item"><button id = "add-cube-inactive" class = "btn btn-outline-secondary mr-2 ml-2">Add Cube</button></li>	
-							<li class = "nav-item"><button id = "delete-polycube" class = "btn btn-outline-light mr-2 ml-2">Delete Polycube</button></li>
+		<ul class = "nav" id = "option-nav">
+			<li class = "nav-item">
+			<button id = "add-polycube" class = "btn btn-outline-warning  mr-2 ml-2" data-toggle="modal" data-target = "#modalAddPolycube">New Polycube</button>
+			</li>
+			<li class = "nav-item"><button id = "add-cube-active" class = "btn btn-outline-warning mr-2 ml-2 btn-poly-mode">Add Cube</button></li>
+			<li class = "nav-item"><button id = "add-cube-inactive" class = "btn btn-outline-secondary mr-2 ml-2 btn-poly-mode">Add Cube</button></li>	
+			
+			<li class = "nav-item"><button class = "btn btn-outline-light btn-poly-mode" id = "save-polycube">Save</button></li>
+			<li class = "nav-item"><button id = "delete-polycube" class = "btn btn-outline-light mr-2 ml-2  btn-poly-mode">Destroy</button></li>
 
-					</ul>
+			<li class = "nav-item"><button class = "btn btn-outline-info tutorial-btn" id = "enter-tutorial-btn">Tutorial</button></li>
+			<li class = "nav-item"><button class = "btn btn-outline-danger tutorial-btn" id = "exit-tutorial-btn">Exit Tutorial</button></li>
+		</ul>
 
-					<ul class = "nav navbar-nav navbar-right">
-						<!--<li class = "nav-item"><button class = "btn btn-outline-info tutorial-btn" id = "enter-tutorial-btn">Tutorial</button></li>
-						<li class = "nav-item"><button class = "btn btn-outline-danger tutorial-btn" id = "exit-tutorial-btn">Exit Tutorial</button></li>-->
-						<li class = "nav-item"><button class = "btn btn-outline-light" id = "save-polycube">Save Polycube</button></li>
-						<li class = "nav-item"><a href="#" class = "nav-link">World View</a></li>
-					</ul>
-				</div>
-			</nav>
+		<script src = "/imports/api/detectmobilebrowser.js"></script>
+		<script type="text/javascript">
+			$(".btn-poly-mode").hide();
+
+			if(window.mobileCheck()){
+				$("#enter-tutorial-btn").hide();
+			}
+
+			$("#exit-tutorial-btn").hide();
+		</script>
 
 		<!--Add polycube modal-->
 		<div id = "modalAddPolycube" class="modal fade" tabindex="-1" role="dialog">
@@ -119,7 +94,7 @@
 </div>
 
 			<div id = "tutorial-gui" class = "fixed-top">
-				<div class = "card bg-dark">
+				<div class = "card">
 					<div class = "card-head">
 						<h2 class = "text-info mr-2" id = "tutorial-title"></h2>
 					</div>

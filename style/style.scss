@@ -1,0 +1,47 @@
+$gui-color: #434343;
+$gui-pad-top: 1em;
+$gui-pad-bot: 1em;
+
+#main-canvas{
+	position: relative;
+}
+
+#gui{
+	position:absolute;
+}
+
+#option-nav{
+	padding-top: $gui-pad-top;
+	padding-bottom: $gui-pad-bot;
+
+	background: #434343;
+}
+
+
+#tutorial-gui{
+	.card{
+		background: transparent;
+		background-color: $gui-color;
+	}
+	margin-top: 4em;
+	width: 24rem;
+}
+
+#tutorial-title{
+	margin-top: 1em;
+	margin-left: .5em;
+}
+
+#tutorial-prompt{
+	padding-right: 2rem;
+	text-align: right;
+	color: #FEFEFE;
+}
+
+#tutorial-panel-row{
+	width: 2em;
+}
+
+#load-polycube{
+	visibility: hidden;
+}

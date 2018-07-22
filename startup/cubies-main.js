@@ -374,8 +374,8 @@ export const CubiesMain = function(modelTemplates){
 		startMode(addCubeMode);
 	}
 
-	GUIHandler.callbacks.onTutorialClick = () => {
-		Cubies.flags.inTutorial = !Cubies.flags.inTutorial;
+	GUIHandler.callbacks.onTutorialClick = (inTutorial) => {
+		Cubies.flags.inTutorial = inTutorial;
 
 		if(Cubies.flags.inTutorial){
 			TutorialHandler.startTutorial();

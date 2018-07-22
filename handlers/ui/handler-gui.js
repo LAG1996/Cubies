@@ -54,7 +54,6 @@ export const GUIHandler = {
 	},
 	inTutorial: false
 }
-$("#exit-tutorial-btn").hide();
 
 //Bind events to buttons
 $("#create-polycube").on("click", function(){ GUIHandler.callbacks.onCreatePolycube();});
@@ -73,6 +72,6 @@ $(".tutorial-btn").on("click", function(){
 		$("#enter-tutorial-btn").show();
 	}
 
-	GUIHandler.callbacks.onTutorialClick();
+	GUIHandler.callbacks.onTutorialClick(GUIHandler.inTutorial);
 });
 $("#delete-polycube").on("click", function(){ GUIHandler.callbacks.onDeletePolycube();});
